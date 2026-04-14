@@ -27,7 +27,7 @@
 
 ---
 
-- [ ] 2. Go API コアハンドラー実装
+- [x] 2. Go API コアハンドラー実装
 - [x] 2.1 (P) メッセージ CRUD ハンドラーを実装する
   - `api/internal/model/message.go` に `Message` 型（id・author・text・createdAt）を定義する
   - `api/internal/handler/messages.go` に `GET /api/messages`（全件取得・作成日降順）と `POST /api/messages`（新規投稿、author/text 空文字は 400）を実装する
@@ -63,7 +63,7 @@
 ---
 
 - [ ] 3. フロントエンド コアコンポーネント実装
-- [ ] 3.1 (P) 年齢確認ゲートと名前入力モーダルを実装する
+- [x] 3.1 (P) 年齢確認ゲートと名前入力モーダルを実装する
   - `soseki-20th/app/globals.css` に `@keyframes glitch`（色反転＋位置ズレ）と `@keyframes ticker`（横スクロール）を定義する
   - `AgeVerificationGate` コンポーネントを実装する。sessionStorage の `age_verified` フラグで再訪時をスキップし、「はい」クリックで 0.8 秒グリッチ演出後にメインを表示する
   - `NameInputModal` コンポーネントを実装する。localStorage の `playerName` 存在時はスキップし、入力した名前で `POST /api/players` を呼んでプレイヤー状態を初期化する

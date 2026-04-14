@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #0a0a0a;
+  --foreground: #ededed;
 }
 
 @theme inline {
@@ -12,15 +12,76 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+/* グリッチアニメーション: 色反転＋位置ズレ */
+@keyframes glitch {
+  0% {
+    filter: none;
+    transform: translate(0, 0);
+  }
+  10% {
+    filter: invert(1) hue-rotate(180deg);
+    transform: translate(-4px, 2px);
+  }
+  20% {
+    filter: none;
+    transform: translate(4px, -2px);
+  }
+  30% {
+    filter: invert(1) hue-rotate(90deg);
+    transform: translate(-2px, 4px);
+  }
+  40% {
+    filter: none;
+    transform: translate(0, 0);
+  }
+  50% {
+    filter: invert(1) hue-rotate(270deg);
+    transform: translate(4px, 2px);
+  }
+  60% {
+    filter: none;
+    transform: translate(-4px, -2px);
+  }
+  70% {
+    filter: invert(1) hue-rotate(180deg);
+    transform: translate(2px, 4px);
+  }
+  80% {
+    filter: none;
+    transform: translate(0, 0);
+  }
+  90% {
+    filter: invert(1) hue-rotate(90deg);
+    transform: translate(-2px, -4px);
+  }
+  100% {
+    filter: none;
+    transform: translate(0, 0);
+  }
+}
+
+.animate-glitch {
+  animation: glitch 0.8s ease-in-out;
+}
+
+/* ティッカーアニメーション: 横スクロール */
+@keyframes ticker {
+  0% {
+    transform: translateX(100%);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+.animate-ticker {
+  animation: ticker 20s linear infinite;
+  white-space: nowrap;
+  display: inline-block;
 }
