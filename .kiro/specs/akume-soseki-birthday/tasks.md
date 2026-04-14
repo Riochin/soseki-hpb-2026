@@ -118,7 +118,7 @@
 
 ---
 
-- [ ] 4. Integration: ページ組み立てとコイン状態共有
+- [x] 4. Integration: ページ組み立てとコイン状態共有
 - [x] 4.1 page.tsx に全コンポーネントを統合し、コイン・借金状態を共有する
   - `soseki-20th/app/page.tsx` を更新し、AgeVerificationGate → NameInputModal → GlobalHeader + 全セクション（Hero・Messages・MiniGame・Gacha・Footer）の順に組み立てる
   - `usePlayer` から取得した `coins`・`debt` を GlobalHeader と GachaSection に渡し、ガチャ・借金操作が即座にヘッダーの残高表示に反映されるよう状態を共有する
@@ -130,7 +130,7 @@
 ---
 
 - [ ] 5. Validation: 統合・E2E テスト
-- [ ] 5.1 Go API の統合テストを実装する
+- [x] 5.1 Go API の統合テストを実装する
   - `api/` にテストファイルを作成し、`POST /api/gacha` のトランザクション整合性テスト（コイン消費・コレクション追加のアトミック性）を実装する
   - `POST /api/messages` → `GET /api/messages` の往復テストを実装する
   - `POST /api/players`（新規・既存の upsert 動作）の確認テストを実装する
