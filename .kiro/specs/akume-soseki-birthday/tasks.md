@@ -108,7 +108,7 @@
   - _Requirements: 5.1, 5.2, 5.3, 5.4_
   - _Boundary: MiniGameSection_
 
-- [ ] 3.7 (P) アクセスカウンターフッターを実装する
+- [x] 3.7 (P) アクセスカウンターフッターを実装する
   - `soseki-20th/hooks/useCounter.ts` に `POST /api/counter` を呼ぶ SWR mutate フックを実装する（ページ表示時に 1 回インクリメント）
   - `FooterCounter` コンポーネントを実装する。6 桁のデジタルカウンター表示（ゼロ埋め）と著作権表記を含む
   - カウント値が 777 の倍数のとき「★☆ LUCKY NUMBER! ☆★」を `animate-pulse` 付きで表示する
