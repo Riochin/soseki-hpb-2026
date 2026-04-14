@@ -18,7 +18,7 @@
   - `go run ./cmd/server` で起動し `GET /health` が 200 を返すこと
   - _Requirements: 9.5, 9.6, 9.7_
 
-- [ ] 1.3 Next.js フロントエンドの API 連携基盤を整備する
+- [x] 1.3 Next.js フロントエンドの API 連携基盤を整備する
   - `soseki-20th/lib/api.ts` に API ベース URL（環境変数 `NEXT_PUBLIC_API_URL`）と SWR 用の汎用 fetcher 関数を定義する
   - SWR パッケージ（`swr`）を `soseki-20th/` に追加する
   - `soseki-20th/.env.local.example` に `NEXT_PUBLIC_API_URL=http://localhost:8080` を記載する
