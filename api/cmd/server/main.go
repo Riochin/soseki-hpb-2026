@@ -74,6 +74,14 @@ func buildRouter(allowedOrigin string, database *db.DB) *chi.Mux {
 	r.Get("/api/messages", msgHandler.List)
 	r.Post("/api/messages", msgHandler.Create)
 
+	// プレイヤー管理・借金
+	playerStore := handler.NewDBPlayerStore(database)
+	playersHandler := handler.NewPlayers(playerStore)
+	borrowHandler := handler.NewBorrow(playerStore)
+	r.Post("/api/players", playersHandler.Create)
+	r.Get("/api/players/{name}", playersHandler.Get)
+	r.Post("/api/players/{name}/borrow", borrowHandler.Create)
+
 	return r
 }
 

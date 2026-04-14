@@ -36,7 +36,7 @@
   - _Requirements: 9.1, 4.1, 4.5_
   - _Boundary: messages Handler_
 
-- [ ] 2.2 (P) プレイヤー管理ハンドラー（取得・作成・借金）を実装する
+- [x] 2.2 (P) プレイヤー管理ハンドラー（取得・作成・借金）を実装する
   - `api/internal/model/player.go` に `Player`（name・coins・debt）と `CollectionItem` 型を定義する
   - `api/internal/handler/players.go` に `POST /api/players`（upsert: 初回は coins=100 で INSERT、既存は SELECT）と `GET /api/players/:name` を実装する
   - `api/internal/handler/borrow.go` に `POST /api/players/:name/borrow`（coins+100・debt+100）を実装する
