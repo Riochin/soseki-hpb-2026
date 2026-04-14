@@ -101,7 +101,7 @@
   - _Requirements: 6.2, 6.3, 6.4, 6.5, 6.6, 6.7, 6.8_
   - _Boundary: GachaSection, usePlayer_
 
-- [ ] 3.6 (P) ミニゲームセクションを実装する
+- [x] 3.6 (P) ミニゲームセクションを実装する
   - `MiniGameSection` コンポーネントを実装する。「漱石タイピング」カード（+100 Coins バッジ・PLAY NOW ボタン）を表示する
   - PLAY NOW クリックで `games/typing-game.html` への相対リンクが機能すること（`target="_blank"` またはルーター遷移）
   - ゲームカードが正しく表示され PLAY NOW でゲームに遷移できること
