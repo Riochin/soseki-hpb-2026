@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: soseki-api
+    runtime: docker
+    dockerfilePath: ./api/Dockerfile
+    dockerContext: ./api
+    envVars:
+      - key: DATABASE_URL
+        sync: false  # Render ダッシュボードで設定
+      - key: ALLOWED_ORIGIN
+        sync: false  # デプロイ後に Vercel の URL を設定
+      - key: PORT
+        value: "8080"
