@@ -53,7 +53,7 @@
   - _Requirements: 9.2, 6.3, 6.4_
   - _Boundary: gacha Handler_
 
-- [ ] 2.4 (P) アクセスカウンターハンドラーを実装する
+- [x] 2.4 (P) アクセスカウンターハンドラーを実装する
   - `api/internal/handler/counter.go` に `POST /api/counter`（`UPDATE access_counter SET count = count + 1 RETURNING count` でアトミック更新）を実装する
   - `{ "count": N }` を返す
   - 複数同時リクエストでカウントが正確にインクリメントされること

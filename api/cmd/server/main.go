@@ -86,6 +86,10 @@ func buildRouter(allowedOrigin string, database *db.DB) *chi.Mux {
 	gachaHandler := handler.NewGacha(handler.NewDBGachaStore(database))
 	r.Post("/api/gacha", gachaHandler.Create)
 
+	// アクセスカウンター
+	counterHandler := handler.NewCounter(handler.NewDBCounterStore(database))
+	r.Post("/api/counter", counterHandler.Create)
+
 	return r
 }
 
