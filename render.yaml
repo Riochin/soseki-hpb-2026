@@ -1,9 +1,10 @@
 services:
   - type: web
     name: soseki-api
-    runtime: docker
-    dockerfilePath: ./api/Dockerfile
-    dockerContext: ./api
+    runtime: go
+    rootDir: api
+    buildCommand: go build -tags netgo -ldflags '-s -w' -o app ./cmd/server
+    startCommand: ./app
     envVars:
       - key: DATABASE_URL
         sync: false  # Render ダッシュボードで設定
