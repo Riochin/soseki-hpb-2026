@@ -44,7 +44,7 @@
   - _Requirements: 9.3, 9.8, 6.1, 6.5_
   - _Boundary: players Handler, borrow Handler_
 
-- [ ] 2.3 (P) ガチャハンドラーを実装する
+- [x] 2.3 (P) ガチャハンドラーを実装する
   - `api/internal/model/item.go` に `Item` 型（id・name・rarity・icon・weight）を定義する
   - `api/internal/handler/gacha.go` に `POST /api/gacha`（player_name を受け取り coins-100・重み付き抽選・collections INSERT をトランザクション内で実行）を実装する
   - coins < 100 の場合は 402 を返す
