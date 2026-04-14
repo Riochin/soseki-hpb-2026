@@ -28,7 +28,7 @@
 ---
 
 - [ ] 2. Go API コアハンドラー実装
-- [ ] 2.1 (P) メッセージ CRUD ハンドラーを実装する
+- [x] 2.1 (P) メッセージ CRUD ハンドラーを実装する
   - `api/internal/model/message.go` に `Message` 型（id・author・text・createdAt）を定義する
   - `api/internal/handler/messages.go` に `GET /api/messages`（全件取得・作成日降順）と `POST /api/messages`（新規投稿、author/text 空文字は 400）を実装する
   - ルーターにエンドポイントを登録する

@@ -12,6 +12,7 @@ import (
 	"github.com/go-chi/cors"
 
 	"github.com/soseki-hpb-2026/api/internal/db"
+	"github.com/soseki-hpb-2026/api/internal/handler"
 )
 
 func main() {
@@ -32,7 +33,7 @@ func main() {
 		allowedOrigin = "http://localhost:3000"
 	}
 
-	r := buildRouter(allowedOrigin)
+	r := buildRouter(allowedOrigin, database)
 
 	port := os.Getenv("PORT")
 	if port == "" {
@@ -53,7 +54,7 @@ func main() {
 }
 
 // buildRouter はルーターを構築して返す（テストでも再利用できるよう切り出す）。
-func buildRouter(allowedOrigin string) *chi.Mux {
+func buildRouter(allowedOrigin string, database *db.DB) *chi.Mux {
 	r := chi.NewRouter()
 
 	r.Use(middleware.Logger)
@@ -67,6 +68,11 @@ func buildRouter(allowedOrigin string) *chi.Mux {
 	}))
 
 	r.Get("/health", healthHandler)
+
+	// メッセージ CRUD
+	msgHandler := handler.NewMessages(handler.NewDBMessageStore(database))
+	r.Get("/api/messages", msgHandler.List)
+	r.Post("/api/messages", msgHandler.Create)
 
 	return r
 }
