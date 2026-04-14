@@ -119,7 +119,7 @@
 ---
 
 - [ ] 4. Integration: ページ組み立てとコイン状態共有
-- [ ] 4.1 page.tsx に全コンポーネントを統合し、コイン・借金状態を共有する
+- [x] 4.1 page.tsx に全コンポーネントを統合し、コイン・借金状態を共有する
   - `soseki-20th/app/page.tsx` を更新し、AgeVerificationGate → NameInputModal → GlobalHeader + 全セクション（Hero・Messages・MiniGame・Gacha・Footer）の順に組み立てる
   - `usePlayer` から取得した `coins`・`debt` を GlobalHeader と GachaSection に渡し、ガチャ・借金操作が即座にヘッダーの残高表示に反映されるよう状態を共有する
   - `soseki-20th/app/layout.tsx` のメタデータを「SOSEKI 20th | Happy Birthday!」に更新する
