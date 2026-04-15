@@ -62,6 +62,7 @@ export default function NameInputModal({ onInit }: Props) {
         body: JSON.stringify({ name: trimmed }),
       });
       localStorage.setItem('playerName', trimmed);
+      setShow(false);
       onInit(player);
     } catch (err) {
       setError(`エラーが発生しました: ${err instanceof Error ? err.message : '不明なエラー'}`);
