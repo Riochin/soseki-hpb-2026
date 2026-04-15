@@ -1,6 +1,6 @@
 'use client';
 
-import { CSSProperties, useState, FormEvent, useEffect, useCallback } from 'react';
+import { CSSProperties, useState, FormEvent, useEffect, useCallback, useRef } from 'react';
 import { Mail, ChevronLeft, ChevronRight, Plus } from 'lucide-react';
 import { useMessages } from '@/hooks/useMessages';
 
@@ -24,6 +24,7 @@ export default function MessageSection() {
   const [submitting, setSubmitting] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [paused, setPaused] = useState(false);
+  const touchStartX = useRef<number | null>(null);
 
   // messages + 追加カード 1枚
   const totalSlides = messages.length + 1;
@@ -82,6 +83,18 @@ export default function MessageSection() {
           className="relative"
           onMouseEnter={() => setPaused(true)}
           onMouseLeave={() => setPaused(false)}
+          onTouchStart={(e) => {
+            touchStartX.current = e.touches[0].clientX;
+            setPaused(true);
+          }}
+          onTouchEnd={(e) => {
+            if (touchStartX.current === null) return;
+            const delta = e.changedTouches[0].clientX - touchStartX.current;
+            touchStartX.current = null;
+            setPaused(false);
+            if (Math.abs(delta) < 50) return;
+            goTo(currentIndex + (delta < 0 ? 1 : -1));
+          }}
         >
           {/* スライドトラック */}
           <div className="overflow-hidden">
