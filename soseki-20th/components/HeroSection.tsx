@@ -11,16 +11,13 @@ export default function HeroSection() {
       </p>
 
       {/* 大見出し */}
-      <h1 className="mb-8 text-center text-4xl font-black leading-tight tracking-tight md:text-6xl lg:text-7xl">
-        <span className="bg-gradient-to-r from-yellow-300 via-yellow-400 to-orange-400 bg-clip-text text-transparent">
-          HAPPY 20th
-        </span>
+      <h1
+        className="mb-8 text-center text-3xl leading-relaxed tracking-wider text-white sm:text-4xl md:text-6xl lg:text-7xl"
+        style={{ fontFamily: "var(--font-yuji-syuku), serif" }}
+      >
+        アクメ漱石
         <br />
-        <span className="text-white">BIRTHDAY</span>
-        <br />
-        <span className="bg-gradient-to-r from-yellow-400 to-yellow-200 bg-clip-text text-transparent">
-          AKUME SOSEKI
-        </span>
+        誕生日おめでとう
       </h1>
 
       {/* スクロール誘導 */}

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Noto_Serif_JP } from "next/font/google";
+import { Geist, Geist_Mono, Noto_Serif_JP, Yuji_Syuku } from "next/font/google";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -18,6 +18,12 @@ const notoSerifJP = Noto_Serif_JP({
   weight: ["400", "700"],
 });
 
+const yujiSyuku = Yuji_Syuku({
+  variable: "--font-yuji-syuku",
+  subsets: ["latin"],
+  weight: ["400"],
+});
+
 export const metadata: Metadata = {
   title: "SOSEKI 20th | Happy Birthday!",
   description: "アクメ漱石 20歳誕生日記念ファンサイト",
@@ -31,7 +37,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} ${notoSerifJP.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${notoSerifJP.variable} ${yujiSyuku.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">{children}</body>
     </html>
