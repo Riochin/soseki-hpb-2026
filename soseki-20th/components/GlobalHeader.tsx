@@ -5,9 +5,10 @@ import { Star, AlertTriangle, Coins } from 'lucide-react';
 interface Props {
   coins: number;
   debt: number;
+  visible: boolean;
 }
 
-export default function GlobalHeader({ coins, debt }: Props) {
+export default function GlobalHeader({ coins, debt, visible }: Props) {
   const tickerContent = (
     <span className="inline-flex items-center gap-2 whitespace-nowrap">
       <Star className="inline h-3 w-3" /> HAPPY 20th BIRTHDAY AKUME SOSEKI <Star className="inline h-3 w-3" />{' '}
@@ -19,7 +20,7 @@ export default function GlobalHeader({ coins, debt }: Props) {
   );
 
   return (
-    <header className="sticky top-0 z-30 border-b border-yellow-400/20 bg-black/90 backdrop-blur">
+    <header className={`fixed inset-x-0 top-0 z-30 border-b border-yellow-400/20 bg-black/90 backdrop-blur transition-transform duration-300 ${visible ? 'translate-y-0' : '-translate-y-full'}`}>
       {/* ニュースティッカー */}
       <div className="overflow-hidden border-b border-yellow-400/10 bg-zinc-950 py-1 text-xs text-yellow-400">
         <div className="animate-ticker" role="marquee">
