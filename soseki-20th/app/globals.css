@@ -16,6 +16,7 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+  overflow-x: hidden;
 }
 
 /* グリッチアニメーション: 色反転＋位置ズレ */
@@ -85,3 +86,4 @@ body {
   white-space: nowrap;
   display: inline-block;
 }
+
