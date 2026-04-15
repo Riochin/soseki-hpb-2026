@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { Keyboard, X } from 'lucide-react';
+import { Keyboard, X, Monitor } from 'lucide-react';
 
 interface GameModalProps {
   isOpen: boolean;
@@ -21,6 +21,9 @@ export default function GameModal({ isOpen, onClose, title, gameUrl }: GameModal
   }, [isOpen, onClose]);
 
   if (!isOpen) return null;
+
+  // md未満はPC専用メッセージを表示
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
 
   return (
     <div
@@ -43,11 +46,20 @@ export default function GameModal({ isOpen, onClose, title, gameUrl }: GameModal
             <X className="h-5 w-5" />
           </button>
         </div>
-        <iframe
-          src={gameUrl}
-          className="w-full h-[75vh] border-0"
-          title={title}
-        />
+
+        {isMobile ? (
+          <div className="flex flex-col items-center justify-center gap-4 py-16 px-6 text-center">
+            <Monitor className="h-12 w-12 text-yellow-400/60" />
+            <p className="text-lg font-bold text-yellow-400">PC専用ゲームです</p>
+            <p className="text-sm text-gray-400">このゲームはキーボード操作が必要なため、<br />PCからお楽しみください。</p>
+          </div>
+        ) : (
+          <iframe
+            src={gameUrl}
+            className="w-full h-[75vh] border-0"
+            title={title}
+          />
+        )}
       </div>
     </div>
   );
