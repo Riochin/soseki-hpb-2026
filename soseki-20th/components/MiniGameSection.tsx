@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { Gamepad2, Keyboard } from 'lucide-react';
 import GameModal from './GameModal';
 
 export default function MiniGameSection() {
@@ -9,13 +10,15 @@ export default function MiniGameSection() {
   return (
     <>
       <section className="px-4 py-12 md:px-8 lg:px-16">
-        <h2 className="mb-6 text-2xl font-bold text-yellow-400">🎮 ミニゲーム</h2>
+        <h2 className="mb-6 flex items-center gap-2 text-2xl font-bold text-yellow-400">
+          <Gamepad2 className="h-7 w-7" /> ミニゲーム
+        </h2>
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {/* 漱石タイピングカード */}
           <div className="rounded-xl border border-zinc-700 bg-zinc-900 p-6 transition-colors hover:border-yellow-400/50">
             <div className="mb-3 flex items-start justify-between">
-              <span className="text-3xl">⌨️</span>
+              <Keyboard className="h-8 w-8 text-yellow-400" />
               <span className="rounded-full bg-yellow-400/10 px-3 py-1 text-xs font-bold text-yellow-400 border border-yellow-400/30">
                 +100 Coins
               </span>

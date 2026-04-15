@@ -1,5 +1,6 @@
 'use client';
 
+import { Star } from 'lucide-react';
 import { useCounter } from '@/hooks/useCounter';
 
 export default function FooterCounter() {
@@ -29,8 +30,10 @@ export default function FooterCounter() {
 
       {/* ラッキーナンバー演出 */}
       {isLucky && (
-        <p className="mb-4 animate-pulse text-sm font-bold text-yellow-300">
-          ★☆ LUCKY NUMBER! ☆★
+        <p className="mb-4 flex items-center justify-center gap-1 animate-pulse text-sm font-bold text-yellow-300">
+          <Star className="h-4 w-4 fill-yellow-300" />
+          LUCKY NUMBER!
+          <Star className="h-4 w-4 fill-yellow-300" />
         </p>
       )}
 

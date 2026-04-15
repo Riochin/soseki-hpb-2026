@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import { Keyboard, X } from 'lucide-react';
 
 interface GameModalProps {
   isOpen: boolean;
@@ -31,13 +32,15 @@ export default function GameModal({ isOpen, onClose, title, gameUrl }: GameModal
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-700">
-          <span className="font-bold text-yellow-400">⌨️ {title}</span>
+          <span className="flex items-center gap-2 font-bold text-yellow-400">
+            <Keyboard className="h-4 w-4" /> {title}
+          </span>
           <button
             onClick={onClose}
-            className="text-yellow-400 hover:text-yellow-300 transition-colors text-xl leading-none"
+            className="text-yellow-400 hover:text-yellow-300 transition-colors"
             aria-label="閉じる"
           >
-            ✕
+            <X className="h-5 w-5" />
           </button>
         </div>
         <iframe
