@@ -42,7 +42,7 @@ export default function GameModal({ isOpen, onClose, title, gameUrl }: GameModal
         </div>
         <iframe
           src={gameUrl}
-          className="w-full aspect-video border-0"
+          className="w-full h-[75vh] border-0"
           title={title}
         />
       </div>
