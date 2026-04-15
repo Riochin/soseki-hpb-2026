@@ -31,7 +31,7 @@ export default function GameModal({ isOpen, onClose, title, gameUrl }: GameModal
       onClick={onClose}
     >
       <div
-        className="w-full max-w-4xl rounded-xl border border-zinc-700 bg-zinc-900 overflow-hidden"
+        className="w-full max-w-4xl border-2 border-zinc-700 bg-zinc-900 overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-700">

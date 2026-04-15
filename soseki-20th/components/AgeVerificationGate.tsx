@@ -50,7 +50,7 @@ export default function AgeVerificationGate({ children }: Props) {
       <div className="flex gap-4">
         <button
           onClick={handleYes}
-          className="rounded border border-yellow-400 px-8 py-3 font-bold text-yellow-400 transition-colors hover:bg-yellow-400 hover:text-black"
+          className="border-2 border-yellow-400 px-8 py-3 font-bold text-yellow-400 transition-colors hover:bg-yellow-400 hover:text-black"
         >
           はい
         </button>
@@ -58,7 +58,7 @@ export default function AgeVerificationGate({ children }: Props) {
           onClick={() => {
             window.location.href = 'https://www.google.com';
           }}
-          className="rounded border border-gray-600 px-8 py-3 font-bold text-gray-400 transition-colors hover:bg-gray-800"
+          className="border-2 border-gray-600 px-8 py-3 font-bold text-gray-400 transition-colors hover:bg-gray-800"
         >
           いいえ
         </button>

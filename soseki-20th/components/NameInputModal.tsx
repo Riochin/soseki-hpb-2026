@@ -81,7 +81,7 @@ export default function NameInputModal({ onInit }: Props) {
 
   return (
     <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/80">
-      <div className="w-full max-w-sm rounded-lg border border-yellow-400/30 bg-zinc-900 p-8">
+      <div className="w-full max-w-sm border-2 border-yellow-400/30 bg-zinc-900 p-8">
         <h2 className="mb-2 text-center text-xl font-bold text-yellow-400">
           お名前を入力してください
         </h2>
@@ -95,7 +95,7 @@ export default function NameInputModal({ onInit }: Props) {
             onChange={(e) => setName(e.target.value)}
             maxLength={50}
             placeholder="例: 漱石ファン"
-            className="mb-3 w-full rounded border border-zinc-700 bg-zinc-800 px-4 py-2 text-white placeholder-zinc-500 focus:border-yellow-400 focus:outline-none"
+            className="mb-3 w-full border-b-2 border-zinc-600 bg-transparent px-2 py-2 text-white placeholder-zinc-500 focus:border-yellow-400 focus:outline-none"
           />
           {error && (
             <p className="mb-3 text-sm text-red-400">{error}</p>
@@ -103,7 +103,7 @@ export default function NameInputModal({ onInit }: Props) {
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded bg-yellow-400 py-2 font-bold text-black transition-opacity hover:opacity-90 disabled:opacity-50"
+            className="w-full bg-yellow-400 py-2 font-bold text-black transition-opacity hover:opacity-90 disabled:opacity-50"
           >
             {loading ? '処理中...' : '決定'}
           </button>

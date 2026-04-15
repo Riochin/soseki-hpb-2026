@@ -68,7 +68,7 @@ export default function GachaSection({ playerName }: Props) {
         <button
           onClick={handleGacha}
           disabled={spinning}
-          className="rounded-lg bg-yellow-400 px-6 py-3 font-bold text-black transition-opacity hover:opacity-90 disabled:opacity-50"
+          className="bg-yellow-400 px-6 py-3 font-bold text-black transition-opacity hover:opacity-90 disabled:opacity-50"
         >
           {spinning ? 'ガチャ中...' : '1回まわす (100C)'}
         </button>
@@ -76,7 +76,7 @@ export default function GachaSection({ playerName }: Props) {
         <button
           onClick={handleBorrow}
           disabled={borrowing}
-          className="rounded-lg border border-red-500 px-6 py-3 font-bold text-red-400 transition-colors hover:bg-red-500/10 disabled:opacity-50"
+          className="border-2 border-red-500 px-6 py-3 font-bold text-red-400 transition-colors hover:bg-red-500/10 disabled:opacity-50"
         >
           {borrowing ? '処理中...' : '借金する (+100C)'}
         </button>
@@ -100,14 +100,14 @@ export default function GachaSection({ playerName }: Props) {
           {collection.map((item) => (
             <div
               key={item.itemId}
-              className={`rounded-lg border bg-zinc-900 p-4 text-center transition-all${
+              className={`border-2 bg-[#141008] p-4 text-center transition-all${
                 item.acquired ? '' : ' grayscale opacity-50'
               }`}
             >
               <div className="mb-2 text-3xl">{item.icon}</div>
               <p className="mb-1 text-sm font-medium text-white">{item.name}</p>
               <span
-                className={`rounded border px-2 py-0.5 text-xs font-bold ${
+                className={`border px-2 py-0.5 text-xs font-bold ${
                   RARITY_COLOR[item.rarity] ?? 'text-gray-400 border-gray-500'
                 }`}
               >

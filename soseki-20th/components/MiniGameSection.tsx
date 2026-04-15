@@ -16,7 +16,7 @@ export default function MiniGameSection() {
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {/* 漱石タイピングカード */}
-          <div className="rounded-xl border border-zinc-700 bg-zinc-900 p-6 transition-colors hover:border-yellow-400/50">
+          <div className="border-2 border-amber-900/50 bg-[#141008] p-6 transition-colors hover:border-yellow-400/50">
             <div className="mb-3 flex items-start justify-between">
               <Keyboard className="h-8 w-8 text-yellow-400" />
               <span className="rounded-full bg-yellow-400/10 px-3 py-1 text-xs font-bold text-yellow-400 border border-yellow-400/30">
@@ -31,7 +31,7 @@ export default function MiniGameSection() {
 
             <button
               onClick={() => setIsOpen(true)}
-              className="w-full rounded-lg bg-yellow-400 py-2 text-center font-bold text-black transition-opacity hover:opacity-90"
+              className="w-full bg-yellow-400 py-2 text-center font-bold text-black transition-opacity hover:opacity-90"
             >
               PLAY NOW
             </button>
