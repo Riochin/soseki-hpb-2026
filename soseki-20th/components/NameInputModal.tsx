@@ -2,6 +2,7 @@
 
 import { useState, useEffect, FormEvent } from 'react';
 import { apiFetch } from '@/lib/api';
+import { IS_UI_MOCK, MOCK_PLAYER } from '@/lib/mock';
 
 export interface Player {
   name: string;
@@ -29,6 +30,11 @@ export default function NameInputModal({ onInit }: Props) {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    if (IS_UI_MOCK) {
+      onInit(MOCK_PLAYER);
+      return;
+    }
+
     const saved = localStorage.getItem('playerName');
     if (saved) {
       // 既存プレイヤーを取得して onInit を呼ぶ

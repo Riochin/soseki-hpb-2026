@@ -1,5 +1,6 @@
 import useSWR from 'swr';
 import { fetcher, apiFetch } from '@/lib/api';
+import { IS_UI_MOCK, MOCK_MESSAGES } from '@/lib/mock';
 
 export interface Message {
   id: number;
@@ -22,11 +23,13 @@ export interface UseMessagesResult {
 
 export function useMessages(): UseMessagesResult {
   const { data, error, isLoading, mutate } = useSWR<Message[]>(
-    '/api/messages',
+    IS_UI_MOCK ? null : '/api/messages',
     fetcher,
   );
 
   async function postMessage(input: PostMessageInput): Promise<void> {
+    if (IS_UI_MOCK) return;
+
     const newMessage = await apiFetch<Message>('/api/messages', {
       method: 'POST',
       body: JSON.stringify(input),
@@ -40,9 +43,9 @@ export function useMessages(): UseMessagesResult {
   }
 
   return {
-    messages: data ?? [],
-    isLoading,
-    error: error ?? null,
+    messages: IS_UI_MOCK ? MOCK_MESSAGES : (data ?? []),
+    isLoading: IS_UI_MOCK ? false : isLoading,
+    error: IS_UI_MOCK ? null : (error ?? null),
     postMessage,
   };
 }

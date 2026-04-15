@@ -1,5 +1,6 @@
 import useSWR from 'swr';
 import { fetcher, apiFetch } from '@/lib/api';
+import { IS_UI_MOCK, MOCK_PLAYER, MOCK_GACHA_RESULT } from '@/lib/mock';
 
 export interface CollectionItem {
   itemId: number;
@@ -32,11 +33,12 @@ export interface UsePlayerResult {
 
 export function usePlayer(name: string | null): UsePlayerResult {
   const { data, error, isLoading, mutate } = useSWR<Player>(
-    name ? `/api/players/${encodeURIComponent(name)}` : null,
+    !IS_UI_MOCK && name ? `/api/players/${encodeURIComponent(name)}` : null,
     fetcher,
   );
 
   async function spinGacha(): Promise<GachaResult> {
+    if (IS_UI_MOCK) return MOCK_GACHA_RESULT;
     if (!name) throw new Error('プレイヤー名が未設定です');
 
     const result = await apiFetch<GachaResult>('/api/gacha', {
@@ -50,6 +52,7 @@ export function usePlayer(name: string | null): UsePlayerResult {
   }
 
   async function borrowCoins(): Promise<void> {
+    if (IS_UI_MOCK) return;
     if (!name) throw new Error('プレイヤー名が未設定です');
 
     await apiFetch<{ coins: number; debt: number }>(
@@ -61,9 +64,9 @@ export function usePlayer(name: string | null): UsePlayerResult {
   }
 
   return {
-    player: data ?? null,
-    isLoading,
-    error: error ?? null,
+    player: IS_UI_MOCK ? MOCK_PLAYER : (data ?? null),
+    isLoading: IS_UI_MOCK ? false : isLoading,
+    error: IS_UI_MOCK ? null : (error ?? null),
     spinGacha,
     borrowCoins,
   };
