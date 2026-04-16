@@ -29,7 +29,6 @@ export default function HeroSection() {
           width={160}
           height={160}
           className="object-contain"
-          style={{ width: 160, height: 'auto' }}
           priority
         />
       </div>
