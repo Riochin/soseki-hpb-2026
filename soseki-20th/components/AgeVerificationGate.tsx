@@ -1,17 +1,13 @@
 'use client';
 
 import { useState, useEffect, ReactNode } from 'react';
-import Image from 'next/image';
 
 interface Props {
   children: ReactNode;
 }
 
-const INTRO_DURATION = 4000; // ms — intro-overlay アニメーションと合わせる
-
 export default function AgeVerificationGate({ children }: Props) {
   const [isVerified, setIsVerified] = useState(false);
-  const [showIntro, setShowIntro] = useState(false);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -24,8 +20,6 @@ export default function AgeVerificationGate({ children }: Props) {
   function handleYes() {
     sessionStorage.setItem('age_verified', 'true');
     setIsVerified(true);
-    setShowIntro(true);
-    setTimeout(() => setShowIntro(false), INTRO_DURATION);
   }
 
   // SSR では何も表示しない（hydration mismatch 防止）
@@ -61,28 +55,6 @@ export default function AgeVerificationGate({ children }: Props) {
               いいえ
             </button>
           </div>
-        </div>
-      )}
-
-      {/* イントロオーバーレイ: 画像フェードイン → 画面フェードアウト */}
-      {showIntro && (
-        <div className="animate-intro-overlay fixed inset-0 z-40 flex flex-col items-center justify-center gap-6 bg-black">
-          <div className="animate-intro-image relative w-64 sm:w-80 md:w-96">
-            <Image
-              src="/yoyu2024.png"
-              alt="yoyu2024"
-              width={400}
-              height={400}
-              className="h-auto w-full object-contain"
-              priority
-            />
-          </div>
-          <p
-            className="animate-intro-image text-4xl tracking-widest text-amber-100 sm:text-5xl md:text-6xl"
-            style={{ fontFamily: "var(--font-yuji-syuku), serif" }}
-          >
-            まあ、余裕っすね
-          </p>
         </div>
       )}
 

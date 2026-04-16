@@ -91,7 +91,7 @@ export default function NameInputModal({ onInit }: Props) {
 
   if (connecting) {
     return (
-      <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black">
+      <div className="fixed inset-0 z-30 flex flex-col items-center justify-center bg-black">
         <div className="mb-8 h-12 w-12 animate-spin rounded-full border-4 border-zinc-700 border-t-yellow-400" />
         <p className="font-noto-serif-jp text-lg text-yellow-400">サーバー接続中{dots}</p>
         <p className="mt-2 text-sm text-zinc-500">初回起動に少々お時間がかかる場合があります。ぶっちゃけ俺悪くなくね！？</p>
