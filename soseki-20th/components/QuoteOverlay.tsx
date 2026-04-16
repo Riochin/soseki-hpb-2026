@@ -5,25 +5,43 @@ import { useState, useEffect } from 'react'
 const quotes = [
   {
     text: "智に働けば角が立つ。情に棹させば流される。意地を通せば窮屈だ。とかくに人の世は住みにくい。",
+    author: "夏目漱石",
     source: "草枕",
   },
   {
     text: "自分が正しいと思ったら、どんな反対があっても、自分を貫け。",
+    author: "夏目漱石",
     source: "こころ",
   },
   {
     text: "人間は自分の一生を貫く仕事を持たなければならない。",
+    author: "夏目漱石",
     source: "道草",
   },
-  { text: "恋は罪悪ですよ、と彼は云った。", source: "こころ" },
-  { text: "義務は大事だ。しかし義務は一種の牢獄だよ。", source: "行人" },
-  { text: "月が綺麗ですね。", source: "（伝説）" },
+  {
+    text: "恋は罪悪ですよ、と彼は云った。",
+    author: "夏目漱石",
+    source: "こころ",
+  },
+  {
+    text: "義務は大事だ。しかし義務は一種の牢獄だよ。",
+    author: "夏目漱石",
+    source: "行人",
+  },
+  { text: "月が綺麗ですね。", author: "夏目漱石", source: "（伝説）" },
   {
     text: "誠実さのない天才よりも、才能のない誠実さの方が世の中の役に立つ。",
+    author: "夏目漱石",
     source: "吾輩は猫である",
   },
-  { text: "easy", source: "NGC 2024" },
-  { text: "まぁ、余裕っすね", source: "NGC 2023" },
+  { text: "easy", author: "FORK", source: "NGC 2024" },
+  { text: "まぁ、余裕ッスね", author: "FORK", source: "NGC 2023" },
+  { text: "じゃ、また", author: "アクメ漱石" },
+  { text: "『『まぁ、余裕ッスね』』", author: "FORK & かたはば" },
+  { text: "俺⁉️⁉️⁉️⁉️⁉️⁉️⁉️", author: "アクメ漱石" },
+  { text: "おけーーーーい‼️‼️‼️", author: "アクメ漱石" },
+  { text: "上手ーーーーい‼️‼️‼️", author: "アクメ漱石" },
+  { text: "本日のおドクペ", author: "アクメ漱石" },
 ];
 
 // 見切れにくい小さめの角度バリエーション
@@ -127,7 +145,7 @@ export default function QuoteOverlay() {
               className="not-italic text-yellow-400/55"
               style={{ fontSize: 'clamp(0.6rem, 0.9vw, 0.75rem)' }}
             >
-              — 夏目漱石『{q.source}』
+              — {q.author}{q.source ? `『${q.source}』` : ''}
             </cite>
           </div>
         )
