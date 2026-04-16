@@ -28,6 +28,16 @@ export default function NameInputModal({ onInit }: Props) {
   const [name, setName] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [connecting, setConnecting] = useState(false);
+  const [dots, setDots] = useState('');
+
+  useEffect(() => {
+    if (!connecting) return;
+    const interval = setInterval(() => {
+      setDots(d => d.length >= 3 ? '' : d + '.');
+    }, 400);
+    return () => clearInterval(interval);
+  }, [connecting]);
 
   useEffect(() => {
     if (IS_UI_MOCK) {
@@ -37,6 +47,7 @@ export default function NameInputModal({ onInit }: Props) {
 
     const saved = localStorage.getItem('playerName');
     if (saved) {
+      setConnecting(true);
       // 既存プレイヤーを取得して onInit を呼ぶ
       apiFetch<Player>('/api/players', {
         method: 'POST',
@@ -46,7 +57,8 @@ export default function NameInputModal({ onInit }: Props) {
         .catch(() => {
           // 取得失敗時はモーダルを表示
           setShow(true);
-        });
+        })
+        .finally(() => setConnecting(false));
     } else {
       setShow(true);
     }
@@ -75,6 +87,16 @@ export default function NameInputModal({ onInit }: Props) {
     } finally {
       setLoading(false);
     }
+  }
+
+  if (connecting) {
+    return (
+      <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black">
+        <div className="mb-8 h-12 w-12 animate-spin rounded-full border-4 border-zinc-700 border-t-yellow-400" />
+        <p className="font-noto-serif-jp text-lg text-yellow-400">サーバー接続中{dots}</p>
+        <p className="mt-2 text-sm text-zinc-500">初回起動に少々お時間がかかる場合があります。ぶっちゃけ俺悪くなくね！？</p>
+      </div>
+    );
   }
 
   if (!show) return null;

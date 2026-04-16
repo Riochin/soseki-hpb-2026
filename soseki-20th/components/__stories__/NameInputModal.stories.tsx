@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import type { Meta, StoryObj } from "@storybook/react";
 
 /**
@@ -6,11 +7,20 @@ import type { Meta, StoryObj } from "@storybook/react";
  */
 
 function SpinnerView() {
+  const [dots, setDots] = useState('');
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setDots(d => d.length >= 3 ? '' : d + '.');
+    }, 400);
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black">
       <div className="mb-8 h-12 w-12 animate-spin rounded-full border-4 border-zinc-700 border-t-yellow-400" />
-      <p className="text-lg text-yellow-400">サーバー接続中...</p>
-      <p className="mt-2 text-sm text-zinc-500">初回起動に少々お時間がかかる場合があります</p>
+      <p className="font-noto-serif-jp text-lg text-yellow-400">サーバー接続中{dots}</p>
+      <p className="mt-2 text-sm text-zinc-500">初回起動に少々お時間がかかる場合があります。ぶっちゃけ俺悪くなくね！？</p>
     </div>
   );
 }
