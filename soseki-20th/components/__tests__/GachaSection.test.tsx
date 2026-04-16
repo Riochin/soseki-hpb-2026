@@ -76,13 +76,14 @@ describe('GachaSection', () => {
     });
   });
 
-  it('コイン不足時に借金ボタンを押すと borrowCoins が呼ばれる', async () => {
+  it('コイン不足時に借金モーダルを開いて借りると borrowCoins が呼ばれる', async () => {
     mockBorrowCoins.mockResolvedValueOnce(undefined);
     mockPlayer = { name: 'テスト', coins: 0, debt: 0, collection: mockCollection };
     render(<GachaSection playerName="テスト" />);
 
     fireEvent.click(screen.getByRole('button', { name: /1回まわす/i }));
-    fireEvent.click(screen.getByRole('button', { name: /借金|borrow/i }));
+    // モーダル内の「借りる」ボタンをクリック
+    fireEvent.click(screen.getByRole('button', { name: /借りる/i }));
 
     await waitFor(() => {
       expect(mockBorrowCoins).toHaveBeenCalledOnce();

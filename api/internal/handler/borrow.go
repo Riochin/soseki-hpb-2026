@@ -20,11 +20,21 @@ func NewBorrow(store PlayerStore) *Borrow {
 }
 
 // Create は POST /api/players/:name/borrow を処理する。
-// coins+100・debt+100 を更新して最新値を返す。
+// リクエストボディの amount（クレ単位）だけ coins・debt を増やして最新値を返す。
+// amount 未指定または 1 未満の場合は 1 とする。
 func (h *Borrow) Create(w http.ResponseWriter, r *http.Request) {
 	name := chi.URLParam(r, "name")
 
-	coins, debt, err := h.store.BorrowCoins(r.Context(), name)
+	var input struct {
+		Amount int `json:"amount"`
+	}
+	// デコード失敗は無視してデフォルト値（0）のまま続行
+	_ = json.NewDecoder(r.Body).Decode(&input)
+	if input.Amount < 1 {
+		input.Amount = 1
+	}
+
+	coins, debt, err := h.store.BorrowCoins(r.Context(), name, input.Amount)
 	if errors.Is(err, ErrNotFound) {
 		writeError(w, http.StatusNotFound, "player not found")
 		return

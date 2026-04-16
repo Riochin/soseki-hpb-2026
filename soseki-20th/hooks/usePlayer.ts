@@ -45,7 +45,7 @@ export interface UsePlayerResult {
   error: Error | null;
   spinGacha(): Promise<GachaResult>;
   spinGachaMulti(): Promise<MultiGachaResult>;
-  borrowCoins(): Promise<void>;
+  borrowCoins(amount: number): Promise<void>;
   earnCoins(
     gameType: string,
     payload: Record<string, unknown>,
@@ -86,13 +86,16 @@ export function usePlayer(name: string | null): UsePlayerResult {
     return result;
   }
 
-  async function borrowCoins(): Promise<void> {
+  async function borrowCoins(amount: number): Promise<void> {
     if (IS_UI_MOCK) return;
     if (!name) throw new Error('プレイヤー名が未設定です');
 
     await apiFetch<{ coins: number; debt: number }>(
       `/api/players/${encodeURIComponent(name)}/borrow`,
-      { method: 'POST' },
+      {
+        method: 'POST',
+        body: JSON.stringify({ amount }),
+      },
     );
 
     await mutate();

@@ -49,7 +49,7 @@ func (m *mockPlayerStore) GetPlayer(_ context.Context, _ string) (model.Player, 
 	return m.player, nil
 }
 
-func (m *mockPlayerStore) BorrowCoins(_ context.Context, _ string) (int, int, error) {
+func (m *mockPlayerStore) BorrowCoins(_ context.Context, _ string, _ int) (int, int, error) {
 	if m.storeErr != nil {
 		return 0, 0, m.storeErr
 	}
@@ -224,7 +224,8 @@ func TestBorrow_ValidPlayer_Returns200(t *testing.T) {
 		debt:   100,
 	})
 
-	req := httptest.NewRequest(http.MethodPost, "/api/players/漱石/borrow", nil)
+	req := httptest.NewRequest(http.MethodPost, "/api/players/漱石/borrow", bytes.NewBufferString(`{"amount":1}`))
+	req.Header.Set("Content-Type", "application/json")
 	req = withURLParam(req, "name", "漱石")
 	w := httptest.NewRecorder()
 	h.Create(w, req)
@@ -247,7 +248,8 @@ func TestBorrow_ValidPlayer_Returns200(t *testing.T) {
 func TestBorrow_NotFound_Returns404(t *testing.T) {
 	h := handler.NewBorrow(&mockPlayerStore{notFound: true})
 
-	req := httptest.NewRequest(http.MethodPost, "/api/players/nobody/borrow", nil)
+	req := httptest.NewRequest(http.MethodPost, "/api/players/nobody/borrow", bytes.NewBufferString(`{"amount":1}`))
+	req.Header.Set("Content-Type", "application/json")
 	req = withURLParam(req, "name", "nobody")
 	w := httptest.NewRecorder()
 	h.Create(w, req)
@@ -260,7 +262,8 @@ func TestBorrow_NotFound_Returns404(t *testing.T) {
 func TestBorrow_StoreError_Returns500(t *testing.T) {
 	h := handler.NewBorrow(&mockPlayerStore{storeErr: errors.New("db error")})
 
-	req := httptest.NewRequest(http.MethodPost, "/api/players/漱石/borrow", nil)
+	req := httptest.NewRequest(http.MethodPost, "/api/players/漱石/borrow", bytes.NewBufferString(`{"amount":1}`))
+	req.Header.Set("Content-Type", "application/json")
 	req = withURLParam(req, "name", "漱石")
 	w := httptest.NewRecorder()
 	h.Create(w, req)

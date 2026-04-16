@@ -4,6 +4,8 @@ import { useState } from 'react';
 import { X } from 'lucide-react';
 import { usePlayer, CollectionItem, GachaResult, MultiGachaResult } from '@/hooks/usePlayer';
 import { toCredit } from '@/lib/currency';
+import BorrowModal from '@/components/BorrowModal';
+import { IS_UI_MOCK } from '@/lib/mock';
 
 const RARITY_COLOR: Record<string, string> = {
   UR: 'text-yellow-300 border-yellow-300',
@@ -191,14 +193,13 @@ export default function GachaSection({ playerName }: Props) {
   const [gachaResult, setGachaResult] = useState<GachaResult | null>(null);
   const [multiGachaResult, setMultiGachaResult] = useState<MultiGachaResult | null>(null);
   const [message, setMessage] = useState('');
-  const [borrowing, setBorrowing] = useState(false);
-  const [showBorrow, setShowBorrow] = useState(false);
+  const [showBorrowModal, setShowBorrowModal] = useState(false);
   const [showCollection, setShowCollection] = useState(false);
 
   async function handleGacha() {
     if (spinning) return;
     if (player && player.coins < 100) {
-      setShowBorrow(true);
+      setShowBorrowModal(true);
       return;
     }
     setSpinning(true);
@@ -231,18 +232,9 @@ export default function GachaSection({ playerName }: Props) {
     }
   }
 
-  async function handleBorrow() {
-    setBorrowing(true);
-    setMessage('');
-    try {
-      await borrowCoins();
-      setShowBorrow(false);
-      setMessage('1クレ 借りました（借金 +1クレ）');
-    } catch (err) {
-      setMessage(`エラー: ${err instanceof Error ? err.message : '失敗しました'}`);
-    } finally {
-      setBorrowing(false);
-    }
+  async function handleBorrow(amount: number) {
+    await borrowCoins(amount);
+    setMessage(`${amount}クレ 借りました（借金 +${amount}クレ）`);
   }
 
   const collection: CollectionItem[] = player?.collection ?? [];
@@ -278,15 +270,14 @@ export default function GachaSection({ playerName }: Props) {
           </button>
         </div>
 
-        {/* 借金ボタン */}
-        {showBorrow && (
+        {/* 借金ボタン: 本番はコイン不足時のみ、モック時は常時表示 */}
+        {!showBorrowModal && (IS_UI_MOCK || (player && player.coins < 100)) && (
           <div className="mb-3">
             <button
-              onClick={handleBorrow}
-              disabled={borrowing}
-              className="w-full border-2 border-red-500 py-3 font-bold text-red-400 transition-colors hover:bg-red-500/10 disabled:opacity-50"
+              onClick={() => setShowBorrowModal(true)}
+              className="w-full border-2 border-red-500 py-3 font-bold text-red-400 transition-colors hover:bg-red-500/10"
             >
-              {borrowing ? '処理中...' : '借金する (+1クレ)'}
+              借金する
             </button>
           </div>
         )}
@@ -325,6 +316,13 @@ export default function GachaSection({ playerName }: Props) {
 
       {showCollection && collection.length > 0 && (
         <CollectionModal collection={collection} onClose={() => setShowCollection(false)} />
+      )}
+
+      {showBorrowModal && (
+        <BorrowModal
+          onBorrow={handleBorrow}
+          onClose={() => setShowBorrowModal(false)}
+        />
       )}
     </>
   );
