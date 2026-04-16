@@ -59,6 +59,17 @@ func (m *mockPlayerStore) BorrowCoins(_ context.Context, _ string) (int, int, er
 	return m.coins, m.debt, nil
 }
 
+func (m *mockPlayerStore) EarnCoins(_ context.Context, _ string, amount int) (int, error) {
+	if m.storeErr != nil {
+		return 0, m.storeErr
+	}
+	if m.notFound {
+		return 0, handler.ErrNotFound
+	}
+	// players_test では実値は厳密に見ていないため、単純な加算挙動を返す。
+	return m.coins + amount, nil
+}
+
 // chiのURLパラメーターをセットするヘルパー
 func withURLParam(r *http.Request, key, value string) *http.Request {
 	rctx := chi.NewRouteContext()
