@@ -241,7 +241,7 @@ export default function GachaSection({ playerName }: Props) {
 
   return (
     <>
-      <section className="px-4 py-12 md:px-8 lg:px-16">
+      <section className="section-reveal px-4 py-12 md:px-8 lg:px-16">
         <p className="mb-4 font-mono text-xs tracking-widest text-yellow-400/60">
           — GACHA &amp; COLLECTION
         </p>

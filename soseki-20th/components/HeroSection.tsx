@@ -3,7 +3,7 @@ import QuoteOverlay from './QuoteOverlay'
 
 export default function HeroSection() {
   return (
-    <section className="relative flex min-h-screen flex-col items-center justify-center px-4 md:px-8 lg:px-16">
+    <section className="section-reveal relative flex min-h-screen flex-col items-center justify-center px-4 md:px-8 lg:px-16">
       <QuoteOverlay />
 
       {/* 日付 */}

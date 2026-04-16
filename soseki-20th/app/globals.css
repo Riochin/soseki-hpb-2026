@@ -112,3 +112,46 @@ body {
   display: inline-block;
 }
 
+/* セクション内コンテンツの共通出現アニメーション */
+@keyframes section-content-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.section-reveal > * {
+  opacity: 0;
+  transform: translateY(36px);
+  transition: opacity 1s ease-out, transform 1s ease-out;
+}
+
+.section-reveal.is-visible > * {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.section-reveal.is-visible > *:nth-child(2) {
+  transition-delay: 140ms;
+}
+
+.section-reveal.is-visible > *:nth-child(3) {
+  transition-delay: 280ms;
+}
+
+.section-reveal.is-visible > *:nth-child(4) {
+  transition-delay: 420ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .section-reveal > * {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+

@@ -33,6 +33,25 @@ export default function Home() {
     return () => observer.disconnect();
   }, [playerName]);
 
+  useEffect(() => {
+    const sections = Array.from(document.querySelectorAll<HTMLElement>('.section-reveal'));
+    if (sections.length === 0) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (!entry.isIntersecting) continue;
+          entry.target.classList.add('is-visible');
+          observer.unobserve(entry.target);
+        }
+      },
+      { threshold: 0.45, rootMargin: '0px 0px -20% 0px' }
+    );
+
+    sections.forEach((section) => observer.observe(section));
+    return () => observer.disconnect();
+  }, [playerName]);
+
   const handleInit = useCallback((p: Player) => {
     setPlayerName(p.name);
     setShowIntro(true);
