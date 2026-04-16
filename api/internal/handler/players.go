@@ -19,6 +19,7 @@ type PlayerStore interface {
 	UpsertPlayer(ctx context.Context, name string) (model.Player, error)
 	GetPlayer(ctx context.Context, name string) (model.Player, error)
 	BorrowCoins(ctx context.Context, name string) (coins, debt int, err error)
+	EarnCoins(ctx context.Context, name string, amount int) (newCoins int, err error)
 }
 
 // Players はプレイヤー取得・作成エンドポイントのハンドラーを保持する。

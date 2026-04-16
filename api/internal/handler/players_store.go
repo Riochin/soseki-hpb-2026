@@ -88,3 +88,17 @@ func (s *DBPlayerStore) BorrowCoins(ctx context.Context, name string) (coins, de
 	}
 	return coins, debt, err
 }
+
+// EarnCoins はゲーム報酬としてコインを加算し、新しい残高を返す。
+// プレイヤーが存在しない場合は ErrNotFound を返す。
+func (s *DBPlayerStore) EarnCoins(ctx context.Context, name string, amount int) (int, error) {
+	var newCoins int
+	err := s.db.Pool.QueryRow(ctx,
+		`UPDATE players SET coins = coins + $2 WHERE name = $1 RETURNING coins`,
+		name, amount,
+	).Scan(&newCoins)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return 0, ErrNotFound
+	}
+	return newCoins, err
+}
