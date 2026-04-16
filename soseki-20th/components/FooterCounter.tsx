@@ -10,13 +10,13 @@ export default function FooterCounter() {
   const display = String(count).padStart(6, '0');
 
   return (
-    <footer className="border-t border-amber-900/30 bg-[#0c0a08] px-4 py-10 text-center">
+    <footer className="border-t border-yellow-400/20 bg-[#0c0a08] px-4 py-10 text-center">
       {/* カウンター */}
       <div className="mb-4">
         <p className="mb-2 text-xs tracking-widest text-gray-500 uppercase">
           Access Counter
         </p>
-        <div className="inline-flex items-center gap-0.5 border-2 border-amber-900/50 bg-[#141008] px-4 py-2">
+        <div className="inline-flex items-center gap-0.5 border-2 border-yellow-400/20 bg-[#141008] px-4 py-2">
           {display.split('').map((digit, i) => (
             <span
               key={i}

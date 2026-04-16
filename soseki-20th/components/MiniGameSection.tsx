@@ -19,7 +19,7 @@ export default function MiniGameSection() {
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {/* 漱石タイピングカード */}
-          <div className="border-2 border-amber-900/50 bg-[#141008] p-6 transition-colors hover:border-yellow-400/50">
+          <div className="border-2 border-yellow-400/20 bg-[#141008] p-6 transition-colors hover:border-yellow-400/50">
             <div className="mb-3 flex items-start justify-between">
               <Keyboard className="h-8 w-8 text-yellow-400" />
               <span className="rounded-full bg-yellow-400/10 px-3 py-1 text-xs font-bold text-yellow-400 border border-yellow-400/30">
