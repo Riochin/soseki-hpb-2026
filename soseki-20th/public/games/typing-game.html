@@ -605,7 +605,7 @@
 
     // ── State ──────────────────────────────────────────────────────────────
     let state = {
-      timeLimit: 60,
+      timeLimit: 30,
       timeLeft: 60,
       timer: null,
       queue: [],       // shuffled phrase queue
@@ -676,7 +676,15 @@
     }
 
     // ── Game logic ─────────────────────────────────────────────────────────
+    function getSelectedTimeLimit() {
+      const activeBtn = document.querySelector('.diff-btn.active');
+      if (!activeBtn) return state.timeLimit;
+      const selected = Number.parseInt(activeBtn.dataset.time, 10);
+      return Number.isNaN(selected) ? state.timeLimit : selected;
+    }
+
     function startGame() {
+      state.timeLimit = getSelectedTimeLimit();
       state.queue = buildQueue();
       state.phraseIndex = 0;
       state.correct = 0;
@@ -789,6 +797,18 @@
       else rank = 'D';
 
       document.getElementById('res-rank').textContent = rank;
+
+      if (window.parent !== window) {
+        window.parent.postMessage({
+          type: 'MINI_GAME_RESULT',
+          payload: {
+            gameType: 'typing',
+            rank: rank,
+            timeLimit: state.timeLimit,
+          }
+        }, '*');
+      }
+
       showScreen('screen-result');
     }
 
