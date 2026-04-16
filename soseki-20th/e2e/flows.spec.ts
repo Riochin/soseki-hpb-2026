@@ -153,10 +153,10 @@ test.describe('初回訪問フロー', () => {
     await page.reload();
 
     // 名前入力モーダルが表示されること
-    await expect(page.getByPlaceholder('例: 漱石ファン')).toBeVisible({ timeout: 3000 });
+    await expect(page.getByPlaceholder('例: アクメ漱石ッズ')).toBeVisible({ timeout: 3000 });
 
     // 名前を入力して送信
-    await page.getByPlaceholder('例: 漱石ファン').fill('テスト太郎');
+    await page.getByPlaceholder('例: アクメ漱石ッズ').fill('テスト太郎');
     await page.getByRole('button', { name: '決定' }).click();
 
     // メインコンテンツ（ヒーローセクション）が表示されること

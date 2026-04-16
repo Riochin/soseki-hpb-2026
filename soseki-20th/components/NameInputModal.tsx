@@ -116,7 +116,7 @@ export default function NameInputModal({ onInit }: Props) {
             value={name}
             onChange={(e) => setName(e.target.value)}
             maxLength={50}
-            placeholder="例: 漱石ファン"
+            placeholder="例: アクメ漱石ッズ"
             className="mb-3 w-full border-b-2 border-zinc-600 bg-transparent px-2 py-2 text-white placeholder-zinc-500 focus:border-yellow-400 focus:outline-none"
           />
           {error && (

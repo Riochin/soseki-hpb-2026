@@ -65,13 +65,13 @@ describe('MessageSection', () => {
       screen.getByLabelText(/名前|お名前/);
     const textInput = screen.getByRole('textbox', { name: /本文|メッセージ/ });
 
-    fireEvent.change(authorInput, { target: { value: '漱石ファン' } });
+    fireEvent.change(authorInput, { target: { value: 'アクメ漱石ッズ' } });
     fireEvent.change(textInput, { target: { value: 'すごい！' } });
     fireEvent.click(screen.getByRole('button', { name: /送信/ }));
 
     await waitFor(() => {
       expect(mockPostMessage).toHaveBeenCalledWith({
-        author: '漱石ファン',
+        author: 'アクメ漱石ッズ',
         text: 'すごい！',
       });
     });
