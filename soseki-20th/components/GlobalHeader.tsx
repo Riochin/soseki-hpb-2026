@@ -11,11 +11,11 @@ interface Props {
 export default function GlobalHeader({ coins, debt, visible }: Props) {
   const tickerContent = (
     <span className="inline-flex items-center gap-2 whitespace-nowrap">
-      <Star className="inline h-3 w-3" /> HAPPY 20th BIRTHDAY AKUME SOSEKI <Star className="inline h-3 w-3" />{' '}
+      <Star className="inline h-3 w-3" /> HAPPY 20th BIRTHDAY ACME SOSEKI <Star className="inline h-3 w-3" />{' '}
       <AlertTriangle className="inline h-3 w-3" /> 警告: このサイトは漱石への愛に満ちています <AlertTriangle className="inline h-3 w-3" />{' '}
       <Star className="inline h-3 w-3" /> 2026年4月23日、伝説の誕生日 <Star className="inline h-3 w-3" />{' '}
       <AlertTriangle className="inline h-3 w-3" /> 課金注意: ガチャには依存性があります <AlertTriangle className="inline h-3 w-3" />{' '}
-      <Star className="inline h-3 w-3" /> HAPPY 20th BIRTHDAY AKUME SOSEKI <Star className="inline h-3 w-3" />
+      <Star className="inline h-3 w-3" /> HAPPY 20th BIRTHDAY ACME SOSEKI <Star className="inline h-3 w-3" />
     </span>
   );
 
