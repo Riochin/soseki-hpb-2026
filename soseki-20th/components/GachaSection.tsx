@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { X } from 'lucide-react';
-import { usePlayer, CollectionItem } from '@/hooks/usePlayer';
+import { usePlayer, CollectionItem, GachaResult } from '@/hooks/usePlayer';
 
 const RARITY_COLOR: Record<string, string> = {
   UR: 'text-yellow-300 border-yellow-300',
@@ -13,6 +13,59 @@ const RARITY_COLOR: Record<string, string> = {
 
 interface Props {
   playerName: string;
+}
+
+const RARITY_LABEL: Record<string, string> = {
+  UR: 'ULTRA RARE',
+  SSR: 'SUPER RARE',
+  R: 'RARE',
+  N: 'NORMAL',
+};
+
+function GachaResultModal({ result, onClose }: { result: GachaResult; onClose: () => void }) {
+  const { item, isNew, newCoins } = result;
+  const colorClass = RARITY_COLOR[item.rarity] ?? 'text-gray-400 border-gray-500';
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <div
+        className="relative w-full max-w-xs border-2 border-yellow-400/20 bg-[#0c0a08] p-8 text-center"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* NEW バッジ */}
+        {isNew && (
+          <p className="mb-4 font-mono text-xs tracking-widest text-yellow-400 animate-pulse">
+            ✦ NEW ITEM ✦
+          </p>
+        )}
+
+        {/* アイコン */}
+        <div className="mb-4 text-7xl">{item.icon}</div>
+
+        {/* レアリティ */}
+        <span className={`border px-3 py-1 text-xs font-bold tracking-widest ${colorClass}`}>
+          {item.rarity} — {RARITY_LABEL[item.rarity]}
+        </span>
+
+        {/* アイテム名 */}
+        <p className="mt-4 text-lg font-bold text-white">{item.name}</p>
+
+        {/* 残コイン */}
+        <p className="mt-2 font-mono text-xs text-gray-500">残コイン: {newCoins}C</p>
+
+        {/* 閉じるボタン */}
+        <button
+          onClick={onClose}
+          className="mt-6 w-full border-2 border-yellow-400/20 py-2 font-bold text-yellow-400 transition-colors hover:border-yellow-400/60 hover:bg-yellow-400/5"
+        >
+          閉じる
+        </button>
+      </div>
+    </div>
+  );
 }
 
 function CollectionModal({ collection, onClose }: { collection: CollectionItem[]; onClose: () => void }) {
@@ -71,21 +124,23 @@ function CollectionModal({ collection, onClose }: { collection: CollectionItem[]
 export default function GachaSection({ playerName }: Props) {
   const { player, spinGacha, borrowCoins } = usePlayer(playerName);
   const [spinning, setSpinning] = useState(false);
+  const [gachaResult, setGachaResult] = useState<GachaResult | null>(null);
   const [message, setMessage] = useState('');
   const [borrowing, setBorrowing] = useState(false);
+  const [showBorrow, setShowBorrow] = useState(false);
   const [showCollection, setShowCollection] = useState(false);
 
   async function handleGacha() {
     if (spinning) return;
     if (player && player.coins < 100) {
-      setMessage('コインが不足しています。借金ボタンで補充できます。');
+      setShowBorrow(true);
       return;
     }
     setSpinning(true);
     setMessage('');
     try {
       const res = await spinGacha();
-      setMessage(res.isNew ? `NEW！ ${res.item.name} を獲得！` : `${res.item.name}（入手済み）`);
+      setGachaResult(res);
     } catch (err) {
       setMessage(`エラー: ${err instanceof Error ? err.message : '失敗しました'}`);
     } finally {
@@ -98,6 +153,7 @@ export default function GachaSection({ playerName }: Props) {
     setMessage('');
     try {
       await borrowCoins();
+      setShowBorrow(false);
       setMessage('100C 借りました（借金 +100C）');
     } catch (err) {
       setMessage(`エラー: ${err instanceof Error ? err.message : '失敗しました'}`);
@@ -128,13 +184,15 @@ export default function GachaSection({ playerName }: Props) {
             {spinning ? 'ガチャ中...' : '1回まわす (100C)'}
           </button>
 
-          <button
-            onClick={handleBorrow}
-            disabled={borrowing}
-            className="border-2 border-red-500 px-6 py-3 font-bold text-red-400 transition-colors hover:bg-red-500/10 disabled:opacity-50"
-          >
-            {borrowing ? '処理中...' : '借金する (+100C)'}
-          </button>
+          {showBorrow && (
+            <button
+              onClick={handleBorrow}
+              disabled={borrowing}
+              className="border-2 border-red-500 px-6 py-3 font-bold text-red-400 transition-colors hover:bg-red-500/10 disabled:opacity-50"
+            >
+              {borrowing ? '処理中...' : '借金する (+100C)'}
+            </button>
+          )}
 
           <button
             onClick={() => setShowCollection(true)}
@@ -156,6 +214,10 @@ export default function GachaSection({ playerName }: Props) {
           </p>
         )}
       </section>
+
+      {gachaResult && (
+        <GachaResultModal result={gachaResult} onClose={() => setGachaResult(null)} />
+      )}
 
       {showCollection && collection.length > 0 && (
         <CollectionModal collection={collection} onClose={() => setShowCollection(false)} />
