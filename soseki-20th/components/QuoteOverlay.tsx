@@ -37,7 +37,7 @@ const quotes = [
   { text: "easy", author: "FORK", source: "NGC 2024" },
   { text: "まぁ、余裕ッスね", author: "FORK", source: "NGC 2023" },
   { text: "じゃ、また", author: "アクメ漱石" },
-  { text: "『『まぁ、余裕ッスね』』", author: "FORK & かたはば" },
+  { text: "「まぁ、余裕ッスね」", author: "FORK & かたはば" },
   { text: "俺⁉️⁉️⁉️⁉️⁉️⁉️⁉️", author: "アクメ漱石" },
   { text: "おけーーーーい‼️‼️‼️", author: "アクメ漱石" },
   { text: "上手ーーーーい‼️‼️‼️", author: "アクメ漱石" },
@@ -47,21 +47,39 @@ const quotes = [
 // 見切れにくい小さめの角度バリエーション
 const ANGLES = [-10, -7, -5, -3, 0, 3, 5, 8, -12, 10]
 
-const VISIBLE_MS = 4500   // 表示継続時間
-const FADE_MS    = 1000   // フェード時間
-const SPAWN_MS   = 2000   // 次の名言を出すまでの間隔
-const MAX_ITEMS  = 3      // 同時表示最大数
+// 出現ゾーン：中央コンテンツエリアを避けた4ゾーン
+const ZONES = [
+  { topMin: 4,  topMax: 26, leftMin: 4,  leftMax: 90 },  // 上部ストリップ（全幅）
+  { topMin: 68, topMax: 90, leftMin: 4,  leftMax: 90 },  // 下部ストリップ（全幅）
+  { topMin: 22, topMax: 72, leftMin: 2,  leftMax: 20 },  // 左カラム
+  { topMin: 22, topMax: 72, leftMin: 78, leftMax: 96 },  // 右カラム
+]
+
+// 文字数に応じたフォントサイズ（短いほど大きく）
+function getQuoteFontSize(text: string): string {
+  const len = [...text].length  // 絵文字も1文字としてカウント
+  if (len <= 8)  return 'clamp(1.5rem, 3.2vw, 3rem)'
+  if (len <= 20) return 'clamp(1rem, 2vw, 1.8rem)'
+  return 'clamp(0.7rem, 1.3vw, 1.1rem)'
+}
+
+const VISIBLE_MS  = 5500  // 表示継続時間
+const FADE_IN_MS  = 1400  // フェードイン時間
+const FADE_OUT_MS = 1800  // フェードアウト時間
+const SPAWN_MS    = 1600  // 次の名言を出すまでの間隔
+const MAX_ITEMS   = 5     // 同時表示最大数
 
 let uid = 0
+
+type Phase = 'in' | 'show' | 'out'
 
 type Item = {
   id: number
   quoteIndex: number
   angle: number
-  top: number    // % — 上端からの位置
-  side: 'left' | 'right'
-  offset: number // % — 各端からの距離
-  visible: boolean
+  top: number   // % — 上端からの位置
+  left: number  // % — 左端からの位置
+  phase: Phase
 }
 
 export default function QuoteOverlay() {
@@ -72,36 +90,34 @@ export default function QuoteOverlay() {
       const id = uid++
       const quoteIndex = Math.floor(Math.random() * quotes.length)
       const angle = ANGLES[Math.floor(Math.random() * ANGLES.length)]
+      const zone = ZONES[Math.floor(Math.random() * ZONES.length)]
+      const top  = zone.topMin  + Math.random() * (zone.topMax  - zone.topMin)
+      const left = zone.leftMin + Math.random() * (zone.leftMax - zone.leftMin)
 
-      // 左右どちらかにランダム配置
-      const top    = 15 + Math.random() * 50
-      const side   = Math.random() < 0.5 ? 'left' : 'right'
-      const offset = 2 + Math.random() * 10   // 端から 2〜12%
+      const item: Item = { id, quoteIndex, angle, top, left, phase: 'in' }
 
-      const item: Item = { id, quoteIndex, angle, top, side, offset, visible: false }
-
-      // まず opacity:0 で追加し、次フレームで opacity:1 にしてフェードイン
+      // まず scale(0.6) opacity:0 で追加し、次フレームで show へ遷移
       setItems(prev => {
         const next = prev.length >= MAX_ITEMS ? prev.slice(1) : prev
         return [...next, item]
       })
 
-      // フェードイン（次フレームで visible:true）
+      // フェードイン（scale up + opacity 1）
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
-          setItems(prev => prev.map(q => q.id === id ? { ...q, visible: true } : q))
+          setItems(prev => prev.map(q => q.id === id ? { ...q, phase: 'show' } : q))
         })
       })
 
-      // フェードアウト開始
+      // フェードアウト開始（scale up + opacity 0）
       setTimeout(() => {
-        setItems(prev => prev.map(q => q.id === id ? { ...q, visible: false } : q))
+        setItems(prev => prev.map(q => q.id === id ? { ...q, phase: 'out' } : q))
       }, VISIBLE_MS)
 
       // 削除
       setTimeout(() => {
         setItems(prev => prev.filter(q => q.id !== id))
-      }, VISIBLE_MS + FADE_MS)
+      }, VISIBLE_MS + FADE_OUT_MS)
     }
 
     spawn()
@@ -116,19 +132,26 @@ export default function QuoteOverlay() {
     >
       {items.map(item => {
         const q = quotes[item.quoteIndex]
+
+        const scale = item.phase === 'in' ? 0.6 : item.phase === 'out' ? 2.2 : 1
+        const opacity = item.phase === 'show' ? 1 : 0
+        const transition = item.phase === 'out'
+          ? `opacity ${FADE_OUT_MS}ms ease, transform ${FADE_OUT_MS}ms ease`
+          : `opacity ${FADE_IN_MS}ms ease, transform ${FADE_IN_MS}ms ease`
+
         return (
           <div
             key={item.id}
             style={{
               position: 'absolute',
               top: `${item.top}%`,
-              left:  item.side === 'left'  ? `${item.offset}%` : undefined,
-              right: item.side === 'right' ? `${item.offset}%` : undefined,
-              transform: `rotate(${item.angle}deg)`,
+              left: `${item.left}%`,
+              transform: `rotate(${item.angle}deg) scale(${scale})`,
+              transformOrigin: 'center center',
               writingMode: 'vertical-rl',
               fontFamily: 'var(--font-noto-serif-jp), "Noto Serif JP", serif',
-              opacity: item.visible ? 1 : 0,
-              transition: `opacity ${FADE_MS}ms ease`,
+              opacity,
+              transition,
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'flex-end',
@@ -137,7 +160,7 @@ export default function QuoteOverlay() {
           >
             <p
               className="font-bold tracking-widest text-yellow-100/75 drop-shadow-lg"
-              style={{ fontSize: 'clamp(0.85rem, 1.5vw, 1.3rem)' }}
+              style={{ fontSize: getQuoteFontSize(q.text), whiteSpace: 'nowrap' }}
             >
               「{q.text}」
             </p>
