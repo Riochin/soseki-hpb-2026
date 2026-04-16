@@ -25,6 +25,7 @@ export function useMessages(): UseMessagesResult {
   const { data, error, isLoading, mutate } = useSWR<Message[]>(
     IS_UI_MOCK ? null : '/api/messages',
     fetcher,
+    { fallbackData: [] },
   );
 
   async function postMessage(input: PostMessageInput): Promise<void> {
