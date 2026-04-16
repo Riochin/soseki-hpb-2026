@@ -4,31 +4,28 @@ import MiniGameSection from '../MiniGameSection';
 
 describe('MiniGameSection', () => {
   it('「漱石タイピング」のゲームカードタイトルが表示される', () => {
-    render(<MiniGameSection />);
+    render(<MiniGameSection playerName={null} />);
     expect(screen.getByText(/漱石タイピング/)).toBeInTheDocument();
   });
 
-  it('+100 Coins バッジが表示される', () => {
-    render(<MiniGameSection />);
-    expect(screen.getByText(/\+100.*Coins?|Coins?.*\+100/i)).toBeInTheDocument();
+  it('+1 Credit バッジが表示される', () => {
+    render(<MiniGameSection playerName={null} />);
+    expect(screen.getByText(/\+1.*Credit|Credit.*\+1/i)).toBeInTheDocument();
   });
 
-  it('PLAY NOW リンクが games/typing-game.html を指す', () => {
-    render(<MiniGameSection />);
-    const link = screen.getByRole('link', { name: /play now/i });
-    expect(link).toBeInTheDocument();
-    expect(link).toHaveAttribute('href', expect.stringContaining('typing-game.html'));
+  it('PLAY NOW ボタンが表示される', () => {
+    render(<MiniGameSection playerName={null} />);
+    expect(screen.getByRole('button', { name: /play now/i })).toBeInTheDocument();
   });
 
-  it('PLAY NOW リンクが target="_blank" で開く', () => {
-    render(<MiniGameSection />);
-    const link = screen.getByRole('link', { name: /play now/i });
-    expect(link).toHaveAttribute('target', '_blank');
+  it('PLAY NOW ボタンをクリックできる', () => {
+    render(<MiniGameSection playerName={null} />);
+    const button = screen.getByRole('button', { name: /play now/i });
+    expect(button).toBeEnabled();
   });
 
-  it('rel="noopener noreferrer" が設定されている', () => {
-    render(<MiniGameSection />);
-    const link = screen.getByRole('link', { name: /play now/i });
-    expect(link).toHaveAttribute('rel', expect.stringContaining('noopener'));
+  it('ゲームモーダルが閉じた状態で初期表示される', () => {
+    render(<MiniGameSection playerName={null} />);
+    expect(screen.queryByTitle('漱石タイピング')).not.toBeInTheDocument();
   });
 });

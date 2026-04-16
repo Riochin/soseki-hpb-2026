@@ -12,9 +12,11 @@ const mockCollection = [
   { itemId: 4, name: '謎の領収書', rarity: 'R' as const, icon: '🧾', acquired: false },
 ];
 
+let mockPlayer = { name: 'テスト', coins: 200, debt: 0, collection: mockCollection };
+
 vi.mock('@/hooks/usePlayer', () => ({
   usePlayer: () => ({
-    player: { name: 'テスト', coins: 200, debt: 0, collection: mockCollection },
+    player: mockPlayer,
     isLoading: false,
     error: null,
     spinGacha: mockSpinGacha,
@@ -25,30 +27,30 @@ vi.mock('@/hooks/usePlayer', () => ({
 describe('GachaSection', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockPlayer = { name: 'テスト', coins: 200, debt: 0, collection: mockCollection };
   });
 
-  it('ガチャボタン（100C）が表示される', () => {
+  it('ガチャボタン（1クレ）が表示される', () => {
     render(<GachaSection playerName="テスト" />);
     expect(screen.getByRole('button', { name: /まわす|ガチャ/i })).toBeInTheDocument();
   });
 
-  it('借金ボタンが表示される', () => {
+  it('初期状態では借金ボタンは表示されない', () => {
     render(<GachaSection playerName="テスト" />);
-    expect(screen.getByRole('button', { name: /借金|borrow/i })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /借金|borrow/i })).not.toBeInTheDocument();
   });
 
-  it('コレクションアイテムが 2 列グリッドで表示される', () => {
-    const { container } = render(<GachaSection playerName="テスト" />);
-    const grid = container.querySelector('[class*="grid"]');
-    expect(grid).not.toBeNull();
+  it('コレクションを見るクリックでコレクションモーダルが表示される', () => {
+    render(<GachaSection playerName="テスト" />);
+    fireEvent.click(screen.getByRole('button', { name: /コレクションを見る/ }));
     expect(screen.getByText('伝説のメガネ')).toBeInTheDocument();
   });
 
-  it('未入手アイテムはグレースケールで表示される', () => {
+  it('コレクションモーダルで未入手アイテムの ??? が表示される', () => {
     const { container } = render(<GachaSection playerName="テスト" />);
-    // acquired:false のアイテムのコンテナに grayscale クラスがある
-    const grayscaleItems = container.querySelectorAll('[class*="grayscale"]');
-    expect(grayscaleItems.length).toBeGreaterThan(0);
+    fireEvent.click(screen.getByRole('button', { name: /コレクションを見る/ }));
+    const unknownItems = container.querySelectorAll('p');
+    expect(Array.from(unknownItems).some((el) => el.textContent === '???')).toBe(true);
   });
 
   it('ガチャボタンをクリックすると spinGacha が呼ばれる', async () => {
@@ -66,10 +68,12 @@ describe('GachaSection', () => {
     });
   });
 
-  it('借金ボタンをクリックすると borrowCoins が呼ばれる', async () => {
+  it('コイン不足時に借金ボタンを押すと borrowCoins が呼ばれる', async () => {
     mockBorrowCoins.mockResolvedValueOnce(undefined);
+    mockPlayer = { name: 'テスト', coins: 0, debt: 0, collection: mockCollection };
     render(<GachaSection playerName="テスト" />);
 
+    fireEvent.click(screen.getByRole('button', { name: /まわす|ガチャ/i }));
     fireEvent.click(screen.getByRole('button', { name: /借金|borrow/i }));
 
     await waitFor(() => {

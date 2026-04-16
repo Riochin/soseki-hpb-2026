@@ -253,9 +253,9 @@ test.describe('ガチャフロー', () => {
     await expect(page.getByText('HAPPY 20th', { exact: true })).toBeVisible({ timeout: 5000 });
   });
 
-  test('ヘッダーにコイン残高が表示される', async ({ page }) => {
-    // GlobalHeader にコイン残高（100C）が表示されること
-    await expect(page.locator('header').getByText('100', { exact: true })).toBeVisible({ timeout: 3000 });
+  test('ヘッダーにクレ残高が表示される', async ({ page }) => {
+    // GlobalHeader にクレ残高（1クレ）が表示されること
+    await expect(page.locator('header').getByText('1', { exact: true })).toBeVisible({ timeout: 3000 });
   });
 
   test('「1回まわす」ボタンをクリックするとガチャ演出が実行される', async ({ page }) => {
@@ -287,8 +287,8 @@ test.describe('ガチャフロー', () => {
     await expect(page.getByText('伝説のメガネ')).toBeVisible({ timeout: 5000 });
   });
 
-  test('コイン不足時にメッセージが表示される', async ({ page }) => {
-    // コイン0のプレイヤーでモック
+  test('Credit不足時にメッセージが表示される', async ({ page }) => {
+    // Credit 0 のプレイヤーでモック
     const brokePlayer = { ...MOCK_PLAYER, coins: 0 };
     await page.route(`http://localhost:8080/api/players`, async (route) => {
       await route.fulfill({ status: 201, contentType: 'application/json', body: JSON.stringify(brokePlayer) });

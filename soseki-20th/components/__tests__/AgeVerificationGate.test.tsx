@@ -32,12 +32,12 @@ describe('AgeVerificationGate', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /はい/i }));
 
-    // グリッチ中はまだ非表示
-    expect(screen.queryByText('メインコンテンツ')).not.toBeInTheDocument();
+    // 現実装では verified 直後に children は表示される
+    expect(screen.getByText('メインコンテンツ')).toBeInTheDocument();
 
-    // 0.8秒後に表示される
+    // イントロ終了後も表示され続ける
     await act(async () => {
-      vi.advanceTimersByTime(800);
+      vi.advanceTimersByTime(4000);
     });
 
     expect(screen.getByText('メインコンテンツ')).toBeInTheDocument();
@@ -53,7 +53,7 @@ describe('AgeVerificationGate', () => {
     fireEvent.click(screen.getByRole('button', { name: /はい/i }));
 
     await act(async () => {
-      vi.advanceTimersByTime(800);
+      vi.advanceTimersByTime(4000);
     });
 
     expect(sessionStorage.getItem('age_verified')).toBe('true');

@@ -35,20 +35,20 @@ describe('MessageSection', () => {
     expect(screen.getByText(/花子/)).toBeInTheDocument();
   });
 
-  it('「+ メッセージを書く」ボタンが一覧末尾にある', () => {
+  it('「追加する」ボタンが一覧末尾にある', () => {
     render(<MessageSection />);
-    expect(screen.getByText(/メッセージを書く/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /追加する/ })).toBeInTheDocument();
   });
 
-  it('「+ メッセージを書く」クリックで投稿フォームが表示される', () => {
+  it('「追加する」クリックで投稿フォームが表示される', () => {
     render(<MessageSection />);
-    fireEvent.click(screen.getByText(/メッセージを書く/));
+    fireEvent.click(screen.getByRole('button', { name: /追加する/ }));
     expect(screen.getByRole('textbox', { name: /本文|メッセージ/ })).toBeInTheDocument();
   });
 
   it('本文が空のまま送信するとバリデーションエラーを表示する', async () => {
     render(<MessageSection />);
-    fireEvent.click(screen.getByText(/メッセージを書く/));
+    fireEvent.click(screen.getByRole('button', { name: /追加する/ }));
     fireEvent.click(screen.getByRole('button', { name: /送信/ }));
     expect(await screen.findByText(/本文.*入力|メッセージ.*入力/)).toBeInTheDocument();
     expect(mockPostMessage).not.toHaveBeenCalled();
@@ -58,11 +58,9 @@ describe('MessageSection', () => {
     mockPostMessage.mockResolvedValueOnce(undefined);
     render(<MessageSection />);
 
-    fireEvent.click(screen.getByText(/メッセージを書く/));
+    fireEvent.click(screen.getByRole('button', { name: /追加する/ }));
 
     // 著者入力
-    const inputs = screen.getAllByRole('textbox');
-    // 著者フィールドと本文フィールドを探す
     const authorInput = screen.queryByPlaceholderText(/名前|お名前/) ??
       screen.getByLabelText(/名前|お名前/);
     const textInput = screen.getByRole('textbox', { name: /本文|メッセージ/ });
