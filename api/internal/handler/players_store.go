@@ -19,12 +19,12 @@ func NewDBPlayerStore(database *db.DB) *DBPlayerStore {
 	return &DBPlayerStore{db: database}
 }
 
-// UpsertPlayer は初回訪問時に players に INSERT（coins=100）し、
+// UpsertPlayer は初回訪問時に players に INSERT（coins=500）し、
 // 既存プレイヤーは SELECT で返す（ON CONFLICT DO NOTHING）。
 func (s *DBPlayerStore) UpsertPlayer(ctx context.Context, name string) (model.Player, error) {
 	// 存在しなければ挿入（既存行はそのまま）
 	_, err := s.db.Pool.Exec(ctx,
-		`INSERT INTO players (name, coins, debt) VALUES ($1, 100, 0) ON CONFLICT (name) DO NOTHING`,
+		`INSERT INTO players (name, coins, debt) VALUES ($1, 500, 0) ON CONFLICT (name) DO NOTHING`,
 		name,
 	)
 	if err != nil {

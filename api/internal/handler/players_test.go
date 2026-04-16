@@ -33,7 +33,7 @@ func (m *mockPlayerStore) UpsertPlayer(_ context.Context, name string) (model.Pl
 	}
 	return model.Player{
 		Name:       name,
-		Coins:      100,
+		Coins:      500,
 		Debt:       0,
 		Collection: []model.CollectionItem{},
 	}, nil
@@ -98,8 +98,8 @@ func TestPlayersCreate_ValidName_Returns201(t *testing.T) {
 	if p.Name != "漱石" {
 		t.Errorf("expected name '漱石', got %q", p.Name)
 	}
-	if p.Coins != 100 {
-		t.Errorf("expected coins 100, got %d", p.Coins)
+	if p.Coins != 500 {
+		t.Errorf("expected coins 500, got %d", p.Coins)
 	}
 }
 

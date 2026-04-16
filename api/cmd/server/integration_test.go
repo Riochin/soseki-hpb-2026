@@ -114,8 +114,8 @@ func TestIntegration_Messages_EmptyAuthor_Returns400(t *testing.T) {
 
 // --- プレイヤー upsert テスト ---
 
-// TestIntegration_Players_NewPlayer_Gets100Coins: 新規プレイヤーは coins=100 で作成されることを検証する
-func TestIntegration_Players_NewPlayer_Gets100Coins(t *testing.T) {
+// TestIntegration_Players_NewPlayer_Gets500Coins: 新規プレイヤーは coins=500 で作成されることを検証する
+func TestIntegration_Players_NewPlayer_Gets500Coins(t *testing.T) {
 	database := integrationDB(t)
 	cleanTables(t, database)
 	r := buildRouter("*", database)
@@ -137,8 +137,8 @@ func TestIntegration_Players_NewPlayer_Gets100Coins(t *testing.T) {
 	if player.Name != "漱石テスト" {
 		t.Errorf("name: expected '漱石テスト', got %q", player.Name)
 	}
-	if player.Coins != 100 {
-		t.Errorf("coins: expected 100, got %d", player.Coins)
+	if player.Coins != 500 {
+		t.Errorf("coins: expected 500, got %d", player.Coins)
 	}
 	if player.Debt != 0 {
 		t.Errorf("debt: expected 0, got %d", player.Debt)
@@ -196,7 +196,7 @@ func TestIntegration_Gacha_CoinsDecreasedAndCollectionUpdated(t *testing.T) {
 	cleanTables(t, database)
 	r := buildRouter("*", database)
 
-	// プレイヤー作成（coins=100）
+	// プレイヤー作成（coins=500）
 	playerBody := `{"name":"ガチャテスト"}`
 	req1 := httptest.NewRequest(http.MethodPost, "/api/players", bytes.NewBufferString(playerBody))
 	req1.Header.Set("Content-Type", "application/json")
@@ -231,9 +231,9 @@ func TestIntegration_Gacha_CoinsDecreasedAndCollectionUpdated(t *testing.T) {
 		t.Fatalf("gacha decode 失敗: %v", err)
 	}
 
-	// コイン消費の確認: 100 → 0
-	if result.NewCoins != 0 {
-		t.Errorf("newCoins: expected 0 (100-100), got %d", result.NewCoins)
+	// コイン消費の確認: 500 → 400
+	if result.NewCoins != 400 {
+		t.Errorf("newCoins: expected 400 (500-100), got %d", result.NewCoins)
 	}
 	if !result.IsNew {
 		// 初回ガチャなので必ず新規アイテム
@@ -254,8 +254,8 @@ func TestIntegration_Gacha_CoinsDecreasedAndCollectionUpdated(t *testing.T) {
 	}
 
 	// コインが正確に 100 減っていること
-	if player.Coins != 0 {
-		t.Errorf("player.Coins: expected 0, got %d", player.Coins)
+	if player.Coins != 400 {
+		t.Errorf("player.Coins: expected 400, got %d", player.Coins)
 	}
 
 	// 獲得したアイテムがコレクションに存在すること（アトミック性）
@@ -288,7 +288,7 @@ func TestIntegration_Gacha_InsufficientCoins_Returns402(t *testing.T) {
 	cleanTables(t, database)
 	r := buildRouter("*", database)
 
-	// プレイヤー作成（coins=100）→ ガチャ1回で 0 にする
+	// プレイヤー作成（coins=500）→ ガチャ5回で 0 にする
 	playerBody := `{"name":"貧乏テスト"}`
 	req1 := httptest.NewRequest(http.MethodPost, "/api/players", bytes.NewBufferString(playerBody))
 	req1.Header.Set("Content-Type", "application/json")
@@ -298,17 +298,19 @@ func TestIntegration_Gacha_InsufficientCoins_Returns402(t *testing.T) {
 		t.Fatalf("プレイヤー作成失敗: %d", w1.Code)
 	}
 
-	// 1回目ガチャ（coins 100→0）
+	// 1〜5回目ガチャ（coins 500→0）
 	gachaBody := `{"player_name":"貧乏テスト"}`
-	req2 := httptest.NewRequest(http.MethodPost, "/api/gacha", bytes.NewBufferString(gachaBody))
-	req2.Header.Set("Content-Type", "application/json")
-	w2 := httptest.NewRecorder()
-	r.ServeHTTP(w2, req2)
-	if w2.Code != http.StatusOK {
-		t.Fatalf("1回目ガチャ失敗: %d", w2.Code)
+	for i := 0; i < 5; i++ {
+		req := httptest.NewRequest(http.MethodPost, "/api/gacha", bytes.NewBufferString(gachaBody))
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, req)
+		if w.Code != http.StatusOK {
+			t.Fatalf("%d回目ガチャ失敗: %d", i+1, w.Code)
+		}
 	}
 
-	// 2回目ガチャ（coins=0 → 402 が返るはず）
+	// 6回目ガチャ（coins=0 → 402 が返るはず）
 	req3 := httptest.NewRequest(http.MethodPost, "/api/gacha", bytes.NewBufferString(gachaBody))
 	req3.Header.Set("Content-Type", "application/json")
 	w3 := httptest.NewRecorder()
