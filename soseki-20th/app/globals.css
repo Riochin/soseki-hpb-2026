@@ -21,27 +21,19 @@ body {
   overflow-x: hidden;
 }
 
-/* イントロ演出: 画像・テキストフェードイン (0-500ms) */
-@keyframes intro-image {
-  0%   { opacity: 0; transform: scale(0.92); }
-  14%  { opacity: 1; transform: scale(1); }
-  100% { opacity: 1; transform: scale(1); }
+/* イントロ演出: 「20」SVGマスク彫り込み (scale 0→1, SVG要素用) */
+@keyframes twenty-carve {
+  0%   { transform: scale(0); }
+  45%  { transform: scale(0.1); }   /* 溜め: ゆっくり始動 */
+  75%  { transform: scale(1.12); }  /* 一気に開いてオーバーシュート */
+  88%  { transform: scale(0.96); }  /* 跳ね返り */
+  100% { transform: scale(1); }     /* 落ち着く */
 }
 
-/* イントロ演出: オーバーレイ全体フェードアウト
-   0-500ms フェードイン, 500-2000ms 表示(1.5秒), 2000-4000ms フェードアウト(2秒) */
-@keyframes intro-overlay {
-  0%   { opacity: 1; }
-  50%  { opacity: 1; }
-  100% { opacity: 0; }
-}
-
-.animate-intro-image {
-  animation: intro-image 4s ease-out forwards;
-}
-
-.animate-intro-overlay {
-  animation: intro-overlay 4s ease-in-out forwards;
+.twenty-carve {
+  animation: twenty-carve 900ms ease-out forwards;
+  transform-box: fill-box;
+  transform-origin: center;
 }
 
 /* グリッチアニメーション: 色反転＋位置ズレ */

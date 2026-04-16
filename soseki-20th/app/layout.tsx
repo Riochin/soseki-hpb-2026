@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Noto_Serif_JP, Yuji_Syuku } from "next/font/google";
+import { Geist, Geist_Mono, Noto_Serif_JP, Yuji_Syuku, Reggae_One } from "next/font/google";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -24,20 +24,26 @@ const yujiSyuku = Yuji_Syuku({
   weight: ["400"],
 });
 
+const reggaeOne = Reggae_One({
+  variable: "--font-reggae-one",
+  subsets: ["latin"],
+  weight: ["400"],
+});
+
 export const metadata: Metadata = {
   title: "SOSEKI 20th | Happy Birthday!",
   description: "アクメ漱石 20歳誕生日記念ファンサイト",
   openGraph: {
     title: "SOSEKI 20th | Happy Birthday!",
     description: "アクメ漱石 20歳誕生日記念ファンサイト",
-    images: ["/ogp.png"],
+    images: ["https://soseki-20th.vercel.app/ogp.png?v=2"],
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
     title: "SOSEKI 20th | Happy Birthday!",
     description: "アクメ漱石 20歳誕生日記念ファンサイト",
-    images: ["/ogp.png"],
+    images: ["https://soseki-20th.vercel.app/ogp.png?v=2"],
   },
 };
 
@@ -49,7 +55,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} ${notoSerifJP.variable} ${yujiSyuku.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${notoSerifJP.variable} ${yujiSyuku.variable} ${reggaeOne.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">{children}</body>
     </html>
