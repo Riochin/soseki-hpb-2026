@@ -27,6 +27,18 @@ const yujiSyuku = Yuji_Syuku({
 export const metadata: Metadata = {
   title: "SOSEKI 20th | Happy Birthday!",
   description: "アクメ漱石 20歳誕生日記念ファンサイト",
+  openGraph: {
+    title: "SOSEKI 20th | Happy Birthday!",
+    description: "アクメ漱石 20歳誕生日記念ファンサイト",
+    images: ["/ogp.png"],
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "SOSEKI 20th | Happy Birthday!",
+    description: "アクメ漱石 20歳誕生日記念ファンサイト",
+    images: ["/ogp.png"],
+  },
 };
 
 export default function RootLayout({
