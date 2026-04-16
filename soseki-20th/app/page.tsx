@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import AgeVerificationGate from '@/components/AgeVerificationGate';
 import NameInputModal, { Player } from '@/components/NameInputModal';
 import GlobalHeader from '@/components/GlobalHeader';
@@ -29,9 +29,9 @@ export default function Home() {
     return () => observer.disconnect();
   }, [playerName]);
 
-  function handleInit(p: Player) {
+  const handleInit = useCallback((p: Player) => {
     setPlayerName(p.name);
-  }
+  }, []);
 
   return (
     <div className="min-h-screen text-white">
