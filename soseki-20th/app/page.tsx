@@ -46,7 +46,7 @@ export default function Home() {
               </div>
               <VideoSection />
               <MessageSection />
-              <MiniGameSection />
+              <MiniGameSection playerName={playerName} />
               <GachaSection playerName={playerName} />
             </main>
             <FooterCounter />

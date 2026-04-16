@@ -1,6 +1,11 @@
 import useSWR from 'swr';
 import { fetcher, apiFetch } from '@/lib/api';
-import { IS_UI_MOCK, MOCK_PLAYER, MOCK_GACHA_RESULT } from '@/lib/mock';
+import {
+  IS_UI_MOCK,
+  MOCK_PLAYER,
+  MOCK_GACHA_RESULT,
+  MOCK_EARN_COINS_RESULT,
+} from '@/lib/mock';
 
 export interface CollectionItem {
   itemId: number;
@@ -23,12 +28,22 @@ export interface GachaResult {
   newCoins: number;
 }
 
+export interface EarnCoinsResult {
+  coinsEarned: number;
+  newCoins: number;
+}
+
 export interface UsePlayerResult {
   player: Player | null;
   isLoading: boolean;
   error: Error | null;
   spinGacha(): Promise<GachaResult>;
   borrowCoins(): Promise<void>;
+  earnCoins(
+    gameType: string,
+    payload: Record<string, unknown>,
+    sessionId: string,
+  ): Promise<EarnCoinsResult>;
 }
 
 export function usePlayer(name: string | null): UsePlayerResult {
@@ -63,11 +78,32 @@ export function usePlayer(name: string | null): UsePlayerResult {
     await mutate();
   }
 
+  async function earnCoins(
+    gameType: string,
+    payload: Record<string, unknown>,
+    sessionId: string,
+  ): Promise<EarnCoinsResult> {
+    if (IS_UI_MOCK) return MOCK_EARN_COINS_RESULT;
+    if (!name) throw new Error('プレイヤー名が未設定です');
+
+    const result = await apiFetch<EarnCoinsResult>(
+      `/api/players/${encodeURIComponent(name)}/game-reward`,
+      {
+        method: 'POST',
+        body: JSON.stringify({ gameType, ...payload, sessionId }),
+      },
+    );
+
+    await mutate();
+    return result;
+  }
+
   return {
     player: IS_UI_MOCK ? MOCK_PLAYER : (data ?? null),
     isLoading: IS_UI_MOCK ? false : isLoading,
     error: IS_UI_MOCK ? null : (error ?? null),
     spinGacha,
     borrowCoins,
+    earnCoins,
   };
 }

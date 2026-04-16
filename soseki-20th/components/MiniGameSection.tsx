@@ -4,7 +4,11 @@ import { useState } from 'react';
 import { Keyboard } from 'lucide-react';
 import GameModal from './GameModal';
 
-export default function MiniGameSection() {
+interface Props {
+  playerName: string | null;
+}
+
+export default function MiniGameSection({ playerName }: Props) {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
@@ -23,7 +27,7 @@ export default function MiniGameSection() {
             <div className="mb-3 flex items-start justify-between">
               <Keyboard className="h-8 w-8 text-yellow-400" />
               <span className="rounded-full bg-yellow-400/10 px-3 py-1 text-xs font-bold text-yellow-400 border border-yellow-400/30">
-                +100 Coins
+                +100 ~ 3000 Coins
               </span>
             </div>
 
@@ -47,6 +51,7 @@ export default function MiniGameSection() {
         onClose={() => setIsOpen(false)}
         title="漱石タイピング"
         gameUrl="/games/typing-game.html"
+        playerName={playerName}
       />
     </>
   );

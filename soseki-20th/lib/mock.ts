@@ -3,7 +3,12 @@
  * NEXT_PUBLIC_UI_MOCK=true のとき、バックエンド呼び出しの代わりに使用される
  */
 
-import type { Player, GachaResult, CollectionItem } from '@/hooks/usePlayer';
+import type {
+  Player,
+  GachaResult,
+  CollectionItem,
+  EarnCoinsResult,
+} from '@/hooks/usePlayer';
 import type { Message } from '@/hooks/useMessages';
 
 export const IS_UI_MOCK = process.env.NEXT_PUBLIC_UI_MOCK === 'true';
@@ -30,6 +35,11 @@ export const MOCK_GACHA_RESULT: GachaResult = {
   item: MOCK_COLLECTION[0],
   isNew: false,
   newCoins: 400,
+};
+
+export const MOCK_EARN_COINS_RESULT: EarnCoinsResult = {
+  coinsEarned: 30,
+  newCoins: 530,
 };
 
 export const MOCK_MESSAGES: Message[] = [
