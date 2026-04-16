@@ -4,6 +4,7 @@ import {
   IS_UI_MOCK,
   MOCK_PLAYER,
   MOCK_GACHA_RESULT,
+  MOCK_MULTI_GACHA_RESULT,
   MOCK_EARN_COINS_RESULT,
 } from '@/lib/mock';
 
@@ -28,6 +29,11 @@ export interface GachaResult {
   newCoins: number;
 }
 
+export interface MultiGachaResult {
+  results: GachaResult[];
+  newCoins: number;
+}
+
 export interface EarnCoinsResult {
   coinsEarned: number;
   newCoins: number;
@@ -38,6 +44,7 @@ export interface UsePlayerResult {
   isLoading: boolean;
   error: Error | null;
   spinGacha(): Promise<GachaResult>;
+  spinGachaMulti(): Promise<MultiGachaResult>;
   borrowCoins(): Promise<void>;
   earnCoins(
     gameType: string,
@@ -62,6 +69,19 @@ export function usePlayer(name: string | null): UsePlayerResult {
     });
 
     // プレイヤーデータを再取得して状態を更新
+    await mutate();
+    return result;
+  }
+
+  async function spinGachaMulti(): Promise<MultiGachaResult> {
+    if (IS_UI_MOCK) return MOCK_MULTI_GACHA_RESULT;
+    if (!name) throw new Error('プレイヤー名が未設定です');
+
+    const result = await apiFetch<MultiGachaResult>('/api/gacha/multi', {
+      method: 'POST',
+      body: JSON.stringify({ player_name: name }),
+    });
+
     await mutate();
     return result;
   }
@@ -103,6 +123,7 @@ export function usePlayer(name: string | null): UsePlayerResult {
     isLoading: IS_UI_MOCK ? false : isLoading,
     error: IS_UI_MOCK ? null : (error ?? null),
     spinGacha,
+    spinGachaMulti,
     borrowCoins,
     earnCoins,
   };

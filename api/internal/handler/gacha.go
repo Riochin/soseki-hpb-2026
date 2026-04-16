@@ -21,9 +21,16 @@ type GachaResult struct {
 	NewCoins int                  `json:"newCoins"`
 }
 
+// MultiGachaResult は10連ガチャ実行結果を表す。
+type MultiGachaResult struct {
+	Results  []GachaResult `json:"results"`
+	NewCoins int           `json:"newCoins"`
+}
+
 // GachaStore はガチャの永続化操作を定義するインターフェース。
 type GachaStore interface {
 	ExecuteGacha(ctx context.Context, playerName string) (GachaResult, error)
+	ExecuteMultiGacha(ctx context.Context, playerName string) (MultiGachaResult, error)
 }
 
 // Gacha は POST /api/gacha エンドポイントのハンドラーを保持する。
@@ -62,6 +69,41 @@ func (h *Gacha) Create(w http.ResponseWriter, r *http.Request) {
 	}
 	if err != nil {
 		log.Printf("gacha.Create: %v", err)
+		writeError(w, http.StatusInternalServerError, "internal server error")
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	_ = json.NewEncoder(w).Encode(result)
+}
+
+// CreateMulti は POST /api/gacha/multi を処理する。
+// player_name を受け取り、1000コイン消費・10回抽選・コレクション追加をトランザクションで実行する。
+func (h *Gacha) CreateMulti(w http.ResponseWriter, r *http.Request) {
+	var input struct {
+		PlayerName string `json:"player_name"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid JSON")
+		return
+	}
+	if input.PlayerName == "" {
+		writeError(w, http.StatusBadRequest, "player_name is required")
+		return
+	}
+
+	result, err := h.store.ExecuteMultiGacha(r.Context(), input.PlayerName)
+	if errors.Is(err, ErrInsufficientCoins) {
+		writeError(w, http.StatusPaymentRequired, "insufficient coins")
+		return
+	}
+	if errors.Is(err, ErrNotFound) {
+		writeError(w, http.StatusNotFound, "player not found")
+		return
+	}
+	if err != nil {
+		log.Printf("gacha.CreateMulti: %v", err)
 		writeError(w, http.StatusInternalServerError, "internal server error")
 		return
 	}

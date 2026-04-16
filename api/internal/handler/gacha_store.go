@@ -112,3 +112,102 @@ func (s *DBGachaStore) ExecuteGacha(ctx context.Context, playerName string) (Gac
 		NewCoins: newCoins,
 	}, nil
 }
+
+// ExecuteMultiGacha は1000コイン消費・10回抽選・コレクション追加をトランザクション内で実行する。
+// - coins < 1000 → ErrInsufficientCoins
+// - プレイヤー不在 → ErrNotFound
+func (s *DBGachaStore) ExecuteMultiGacha(ctx context.Context, playerName string) (MultiGachaResult, error) {
+	tx, err := s.db.Pool.Begin(ctx)
+	if err != nil {
+		return MultiGachaResult{}, err
+	}
+	defer tx.Rollback(ctx) //nolint:errcheck
+
+	// プレイヤーをロック付きで取得
+	var coins int
+	err = tx.QueryRow(ctx,
+		`SELECT coins FROM players WHERE name = $1 FOR UPDATE`,
+		playerName,
+	).Scan(&coins)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return MultiGachaResult{}, ErrNotFound
+	}
+	if err != nil {
+		return MultiGachaResult{}, err
+	}
+
+	if coins < 1000 {
+		return MultiGachaResult{}, ErrInsufficientCoins
+	}
+
+	// 1000コイン一括消費
+	var newCoins int
+	if err := tx.QueryRow(ctx,
+		`UPDATE players SET coins = coins - 1000 WHERE name = $1 RETURNING coins`,
+		playerName,
+	).Scan(&newCoins); err != nil {
+		return MultiGachaResult{}, err
+	}
+
+	// アイテム一覧取得（1回だけ）
+	rows, err := tx.Query(ctx,
+		`SELECT id, name, rarity, icon, weight FROM items WHERE weight > 0`,
+	)
+	if err != nil {
+		return MultiGachaResult{}, err
+	}
+	var items []model.Item
+	for rows.Next() {
+		var item model.Item
+		if err := rows.Scan(&item.ID, &item.Name, &item.Rarity, &item.Icon, &item.Weight); err != nil {
+			rows.Close()
+			return MultiGachaResult{}, err
+		}
+		items = append(items, item)
+	}
+	rows.Close()
+	if err := rows.Err(); err != nil {
+		return MultiGachaResult{}, err
+	}
+	if len(items) == 0 {
+		return MultiGachaResult{}, fmt.Errorf("no items available for gacha")
+	}
+
+	// rng を1つ生成して10回使い回す
+	rng := rand.New(rand.NewSource(time.Now().UnixNano()))
+
+	results := make([]GachaResult, 0, 10)
+	for i := 0; i < 10; i++ {
+		selected := SelectWeightedItem(items, rng)
+
+		tag, err := tx.Exec(ctx,
+			`INSERT INTO collections (player_name, item_id) VALUES ($1, $2) ON CONFLICT DO NOTHING`,
+			playerName, selected.ID,
+		)
+		if err != nil {
+			return MultiGachaResult{}, err
+		}
+		isNew := tag.RowsAffected() > 0
+
+		results = append(results, GachaResult{
+			Item: model.CollectionItem{
+				ItemID:   selected.ID,
+				Name:     selected.Name,
+				Rarity:   selected.Rarity,
+				Icon:     selected.Icon,
+				Acquired: true,
+			},
+			IsNew:    isNew,
+			NewCoins: newCoins,
+		})
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		return MultiGachaResult{}, err
+	}
+
+	return MultiGachaResult{
+		Results:  results,
+		NewCoins: newCoins,
+	}, nil
+}

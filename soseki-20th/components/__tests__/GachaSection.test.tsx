@@ -3,6 +3,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import GachaSection from '../GachaSection';
 
 const mockSpinGacha = vi.fn();
+const mockSpinGachaMulti = vi.fn();
 const mockBorrowCoins = vi.fn();
 
 const mockCollection = [
@@ -14,12 +15,19 @@ const mockCollection = [
 
 let mockPlayer = { name: 'テスト', coins: 200, debt: 0, collection: mockCollection };
 
+const mockMultiCollection = Array.from({ length: 10 }, (_, i) => ({
+  item: mockCollection[i % mockCollection.length],
+  isNew: i === 0,
+  newCoins: 0,
+}));
+
 vi.mock('@/hooks/usePlayer', () => ({
   usePlayer: () => ({
     player: mockPlayer,
     isLoading: false,
     error: null,
     spinGacha: mockSpinGacha,
+    spinGachaMulti: mockSpinGachaMulti,
     borrowCoins: mockBorrowCoins,
   }),
 }));
@@ -32,7 +40,7 @@ describe('GachaSection', () => {
 
   it('ガチャボタン（1クレ）が表示される', () => {
     render(<GachaSection playerName="テスト" />);
-    expect(screen.getByRole('button', { name: /まわす|ガチャ/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /1回まわす/i })).toBeInTheDocument();
   });
 
   it('初期状態では借金ボタンは表示されない', () => {
@@ -61,7 +69,7 @@ describe('GachaSection', () => {
     });
     render(<GachaSection playerName="テスト" />);
 
-    fireEvent.click(screen.getByRole('button', { name: /まわす|ガチャ/i }));
+    fireEvent.click(screen.getByRole('button', { name: /1回まわす/i }));
 
     await waitFor(() => {
       expect(mockSpinGacha).toHaveBeenCalledOnce();
@@ -73,11 +81,82 @@ describe('GachaSection', () => {
     mockPlayer = { name: 'テスト', coins: 0, debt: 0, collection: mockCollection };
     render(<GachaSection playerName="テスト" />);
 
-    fireEvent.click(screen.getByRole('button', { name: /まわす|ガチャ/i }));
+    fireEvent.click(screen.getByRole('button', { name: /1回まわす/i }));
     fireEvent.click(screen.getByRole('button', { name: /借金|borrow/i }));
 
     await waitFor(() => {
       expect(mockBorrowCoins).toHaveBeenCalledOnce();
     });
+  });
+
+  // --- 10連ガチャ ---
+
+  it('10連ガチャボタンが表示される', () => {
+    render(<GachaSection playerName="テスト" />);
+    expect(screen.getByRole('button', { name: /10回まわす/i })).toBeInTheDocument();
+  });
+
+  it('コインが1000未満のとき10連ボタンはdisabled', () => {
+    mockPlayer = { name: 'テスト', coins: 500, debt: 0, collection: mockCollection };
+    render(<GachaSection playerName="テスト" />);
+    expect(screen.getByRole('button', { name: /10回まわす/i })).toBeDisabled();
+  });
+
+  it('コインが1000以上のとき10連ボタンはenabled', () => {
+    mockPlayer = { name: 'テスト', coins: 1000, debt: 0, collection: mockCollection };
+    render(<GachaSection playerName="テスト" />);
+    expect(screen.getByRole('button', { name: /10回まわす/i })).not.toBeDisabled();
+  });
+
+  it('10連ボタンをクリックすると spinGachaMulti が呼ばれる', async () => {
+    mockPlayer = { name: 'テスト', coins: 1000, debt: 0, collection: mockCollection };
+    mockSpinGachaMulti.mockResolvedValueOnce({ results: mockMultiCollection, newCoins: 0 });
+    render(<GachaSection playerName="テスト" />);
+
+    fireEvent.click(screen.getByRole('button', { name: /10回まわす/i }));
+
+    await waitFor(() => {
+      expect(mockSpinGachaMulti).toHaveBeenCalledOnce();
+    });
+  });
+
+  it('10連ガチャ完了後にモーダルが表示される', async () => {
+    mockPlayer = { name: 'テスト', coins: 1000, debt: 0, collection: mockCollection };
+    mockSpinGachaMulti.mockResolvedValueOnce({ results: mockMultiCollection, newCoins: 0 });
+    render(<GachaSection playerName="テスト" />);
+
+    fireEvent.click(screen.getByRole('button', { name: /10回まわす/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText('— 10連ガチャ結果')).toBeInTheDocument();
+    });
+  });
+
+  it('10連モーダルでNEWバッジが新規アイテムに表示される', async () => {
+    mockPlayer = { name: 'テスト', coins: 1000, debt: 0, collection: mockCollection };
+    mockSpinGachaMulti.mockResolvedValueOnce({ results: mockMultiCollection, newCoins: 0 });
+    render(<GachaSection playerName="テスト" />);
+
+    fireEvent.click(screen.getByRole('button', { name: /10回まわす/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText('NEW')).toBeInTheDocument();
+    });
+  });
+
+  it('10連モーダルを閉じると非表示になる', async () => {
+    mockPlayer = { name: 'テスト', coins: 1000, debt: 0, collection: mockCollection };
+    mockSpinGachaMulti.mockResolvedValueOnce({ results: mockMultiCollection, newCoins: 0 });
+    render(<GachaSection playerName="テスト" />);
+
+    fireEvent.click(screen.getByRole('button', { name: /10回まわす/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText('— 10連ガチャ結果')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /閉じる/ }));
+
+    expect(screen.queryByText('— 10連ガチャ結果')).not.toBeInTheDocument();
   });
 });

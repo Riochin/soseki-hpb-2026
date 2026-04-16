@@ -6,6 +6,7 @@
 import type {
   Player,
   GachaResult,
+  MultiGachaResult,
   CollectionItem,
   EarnCoinsResult,
 } from '@/hooks/usePlayer';
@@ -26,7 +27,7 @@ export const MOCK_COLLECTION: CollectionItem[] = [
 
 export const MOCK_PLAYER: Player = {
   name: 'UIモックユーザー',
-  coins: 500,
+  coins: 1500,
   debt: 100,
   collection: MOCK_COLLECTION,
 };
@@ -35,6 +36,15 @@ export const MOCK_GACHA_RESULT: GachaResult = {
   item: MOCK_COLLECTION[0],
   isNew: false,
   newCoins: 400,
+};
+
+export const MOCK_MULTI_GACHA_RESULT: MultiGachaResult = {
+  results: Array.from({ length: 10 }, (_, i) => ({
+    item: MOCK_COLLECTION[i % MOCK_COLLECTION.length],
+    isNew: i === 0,
+    newCoins: 0,
+  })),
+  newCoins: 0,
 };
 
 export const MOCK_EARN_COINS_RESULT: EarnCoinsResult = {
