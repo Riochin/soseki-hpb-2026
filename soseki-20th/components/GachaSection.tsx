@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Dices, Lock } from 'lucide-react';
+import { Lock } from 'lucide-react';
 import { usePlayer, GachaResult, CollectionItem } from '@/hooks/usePlayer';
 
 const RARITY_COLOR: Record<string, string> = {
@@ -59,8 +59,11 @@ export default function GachaSection({ playerName }: Props) {
 
   return (
     <section className="px-4 py-12 md:px-8 lg:px-16">
-      <h2 className="mb-6 flex items-center gap-2 text-2xl font-bold text-yellow-400">
-        <Dices className="h-7 w-7" /> ガチャ＆コレクション
+      <p className="mb-4 font-mono text-xs tracking-widest text-yellow-400/60">
+        — GACHA &amp; COLLECTION
+      </p>
+      <h2 className="mb-8 text-xl font-black tracking-tight text-white md:text-3xl" style={{ fontFamily: "var(--font-noto-serif-jp), serif" }}>
+        ガチャ＆コレクション
       </h2>
 
       {/* ガチャ操作エリア */}

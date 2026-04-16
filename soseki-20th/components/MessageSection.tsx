@@ -1,7 +1,7 @@
 'use client';
 
 import { CSSProperties, useState, FormEvent, useEffect, useCallback, useRef } from 'react';
-import { Mail, ChevronLeft, ChevronRight, Plus } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';
 import { useMessages } from '@/hooks/useMessages';
 
 // SVGノイズで紙のグレイン感を再現（外部画像不要）
@@ -70,8 +70,11 @@ export default function MessageSection() {
 
   return (
     <section className="px-4 py-12 md:px-8 lg:px-16">
-      <h2 className="mb-6 flex items-center gap-2 text-2xl font-bold text-yellow-400">
-        <Mail className="h-7 w-7" /> みんなからのメッセージ
+      <p className="mb-4 font-mono text-xs tracking-widest text-yellow-400/60">
+        — MESSAGES
+      </p>
+      <h2 className="mb-8 text-xl font-black tracking-tight text-white md:text-3xl" style={{ fontFamily: "var(--font-noto-serif-jp), serif" }}>
+        みんなからのメッセージ
       </h2>
 
       {isLoading && <p className="text-gray-400">読み込み中...</p>}

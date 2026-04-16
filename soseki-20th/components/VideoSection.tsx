@@ -4,7 +4,7 @@ export default function VideoSection() {
       <p className="mb-4 font-mono text-xs tracking-widest text-yellow-400/60">
         — ANNIVERSARY FILM
       </p>
-      <h2 className="mb-8 text-2xl font-black tracking-tight text-white md:text-3xl">
+      <h2 className="mb-8 text-xl font-black tracking-tight text-white md:text-3xl" style={{ fontFamily: "var(--font-noto-serif-jp), serif" }}>
         誕生日記念動画
       </h2>
 

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Gamepad2, Keyboard } from 'lucide-react';
+import { Keyboard } from 'lucide-react';
 import GameModal from './GameModal';
 
 export default function MiniGameSection() {
@@ -10,8 +10,11 @@ export default function MiniGameSection() {
   return (
     <>
       <section className="px-4 py-12 md:px-8 lg:px-16">
-        <h2 className="mb-6 flex items-center gap-2 text-2xl font-bold text-yellow-400">
-          <Gamepad2 className="h-7 w-7" /> ミニゲーム
+        <p className="mb-4 font-mono text-xs tracking-widest text-yellow-400/60">
+          — MINI GAME
+        </p>
+        <h2 className="mb-8 text-xl font-black tracking-tight text-white md:text-3xl" style={{ fontFamily: "var(--font-noto-serif-jp), serif" }}>
+          ミニゲーム
         </h2>
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
