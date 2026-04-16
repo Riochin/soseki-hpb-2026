@@ -27,13 +27,13 @@ export default function MiniGameSection({ playerName }: Props) {
             <div className="mb-3 flex items-start justify-between">
               <Keyboard className="h-8 w-8 text-yellow-400" />
               <span className="rounded-full bg-yellow-400/10 px-3 py-1 text-xs font-bold text-yellow-400 border border-yellow-400/30">
-                +100 ~ 3000 Coins
+                +1 ~ 30 Credit
               </span>
             </div>
 
             <h3 className="mb-1 text-lg font-bold text-white">漱石タイピング</h3>
             <p className="mb-5 text-sm text-gray-400">
-              名言をタイピングしてコインをゲット！漱石の言葉をマスターしよう。
+              名言をタイピングしてCreditをゲット！漱石の言葉をマスターしよう。
             </p>
 
             <button

@@ -108,7 +108,7 @@ export default function NameInputModal({ onInit }: Props) {
           お名前を入力してください
         </h2>
         <p className="mb-6 text-center text-sm text-gray-400">
-          名前はコインやコレクションに紐付けられます
+          名前はCreditやコレクションに紐付けられます
         </p>
         <form onSubmit={handleSubmit} noValidate>
           <input

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { X } from 'lucide-react';
 import { usePlayer, CollectionItem, GachaResult } from '@/hooks/usePlayer';
+import { toCredit } from '@/lib/currency';
 
 const RARITY_COLOR: Record<string, string> = {
   UR: 'text-yellow-300 border-yellow-300',
@@ -53,8 +54,8 @@ function GachaResultModal({ result, onClose }: { result: GachaResult; onClose: (
         {/* アイテム名 */}
         <p className="mt-4 text-lg font-bold text-white">{item.name}</p>
 
-        {/* 残コイン */}
-        <p className="mt-2 font-mono text-xs text-gray-500">残コイン: {newCoins}C</p>
+        {/* 残Credit */}
+        <p className="mt-2 font-mono text-xs text-gray-500">残Credit: {toCredit(newCoins)}</p>
 
         {/* 閉じるボタン */}
         <button
@@ -154,7 +155,7 @@ export default function GachaSection({ playerName }: Props) {
     try {
       await borrowCoins();
       setShowBorrow(false);
-      setMessage('100C 借りました（借金 +100C）');
+      setMessage('1クレ 借りました（借金 +1クレ）');
     } catch (err) {
       setMessage(`エラー: ${err instanceof Error ? err.message : '失敗しました'}`);
     } finally {
@@ -181,7 +182,7 @@ export default function GachaSection({ playerName }: Props) {
             disabled={spinning}
             className="bg-yellow-400 px-6 py-3 font-bold text-black transition-opacity hover:opacity-90 disabled:opacity-50"
           >
-            {spinning ? 'ガチャ中...' : '1回まわす (100C)'}
+            {spinning ? 'ガチャ中...' : '1回まわす (1クレ)'}
           </button>
 
           {showBorrow && (
@@ -190,7 +191,7 @@ export default function GachaSection({ playerName }: Props) {
               disabled={borrowing}
               className="border-2 border-red-500 px-6 py-3 font-bold text-red-400 transition-colors hover:bg-red-500/10 disabled:opacity-50"
             >
-              {borrowing ? '処理中...' : '借金する (+100C)'}
+              {borrowing ? '処理中...' : '借金する (+1クレ)'}
             </button>
           )}
 

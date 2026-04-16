@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Keyboard, X, Monitor } from 'lucide-react';
 import { usePlayer } from '@/hooks/usePlayer';
+import { toCredit } from '@/lib/currency';
 
 interface GameModalProps {
   isOpen: boolean;
@@ -105,7 +106,7 @@ export default function GameModal({
 
         {toast && (
           <div className="absolute bottom-4 left-1/2 -translate-x-1/2 rounded bg-yellow-400 px-5 py-2 text-sm font-bold text-black shadow-lg">
-            +{toast.coinsEarned} コイン獲得！
+            +{toCredit(toast.coinsEarned)} Credit獲得！
           </div>
         )}
       </div>
