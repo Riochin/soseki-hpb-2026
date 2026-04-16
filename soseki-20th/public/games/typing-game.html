@@ -275,6 +275,7 @@
       color: #555;
       transition: color 0.08s;
       font-family: 'Courier New', monospace;
+      white-space: pre;
     }
 
     .char.correct {
@@ -520,16 +521,17 @@
   <script>
     // ── Phrase pool ────────────────────────────────────────────────────────
     // display: 画面に表示する日本語テキスト
-    // romaji:  実際にタイプするローマ字（canonical形式）
+    // romaji:  実際にタイプするローマ字（ーは-で表記）
     const PHRASES = [
-      { display: 'ロー！ロー！ロー！ロー！',                   romaji: 'roo!roo!roo!roo!' },
+      { display: 'ロー！ロー！ロー！ロー！',                   romaji: 'ro-!ro-!ro-!ro-!' },
+      { display: 'easy',                                         romaji: 'easy' },
       { display: 'easy easy',                                   romaji: 'easy easy' },
       { display: '今のは俺が悪いわ',                           romaji: 'imanohaoregawaruiwa' },
       { display: 'ぶっちゃけ俺の締まりよくね！？',             romaji: 'bucchakeorenoshimariyokune!?' },
-      { display: 'ア○ル舐めたーい！！',                        romaji: 'anarunametaai!!' },
+      { display: 'ア○ル舐めたーい！！',                        romaji: 'anarunameta-i!!' },
       { display: 'ゴリラさんもア○ル舐めたいですよね？',        romaji: 'gorirasannmoanarunametaidesuyone?' },
       { display: '今のはお前が悪いよ？',                       romaji: 'imanohaomaegawaruiyo?' },
-      { display: 'うまーーーーーーーーい！！',                  romaji: 'umaaaaaaaaai!!' },
+      { display: 'うまーーーーーーーーい！！',                  romaji: 'uma--------i!!' },
       { display: 'まぁ、余裕っすね',                           romaji: 'maa,yoyuussune' },
     ];
 
@@ -556,12 +558,26 @@
     // ── Romaji match engine ────────────────────────────────────────────────
     // typed した文字列が canonical ローマ字にどこまで一致するかを返す
     // { consumed: canonicalの消費文字数, valid: 有効な入力か }
+    // canonical 中の `-` は長音符（ー）を表し、`-` または直前の母音で入力できる
+    const VOWELS = 'aeiou';
     function matchRomaji(typed, canonical, ti = 0, ci = 0) {
       if (ti >= typed.length) return { consumed: ci, valid: true };
       if (ci >= canonical.length) return { consumed: ci, valid: false };
 
       const typedRem  = typed.slice(ti);
       const canonRem  = canonical.slice(ci);
+
+      // 長音符 `-` の処理: `-` または直前の母音を受け付ける
+      if (canonRem[0] === '-') {
+        let prevVowel = '';
+        for (let k = ci - 1; k >= 0; k--) {
+          if (VOWELS.includes(canonical[k])) { prevVowel = canonical[k]; break; }
+        }
+        if (typedRem[0] === '-' || (prevVowel && typedRem[0] === prevVowel)) {
+          return matchRomaji(typed, canonical, ti + 1, ci + 1);
+        }
+        return { consumed: ci, valid: false };
+      }
 
       // alternatives チェック
       for (const [canon, ...alts] of ROMAJI_ALTS) {
@@ -641,7 +657,6 @@
       const { consumed } = matchRomaji(state.typed, phrase.romaji);
       const romajiEl = document.createElement('div');
       romajiEl.className = 'phrase-romaji';
-
       [...phrase.romaji].forEach((ch, i) => {
         const span = document.createElement('span');
         span.className = 'char';
