@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import QuoteOverlay from './QuoteOverlay'
 
 export default function HeroSection() {
@@ -19,6 +20,18 @@ export default function HeroSection() {
         <br />
         誕生日おめでとう
       </h1>
+
+      {/* hpb画像 */}
+      <div className="mb-6 mt-2">
+        <Image
+          src="/hpb.png"
+          alt="Happy Birthday"
+          width={160}
+          height={160}
+          className="object-contain"
+          priority
+        />
+      </div>
 
       {/* スクロール誘導 */}
       <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 text-yellow-400/50">
