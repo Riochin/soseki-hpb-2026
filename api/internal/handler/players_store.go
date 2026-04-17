@@ -51,7 +51,10 @@ func (s *DBPlayerStore) GetPlayer(ctx context.Context, name string) (model.Playe
 	// 全アイテムと取得状態を JOIN で取得
 	rows, err := s.db.Pool.Query(ctx, `
 		SELECT i.id, i.name, i.rarity, i.icon,
-		       (c.player_name IS NOT NULL) AS acquired
+		       (c.player_name IS NOT NULL) AS acquired,
+		       i.is_giftable,
+		       i.proposed_by,
+		       COALESCE(c.is_consumed, false) AS is_consumed
 		FROM items i
 		LEFT JOIN collections c ON c.item_id = i.id AND c.player_name = $1
 		ORDER BY i.id
@@ -64,7 +67,7 @@ func (s *DBPlayerStore) GetPlayer(ctx context.Context, name string) (model.Playe
 	p.Collection = []model.CollectionItem{}
 	for rows.Next() {
 		var item model.CollectionItem
-		if err := rows.Scan(&item.ItemID, &item.Name, &item.Rarity, &item.Icon, &item.Acquired); err != nil {
+		if err := rows.Scan(&item.ItemID, &item.Name, &item.Rarity, &item.Icon, &item.Acquired, &item.IsGiftable, &item.ProposedBy, &item.IsConsumed); err != nil {
 			return model.Player{}, err
 		}
 		p.Collection = append(p.Collection, item)

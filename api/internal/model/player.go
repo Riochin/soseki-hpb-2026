@@ -10,9 +10,12 @@ type Player struct {
 
 // CollectionItem は全アイテムの一覧と獲得状態を表す。
 type CollectionItem struct {
-	ItemID   int    `json:"itemId"`
-	Name     string `json:"name"`
-	Rarity   string `json:"rarity"`
-	Icon     string `json:"icon"`
-	Acquired bool   `json:"acquired"`
+	ItemID     int     `json:"itemId"`
+	Name       string  `json:"name"`
+	Rarity     string  `json:"rarity"`
+	Icon       string  `json:"icon"`
+	Acquired   bool    `json:"acquired"`
+	IsGiftable bool    `json:"is_giftable"`
+	ProposedBy *string `json:"proposed_by"`
+	IsConsumed bool    `json:"is_consumed"`
 }

@@ -60,7 +60,7 @@ func (s *DBGachaStore) ExecuteGacha(ctx context.Context, playerName string) (Gac
 
 	// アイテム一覧取得（重み付き抽選用）
 	rows, err := tx.Query(ctx,
-		`SELECT id, name, rarity, icon, weight FROM items WHERE weight > 0`,
+		`SELECT id, name, rarity, icon, weight, proposed_by, is_giftable FROM items WHERE weight > 0`,
 	)
 	if err != nil {
 		return GachaResult{}, err
@@ -68,7 +68,7 @@ func (s *DBGachaStore) ExecuteGacha(ctx context.Context, playerName string) (Gac
 	var items []model.Item
 	for rows.Next() {
 		var item model.Item
-		if err := rows.Scan(&item.ID, &item.Name, &item.Rarity, &item.Icon, &item.Weight); err != nil {
+		if err := rows.Scan(&item.ID, &item.Name, &item.Rarity, &item.Icon, &item.Weight, &item.ProposedBy, &item.IsGiftable); err != nil {
 			rows.Close()
 			return GachaResult{}, err
 		}
@@ -102,11 +102,14 @@ func (s *DBGachaStore) ExecuteGacha(ctx context.Context, playerName string) (Gac
 
 	return GachaResult{
 		Item: model.CollectionItem{
-			ItemID:   selected.ID,
-			Name:     selected.Name,
-			Rarity:   selected.Rarity,
-			Icon:     selected.Icon,
-			Acquired: true,
+			ItemID:     selected.ID,
+			Name:       selected.Name,
+			Rarity:     selected.Rarity,
+			Icon:       selected.Icon,
+			Acquired:   true,
+			IsGiftable: selected.IsGiftable,
+			ProposedBy: selected.ProposedBy,
+			IsConsumed: false,
 		},
 		IsNew:    isNew,
 		NewCoins: newCoins,
@@ -151,7 +154,7 @@ func (s *DBGachaStore) ExecuteMultiGacha(ctx context.Context, playerName string)
 
 	// アイテム一覧取得（1回だけ）
 	rows, err := tx.Query(ctx,
-		`SELECT id, name, rarity, icon, weight FROM items WHERE weight > 0`,
+		`SELECT id, name, rarity, icon, weight, proposed_by, is_giftable FROM items WHERE weight > 0`,
 	)
 	if err != nil {
 		return MultiGachaResult{}, err
@@ -159,7 +162,7 @@ func (s *DBGachaStore) ExecuteMultiGacha(ctx context.Context, playerName string)
 	var items []model.Item
 	for rows.Next() {
 		var item model.Item
-		if err := rows.Scan(&item.ID, &item.Name, &item.Rarity, &item.Icon, &item.Weight); err != nil {
+		if err := rows.Scan(&item.ID, &item.Name, &item.Rarity, &item.Icon, &item.Weight, &item.ProposedBy, &item.IsGiftable); err != nil {
 			rows.Close()
 			return MultiGachaResult{}, err
 		}
@@ -191,11 +194,14 @@ func (s *DBGachaStore) ExecuteMultiGacha(ctx context.Context, playerName string)
 
 		results = append(results, GachaResult{
 			Item: model.CollectionItem{
-				ItemID:   selected.ID,
-				Name:     selected.Name,
-				Rarity:   selected.Rarity,
-				Icon:     selected.Icon,
-				Acquired: true,
+				ItemID:     selected.ID,
+				Name:       selected.Name,
+				Rarity:     selected.Rarity,
+				Icon:       selected.Icon,
+				Acquired:   true,
+				IsGiftable: selected.IsGiftable,
+				ProposedBy: selected.ProposedBy,
+				IsConsumed: false,
 			},
 			IsNew:    isNew,
 			NewCoins: newCoins,
