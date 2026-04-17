@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import AgeVerificationGate from '@/components/AgeVerificationGate';
 import NameInputModal, { Player } from '@/components/NameInputModal';
 import GlobalHeader from '@/components/GlobalHeader';
+import ScrollToTopButton from '@/components/ScrollToTopButton';
 import HeroSection from '@/components/HeroSection';
 import VideoSection from '@/components/VideoSection';
 import MessageSection from '@/components/MessageSection';
@@ -67,6 +68,7 @@ export default function Home() {
         {playerName && (
           <>
             <GlobalHeader coins={player?.coins ?? 0} debt={player?.debt ?? 0} visible={pastHero} />
+            <ScrollToTopButton visible={pastHero} />
             <main>
               <div ref={heroRef}>
                 <HeroSection />
