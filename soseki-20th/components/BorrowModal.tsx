@@ -13,6 +13,7 @@ interface Props {
 }
 
 function lenderLine(debt: number): string {
+  if (debt >= 10000) return '殺す。';
   if (debt >= 5000) return 'もう俺も金ないて❗️';
   if (debt >= 1000) return 'またぁ？';
   return 'しゃあねえな';
