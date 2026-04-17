@@ -14,6 +14,9 @@ export interface CollectionItem {
   rarity: 'UR' | 'SSR' | 'R' | 'N';
   icon: string;
   acquired: boolean;
+  is_giftable: boolean;
+  proposed_by: string | null;
+  is_consumed: boolean;
 }
 
 export interface Player {
@@ -51,6 +54,7 @@ export interface UsePlayerResult {
     payload: Record<string, unknown>,
     sessionId: string,
   ): Promise<EarnCoinsResult>;
+  consumeItem(itemId: number): Promise<void>;
 }
 
 export function usePlayer(name: string | null): UsePlayerResult {
@@ -121,6 +125,18 @@ export function usePlayer(name: string | null): UsePlayerResult {
     return result;
   }
 
+  async function consumeItem(itemId: number): Promise<void> {
+    if (IS_UI_MOCK) return;
+    if (!name) throw new Error('プレイヤー名が未設定です');
+
+    await apiFetch<{ consumed: boolean }>(
+      `/api/players/${encodeURIComponent(name)}/items/${itemId}/consume`,
+      { method: 'POST' },
+    );
+
+    await mutate();
+  }
+
   return {
     player: IS_UI_MOCK ? MOCK_PLAYER : (data ?? null),
     isLoading: IS_UI_MOCK ? false : isLoading,
@@ -129,5 +145,6 @@ export function usePlayer(name: string | null): UsePlayerResult {
     spinGachaMulti,
     borrowCoins,
     earnCoins,
+    consumeItem,
   };
 }

@@ -7,11 +7,20 @@ import { toCredit } from '@/lib/currency';
 import BorrowModal from '@/components/BorrowModal';
 import { IS_UI_MOCK } from '@/lib/mock';
 
-const RARITY_COLOR: Record<string, string> = {
-  UR: 'text-yellow-300 border-yellow-300',
-  SSR: 'text-purple-400 border-purple-400',
-  R: 'text-blue-400 border-blue-400',
-  N: 'text-gray-400 border-gray-500',
+// レアリティごとのテキスト・ボーダークラス
+// UR=虹グラデーション / SSR=金 / R=銀 / N=銅
+const RARITY_TEXT: Record<string, string> = {
+  UR: 'bg-gradient-to-r from-rose-400 via-yellow-300 via-green-400 via-blue-400 to-purple-400 bg-clip-text text-transparent',
+  SSR: 'text-yellow-400',
+  R: 'text-slate-300',
+  N: 'text-amber-600',
+};
+
+const RARITY_BORDER: Record<string, string> = {
+  UR: 'border-white/50',
+  SSR: 'border-yellow-400',
+  R: 'border-slate-300',
+  N: 'border-amber-600',
 };
 
 interface Props {
@@ -25,9 +34,15 @@ const RARITY_LABEL: Record<string, string> = {
   N: 'NORMAL',
 };
 
+function rarityClass(rarity: string): string {
+  const text = RARITY_TEXT[rarity] ?? 'text-gray-400';
+  const border = RARITY_BORDER[rarity] ?? 'border-gray-500';
+  return `${text} ${border}`;
+}
+
 function GachaResultModal({ result, onClose }: { result: GachaResult; onClose: () => void }) {
   const { item, isNew, newCoins } = result;
-  const colorClass = RARITY_COLOR[item.rarity] ?? 'text-gray-400 border-gray-500';
+  const colorClass = rarityClass(item.rarity);
 
   return (
     <div
@@ -95,7 +110,7 @@ function MultiGachaResultModal({
         {/* 結果グリッド: モバイル2列、sm以上5列 */}
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-6">
           {result.results.map((r, idx) => {
-            const colorClass = RARITY_COLOR[r.item.rarity] ?? 'text-gray-400 border-gray-500';
+            const colorClass = rarityClass(r.item.rarity);
             return (
               <div
                 key={idx}
@@ -134,61 +149,223 @@ function MultiGachaResultModal({
   );
 }
 
-function CollectionModal({ collection, onClose }: { collection: CollectionItem[]; onClose: () => void }) {
-  const acquired = collection.filter((i) => i.acquired).length;
+function ItemDetailModal({
+  item,
+  onConsume,
+  onClose,
+}: {
+  item: CollectionItem;
+  onConsume: (itemId: number) => Promise<void>;
+  onClose: () => void;
+}) {
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [consuming, setConsuming] = useState(false);
+  const [consumed, setConsumed] = useState(item.is_consumed);
+  const [error, setError] = useState('');
+  const colorClass = rarityClass(item.rarity);
+
+  async function handleConsume() {
+    setConsuming(true);
+    setError('');
+    try {
+      await onConsume(item.itemId);
+      setConsumed(true);
+      setShowConfirm(false);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : '失敗しました');
+    } finally {
+      setConsuming(false);
+    }
+  }
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
+      className="fixed inset-0 z-[60] flex items-center justify-center bg-black/85 p-4 backdrop-blur-sm"
       onClick={onClose}
     >
       <div
-        className="relative w-full max-w-lg max-h-[80vh] overflow-y-auto border-2 border-yellow-400/20 bg-[#050403] p-6"
+        className="relative w-full max-w-xs border-2 border-yellow-400/20 bg-[#050403] p-8 text-center overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* ヘッダー */}
-        <div className="mb-4 flex items-center justify-between">
-          <div>
-            <p className="font-mono text-xs tracking-widest text-yellow-400/60">— COLLECTION</p>
-            <p className="text-sm text-gray-400 mt-0.5">{acquired} / {collection.length} 入手済み</p>
-          </div>
-          <button
-            onClick={onClose}
-            className="border border-yellow-400/20 p-1.5 text-gray-400 transition-colors hover:border-yellow-400/60 hover:text-white"
-          >
-            <X className="h-4 w-4" />
-          </button>
-        </div>
+        {/* アイコン */}
+        <div className="mb-3 text-6xl">{item.icon}</div>
 
-        {/* グリッド */}
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
-          {collection.map((item) =>
-            item.acquired ? (
-              <div key={item.itemId} className="border border-yellow-400/20 bg-[#0a0806] p-3 text-center">
-                <div className="mb-1.5 text-3xl">{item.icon}</div>
-                <p className="mb-1 text-xs font-medium text-white leading-tight">{item.name}</p>
-                <span className={`border px-1.5 py-0.5 text-xs font-bold ${RARITY_COLOR[item.rarity] ?? 'text-gray-400 border-gray-500'}`}>
-                  {item.rarity}
-                </span>
+        {/* レアリティ */}
+        <span className={`border px-3 py-1 text-xs font-bold tracking-widest ${colorClass}`}>
+          {item.rarity} — {RARITY_LABEL[item.rarity]}
+        </span>
+
+        {/* アイテム名 */}
+        <p className="mt-4 text-lg font-bold text-white">{item.name}</p>
+
+        {/* 提案者 */}
+        {item.proposed_by && (
+          <p className="mt-2 text-sm text-gray-400">
+            アイテム提案者:{' '}
+            <span className="text-yellow-300 font-bold">{item.proposed_by}</span>
+          </p>
+        )}
+
+        {/* ギフト情報 */}
+        {item.is_giftable && !consumed && (
+          <>
+            <p className="mt-3 border border-green-400/30 bg-green-400/5 px-3 py-2 text-xs text-green-400">
+              提案者の前で見せればもらえます
+            </p>
+            <button
+              onClick={() => setShowConfirm(true)}
+              className="mt-3 w-full border-2 border-green-400 py-2 text-sm font-bold text-green-400 transition-colors hover:bg-green-400/10"
+            >
+              交換する
+            </button>
+          </>
+        )}
+
+        {/* 交換済みバッジ */}
+        {(consumed) && (
+          <div className="mt-3 w-full border-2 border-gray-600 py-2 text-sm font-bold text-gray-500">
+            交換済み
+          </div>
+        )}
+
+        {error && <p className="mt-2 text-xs text-red-400">{error}</p>}
+
+        {/* 閉じるボタン */}
+        <button
+          onClick={onClose}
+          className="mt-4 w-full border border-yellow-400/20 py-2 text-sm text-gray-400 transition-colors hover:border-yellow-400/40 hover:text-white"
+        >
+          閉じる
+        </button>
+
+        {/* 交換確認オーバーレイ */}
+        {showConfirm && (
+          <div
+            className="absolute inset-0 flex items-center justify-center bg-black/90 p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="text-center">
+              <p className="mb-3 font-mono text-xs tracking-widest text-yellow-400">⚠ 確認</p>
+              <p className="mb-1 text-base font-bold text-white">{item.name}</p>
+              <p className="mb-1 text-sm text-gray-300">を交換しますか？</p>
+              <p className="mb-5 text-xs text-red-400">※ 一度交換すると取り消せません</p>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setShowConfirm(false)}
+                  disabled={consuming}
+                  className="flex-1 border border-gray-600 py-2 text-sm text-gray-400 transition-colors hover:text-white disabled:opacity-50"
+                >
+                  やめる
+                </button>
+                <button
+                  onClick={handleConsume}
+                  disabled={consuming}
+                  className="flex-1 border-2 border-green-400 py-2 text-sm font-bold text-green-400 transition-colors hover:bg-green-400/10 disabled:opacity-50"
+                >
+                  {consuming ? '処理中...' : '交換する'}
+                </button>
               </div>
-            ) : (
-              <div key={item.itemId} className="border border-yellow-400/10 bg-[#0a0806] p-3 text-center opacity-40">
-                <div className="mb-1.5 text-3xl text-gray-600">？</div>
-                <p className="mb-1 text-xs font-medium text-gray-600">???</p>
-                <span className={`border px-1.5 py-0.5 text-xs font-bold ${RARITY_COLOR[item.rarity] ?? 'text-gray-400 border-gray-500'}`}>
-                  {item.rarity}
-                </span>
-              </div>
-            )
-          )}
-        </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
 }
 
+function CollectionModal({
+  collection,
+  onConsume,
+  onClose,
+}: {
+  collection: CollectionItem[];
+  onConsume: (itemId: number) => Promise<void>;
+  onClose: () => void;
+}) {
+  const [selectedItem, setSelectedItem] = useState<CollectionItem | null>(null);
+  const acquired = collection.filter((i) => i.acquired).length;
+
+  const RARITY_ORDER: Record<string, number> = { UR: 0, SSR: 1, R: 2, N: 3 };
+  const sorted = [...collection].sort(
+    (a, b) => (RARITY_ORDER[a.rarity] ?? 9) - (RARITY_ORDER[b.rarity] ?? 9),
+  );
+
+  return (
+    <>
+      <div
+        className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
+        onClick={onClose}
+      >
+        <div
+          className="relative w-full max-w-lg max-h-[80vh] overflow-y-auto border-2 border-yellow-400/20 bg-[#050403] p-6"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* ヘッダー */}
+          <div className="mb-4 flex items-center justify-between">
+            <div>
+              <p className="font-mono text-xs tracking-widest text-yellow-400/60">— COLLECTION</p>
+              <p className="text-sm text-gray-400 mt-0.5">{acquired} / {collection.length} 入手済み</p>
+            </div>
+            <button
+              onClick={onClose}
+              className="border border-yellow-400/20 p-1.5 text-gray-400 transition-colors hover:border-yellow-400/60 hover:text-white"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+
+          {/* グリッド */}
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
+            {sorted.map((item) =>
+              item.acquired ? (
+                <button
+                  key={item.itemId}
+                  onClick={() => setSelectedItem(item)}
+                  className="relative border border-yellow-400/20 bg-[#0a0806] p-3 text-center transition-colors hover:border-yellow-400/50 hover:bg-[#120f06] active:scale-95"
+                >
+                  {item.is_giftable && !item.is_consumed && (
+                    <span className="absolute -top-1.5 -right-1.5 bg-green-400 text-black text-[9px] font-bold px-1.5 py-0.5 leading-none">
+                      GIFT
+                    </span>
+                  )}
+                  {item.is_consumed && (
+                    <span className="absolute -top-1.5 -right-1.5 bg-gray-600 text-gray-300 text-[9px] font-bold px-1.5 py-0.5 leading-none">
+                      済
+                    </span>
+                  )}
+                  <div className="mb-1.5 text-3xl">{item.icon}</div>
+                  <p className="mb-1 text-xs font-medium text-white leading-tight">{item.name}</p>
+                  <span className={`border px-1.5 py-0.5 text-xs font-bold ${rarityClass(item.rarity)}`}>
+                    {item.rarity}
+                  </span>
+                </button>
+              ) : (
+                <div key={item.itemId} className="border border-yellow-400/10 bg-[#0a0806] p-3 text-center opacity-40">
+                  <div className="mb-1.5 text-3xl text-gray-600">？</div>
+                  <p className="mb-1 text-xs font-medium text-gray-600">???</p>
+                  <span className={`border px-1.5 py-0.5 text-xs font-bold ${rarityClass(item.rarity)}`}>
+                    {item.rarity}
+                  </span>
+                </div>
+              )
+            )}
+          </div>
+        </div>
+      </div>
+
+      {selectedItem && (
+        <ItemDetailModal
+          item={selectedItem}
+          onConsume={onConsume}
+          onClose={() => setSelectedItem(null)}
+        />
+      )}
+    </>
+  );
+}
+
 export default function GachaSection({ playerName }: Props) {
-  const { player, spinGacha, spinGachaMulti, borrowCoins } = usePlayer(playerName);
+  const { player, spinGacha, spinGachaMulti, borrowCoins, consumeItem } = usePlayer(playerName);
   const [spinning, setSpinning] = useState(false);
   const [gachaResult, setGachaResult] = useState<GachaResult | null>(null);
   const [multiGachaResult, setMultiGachaResult] = useState<MultiGachaResult | null>(null);
@@ -315,7 +492,11 @@ export default function GachaSection({ playerName }: Props) {
       )}
 
       {showCollection && collection.length > 0 && (
-        <CollectionModal collection={collection} onClose={() => setShowCollection(false)} />
+        <CollectionModal
+          collection={collection}
+          onConsume={consumeItem}
+          onClose={() => setShowCollection(false)}
+        />
       )}
 
       {showBorrowModal && (

@@ -15,14 +15,14 @@ import type { Message } from '@/hooks/useMessages';
 export const IS_UI_MOCK = process.env.NEXT_PUBLIC_UI_MOCK === 'true';
 
 export const MOCK_COLLECTION: CollectionItem[] = [
-  { itemId: 1, name: '吾輩は猫である', rarity: 'UR',  icon: '🐱', acquired: true  },
-  { itemId: 2, name: '坊っちゃん',     rarity: 'SSR', icon: '🏔️', acquired: true  },
-  { itemId: 3, name: 'こころ',         rarity: 'SSR', icon: '💙', acquired: false },
-  { itemId: 4, name: '三四郎',         rarity: 'R',   icon: '📚', acquired: true  },
-  { itemId: 5, name: 'それから',       rarity: 'R',   icon: '🍋', acquired: false },
-  { itemId: 6, name: '門',             rarity: 'R',   icon: '🚪', acquired: false },
-  { itemId: 7, name: '草枕',           rarity: 'N',   icon: '🎨', acquired: true  },
-  { itemId: 8, name: '虞美人草',       rarity: 'N',   icon: '🌸', acquired: false },
+  { itemId: 1, name: '吾輩は猫である', rarity: 'UR',  icon: '🐱', acquired: true,  is_giftable: true,  proposed_by: '正岡子規',   is_consumed: false },
+  { itemId: 2, name: '坊っちゃん',     rarity: 'SSR', icon: '🏔️', acquired: true,  is_giftable: true,  proposed_by: '寺田寅彦',   is_consumed: true  },
+  { itemId: 3, name: 'こころ',         rarity: 'SSR', icon: '💙', acquired: false, is_giftable: false, proposed_by: null,          is_consumed: false },
+  { itemId: 4, name: '三四郎',         rarity: 'R',   icon: '📚', acquired: true,  is_giftable: false, proposed_by: '鏡子',       is_consumed: false },
+  { itemId: 5, name: 'それから',       rarity: 'R',   icon: '🍋', acquired: false, is_giftable: false, proposed_by: null,          is_consumed: false },
+  { itemId: 6, name: '門',             rarity: 'R',   icon: '🚪', acquired: false, is_giftable: false, proposed_by: null,          is_consumed: false },
+  { itemId: 7, name: '草枕',           rarity: 'N',   icon: '🎨', acquired: true,  is_giftable: false, proposed_by: null,          is_consumed: false },
+  { itemId: 8, name: '虞美人草',       rarity: 'N',   icon: '🌸', acquired: false, is_giftable: false, proposed_by: null,          is_consumed: false },
 ];
 
 export const MOCK_PLAYER: Player = {
