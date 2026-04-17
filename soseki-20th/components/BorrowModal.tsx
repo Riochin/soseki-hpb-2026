@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 
 const MIN_AMOUNT = 1;
 const MAX_AMOUNT = 10;
@@ -8,9 +9,23 @@ const MAX_AMOUNT = 10;
 interface Props {
   onBorrow: (amount: number) => Promise<void>;
   onClose: () => void;
+  debt?: number;
 }
 
-export default function BorrowModal({ onBorrow, onClose }: Props) {
+function lenderLine(debt: number): string {
+  if (debt >= 5000) return 'もう俺も金ないて❗️';
+  if (debt >= 1000) return 'またぁ？';
+  return 'しゃあねえな';
+}
+
+function lenderImage(debt: number): string {
+  if (debt >= 10000) return '/lender4.jpg';
+  if (debt >= 5000) return '/lender3.jpg';
+  if (debt >= 1000) return '/lender2.jpg';
+  return '/lender.jpg';
+}
+
+export default function BorrowModal({ onBorrow, onClose, debt = 0 }: Props) {
   const [amount, setAmount] = useState(1);
   const [borrowing, setBorrowing] = useState(false);
   const [error, setError] = useState('');
@@ -45,9 +60,15 @@ export default function BorrowModal({ onBorrow, onClose }: Props) {
         className="relative w-full max-w-xs border-2 border-red-500/40 bg-[#050403] p-8 text-center"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* キャラクター画像エリア（プレースホルダー） */}
-        <div className="mb-6 flex h-32 items-center justify-center border border-red-500/20 bg-[#0a0604]">
-          <span className="text-xs text-red-500/40 tracking-widest">IMAGE COMING SOON</span>
+        {/* キャラクター画像 */}
+        <div className="mb-6 overflow-hidden border border-red-500/20">
+          <Image
+            src={lenderImage(debt)}
+            alt="金貸し"
+            width={320}
+            height={180}
+            className="w-full object-cover object-top"
+          />
         </div>
 
         {/* セリフ */}
@@ -55,7 +76,7 @@ export default function BorrowModal({ onBorrow, onClose }: Props) {
           className="mb-6 text-lg font-black text-red-300 tracking-wider"
           style={{ fontFamily: "var(--font-noto-serif-jp), serif" }}
         >
-          「しゃあねえな」
+          「{lenderLine(debt)}」
         </p>
 
         {/* ステッパー */}

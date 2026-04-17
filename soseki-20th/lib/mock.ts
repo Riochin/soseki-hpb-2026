@@ -28,7 +28,7 @@ export const MOCK_COLLECTION: CollectionItem[] = [
 export const MOCK_PLAYER: Player = {
   name: 'UIモックユーザー',
   coins: 1500,
-  debt: 100,
+  debt: 10000,
   collection: MOCK_COLLECTION,
 };
 

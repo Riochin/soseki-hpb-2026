@@ -322,6 +322,7 @@ export default function GachaSection({ playerName }: Props) {
         <BorrowModal
           onBorrow={handleBorrow}
           onClose={() => setShowBorrowModal(false)}
+          debt={player?.debt ?? 0}
         />
       )}
     </>
