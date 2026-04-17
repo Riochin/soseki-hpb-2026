@@ -283,12 +283,19 @@ function CollectionModal({
   onClose: () => void;
 }) {
   const [selectedItem, setSelectedItem] = useState<CollectionItem | null>(null);
+  const [filterBy, setFilterBy] = useState<string | null>(null);
   const acquired = collection.filter((i) => i.acquired).length;
 
   const RARITY_ORDER: Record<string, number> = { UR: 0, SSR: 1, R: 2, N: 3 };
   const sorted = [...collection].sort(
     (a, b) => (RARITY_ORDER[a.rarity] ?? 9) - (RARITY_ORDER[b.rarity] ?? 9),
   );
+
+  const proposers = Array.from(
+    new Set(sorted.filter((i) => i.proposed_by).map((i) => i.proposed_by as string)),
+  );
+
+  const filtered = filterBy ? sorted.filter((i) => i.proposed_by === filterBy) : sorted;
 
   return (
     <>
@@ -314,9 +321,38 @@ function CollectionModal({
             </button>
           </div>
 
+          {/* 提案者フィルター */}
+          {proposers.length > 0 && (
+            <div className="mb-4 flex flex-wrap gap-1.5">
+              <button
+                onClick={() => setFilterBy(null)}
+                className={`px-2.5 py-1 text-xs font-mono border transition-colors ${
+                  filterBy === null
+                    ? 'border-yellow-400/60 text-yellow-400 bg-yellow-400/10'
+                    : 'border-yellow-400/20 text-gray-400 hover:border-yellow-400/40 hover:text-gray-200'
+                }`}
+              >
+                すべて
+              </button>
+              {proposers.map((name) => (
+                <button
+                  key={name}
+                  onClick={() => setFilterBy(filterBy === name ? null : name)}
+                  className={`px-2.5 py-1 text-xs font-mono border transition-colors ${
+                    filterBy === name
+                      ? 'border-yellow-400/60 text-yellow-400 bg-yellow-400/10'
+                      : 'border-yellow-400/20 text-gray-400 hover:border-yellow-400/40 hover:text-gray-200'
+                  }`}
+                >
+                  {name}
+                </button>
+              ))}
+            </div>
+          )}
+
           {/* グリッド */}
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
-            {sorted.map((item) =>
+            {filtered.map((item) =>
               item.acquired ? (
                 <button
                   key={item.itemId}
