@@ -45,9 +45,9 @@ export default function ScrollToTopButton({ visible }: Props) {
         <Image
           src="/up.png"
           alt="上へ戻る"
-          width={96}
-          height={96}
-          style={{ width: 96, height: 96 }}
+          width={1600}
+          height={1399}
+          className="h-24 w-24 object-contain"
         />
       </button>
     </div>
