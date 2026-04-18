@@ -36,17 +36,17 @@ const quotes = [
   },
   { text: "easy", author: "FORK", source: "NGC 2024" },
   { text: "まぁ、余裕ッスね", author: "FORK", source: "NGC 2023" },
-  { text: "じゃ、また", author: "アクメ漱石", souce: "namco巣鴨店" },
+  { text: "じゃ、また", author: "アクメ漱石", source: "namco巣鴨店" },
   {
     text: "「まぁ、余裕ッスね」",
     author: "FORK & かたはば",
-    souce: "LSC 2025",
+    source: "LSC 2025",
   },
-  { text: "俺⁉️⁉️⁉️⁉️⁉️⁉️⁉️", author: "アクメ漱石", souce: "namco巣鴨店" },
-  { text: "おけーーーーい‼️‼️‼️", author: "アクメ漱石", souce: "namco巣鴨店" },
-  { text: "上手ーーーーい‼️‼️‼️", author: "アクメ漱石", souce: "namco巣鴨店" },
-  { text: "本日のおドクペ", author: "アクメ漱石", souce: "Twitter" },
-  { text: "namco巣鴨が実家", author: "アクメ漱石", souce: "Twitter" },
+  { text: "俺⁉️⁉️⁉️⁉️⁉️⁉️⁉️", author: "アクメ漱石", source: "namco巣鴨店" },
+  { text: "おけーーーーい‼️‼️‼️", author: "アクメ漱石", source: "namco巣鴨店" },
+  { text: "上手ーーーーい‼️‼️‼️", author: "アクメ漱石", source: "namco巣鴨店" },
+  { text: "本日のおドクペ", author: "アクメ漱石", source: "Twitter" },
+  { text: "namco巣鴨が実家", author: "アクメ漱石", source: "Twitter" },
 ];
 
 // 見切れにくい小さめの角度バリエーション
