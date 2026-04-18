@@ -20,12 +20,13 @@
       background: var(--bg);
       color: var(--text);
       font-family: 'Courier New', monospace;
-      min-height: 100vh;
+      min-height: 100svh;
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
-      overflow: hidden;
+      justify-content: flex-start;
+      overflow-x: hidden;
+      overflow-y: auto;
       position: relative;
     }
 
@@ -50,6 +51,8 @@
       padding: 16px;
       position: relative;
       z-index: 1;
+      min-height: 100svh;
+      justify-content: center;
     }
     .screen.active { display: flex; }
 
@@ -95,8 +98,9 @@
     /* Game screen layout */
     #screen-game {
       gap: 0;
-      padding: 8px;
+      padding: 4px 8px 8px;
       justify-content: flex-start;
+      min-height: 0;
     }
 
     #canvas-wrapper {
@@ -116,8 +120,12 @@
     .touch-controls {
       display: flex;
       gap: 32px;
-      margin-top: 12px;
       justify-content: center;
+      position: fixed;
+      bottom: max(16px, env(safe-area-inset-bottom));
+      left: 0;
+      right: 0;
+      z-index: 100;
     }
 
     .touch-btn {
@@ -234,9 +242,9 @@
     const ctx = canvas.getContext('2d');
 
     const LANES = 3;
-    const SCALE = 2;                 // logical resolution multiplier (500→1000, 400→800)
-    const CANVAS_W = 500 * SCALE;
-    const CANVAS_H = 400 * SCALE;
+    const SCALE = 2;                 // logical resolution multiplier
+    const CANVAS_W = 360 * SCALE;   // portrait: 720 logical px wide
+    const CANVAS_H = 500 * SCALE;   // portrait: 1000 logical px tall
     const HUD_H    =  48 * SCALE;
     const LANE_H = (CANVAS_H - HUD_H) / LANES;
 
@@ -249,16 +257,16 @@
     ctx.imageSmoothingQuality = 'high';
 
     // ── Responsive scaling ─────────────────────────────────────────────────
-    const TOUCH_CTRL_H = 96; // CSS px — not a canvas coordinate
+    const TOUCH_BTN_H = 112; // fixed touch buttons area (px) reserved at bottom
     function fitCanvas() {
-      const availW = window.innerWidth - 16;
-      const availH = window.innerHeight - TOUCH_CTRL_H - 16;
+      const availW = window.innerWidth - 8;
+      const availH = window.innerHeight - TOUCH_BTN_H - 8;
       const scale  = Math.min(availW / CANVAS_W, availH / CANVAS_H, 1);
       canvas.style.width  = CANVAS_W + 'px';
       canvas.style.height = CANVAS_H + 'px';
       canvas.style.transform = `scale(${scale})`;
       document.getElementById('canvas-wrapper').style.height =
-        Math.ceil(CANVAS_H * scale + TOUCH_CTRL_H) + 'px';
+        Math.ceil(CANVAS_H * scale) + 'px';
     }
     window.addEventListener('resize', fitCanvas);
     fitCanvas();
@@ -394,7 +402,7 @@
       if (state.spawnTimer >= state.spawnInterval) {
         state.spawnTimer = 0;
         const lane = Math.floor(Math.random() * LANES);
-        state.enemies.push({ x: CANVAS_W + 30*SCALE, lane, baseSpeed: (140 + difficulty * 120) * SCALE, hp: 5 });
+        state.enemies.push({ x: CANVAS_W + 30*SCALE, lane, baseSpeed: (100 + difficulty * 88) * SCALE, hp: 5 });
       }
 
       state.enemies = state.enemies.filter(e => {
