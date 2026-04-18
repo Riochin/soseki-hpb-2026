@@ -24,7 +24,7 @@ export default function ScrollToTopButton({ visible }: Props) {
   };
 
   return (
-    <div className={`fixed bottom-6 -right-2 sm:right-6 z-30 flex flex-col items-center gap-2 transition-all duration-300 ${
+    <div className={`fixed bottom-6 right-4 sm:right-6 z-30 flex flex-col items-center gap-2 transition-all duration-300 ${
       visible ? 'translate-y-0 opacity-100' : 'translate-y-16 opacity-0 pointer-events-none'
     }`}>
       <span
@@ -42,7 +42,13 @@ export default function ScrollToTopButton({ visible }: Props) {
         }`}
         aria-label="ページ上部へ戻る"
       >
-        <Image src="/up.png" alt="上へ戻る" width={96} height={96} />
+        <Image
+          src="/up.png"
+          alt="上へ戻る"
+          width={96}
+          height={96}
+          style={{ width: 96, height: 96 }}
+        />
       </button>
     </div>
   );
