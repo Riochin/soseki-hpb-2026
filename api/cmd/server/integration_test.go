@@ -464,3 +464,62 @@ func TestIntegration_GameReward_DuplicateSession_Returns429(t *testing.T) {
 		t.Errorf("2回目失敗後もコインは変わらないこと: expected %d, got %d", first.NewCoins, p.Coins)
 	}
 }
+
+// TestIntegration_GameResults_Leaderboard_OneRowPerPlayer: 同一プレイヤーの複数プレイは最高スコア1件のみがランキングに載る
+func TestIntegration_GameResults_Leaderboard_OneRowPerPlayer(t *testing.T) {
+	database := integrationDB(t)
+	cleanTables(t, database)
+	r := buildRouter("*", database)
+
+	playerName := "HS同一"
+	reqP := httptest.NewRequest(http.MethodPost, "/api/players", bytes.NewBufferString(fmt.Sprintf(`{"name":%q}`, playerName)))
+	reqP.Header.Set("Content-Type", "application/json")
+	wP := httptest.NewRecorder()
+	r.ServeHTTP(wP, reqP)
+	if wP.Code != http.StatusCreated {
+		t.Fatalf("プレイヤー作成: %d", wP.Code)
+	}
+
+	path := "/api/players/" + playerName + "/game-reward"
+	post := func(sessionID, body string) *httptest.ResponseRecorder {
+		t.Helper()
+		req := httptest.NewRequest(http.MethodPost, path, bytes.NewBufferString(body))
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, req)
+		return w
+	}
+
+	w1 := post("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa", fmt.Sprintf(`{"gameType":"shooting","rank":"D","score":10,"sessionId":%q}`, "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"))
+	if w1.Code != http.StatusOK {
+		t.Fatalf("1プレイ目: %d %s", w1.Code, w1.Body.String())
+	}
+	w2 := post("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb", fmt.Sprintf(`{"gameType":"shooting","rank":"S","score":9999,"sessionId":%q}`, "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"))
+	if w2.Code != http.StatusOK {
+		t.Fatalf("2プレイ目: %d %s", w2.Code, w2.Body.String())
+	}
+
+	reqG := httptest.NewRequest(http.MethodGet, "/api/game-results?gameType=shooting&limit=10", nil)
+	wG := httptest.NewRecorder()
+	r.ServeHTTP(wG, reqG)
+	if wG.Code != http.StatusOK {
+		t.Fatalf("game-results: %d", wG.Code)
+	}
+	var board struct {
+		Entries []struct {
+			Rank       int    `json:"rank"`
+			PlayerName string `json:"playerName"`
+			Score      int    `json:"score"`
+			GradeRank  string `json:"gradeRank"`
+		} `json:"entries"`
+	}
+	if err := json.NewDecoder(wG.Body).Decode(&board); err != nil {
+		t.Fatalf("decode board: %v", err)
+	}
+	if len(board.Entries) != 1 {
+		t.Fatalf("entries: expected 1 row per player, got %d", len(board.Entries))
+	}
+	if board.Entries[0].Score != 9999 || board.Entries[0].GradeRank != "S" {
+		t.Errorf("expected best score row, got %+v", board.Entries[0])
+	}
+}

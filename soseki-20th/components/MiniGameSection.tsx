@@ -48,7 +48,7 @@ function LeaderboardLoadingSkeleton() {
       aria-live="polite"
       aria-busy="true"
     >
-      <span className="sr-only">ランキングを読み込み中です</span>
+      <span className="sr-only">ハイスコアランキングを読み込み中です</span>
       {[1, 2, 3, 4, 5, 6].map((i) => (
         <div
           key={i}
@@ -70,7 +70,7 @@ function LeaderboardTable({ entries, playerName }: LeaderboardRowsProps) {
     <div className="hidden overflow-x-auto sm:block">
       <table className="w-full min-w-[360px] text-left text-sm text-stone-300">
         <caption className="sr-only">
-          スコア順のランキング。順位、プレイヤー名、スコア、グレード、記録日時。
+          ハイスコア順のランキング。各プレイヤーは自己ベストのみ。順位、プレイヤー名、ハイスコア、グレード、記録日時。
         </caption>
         <thead>
           <tr className="border-b border-edge text-xs uppercase tracking-wider text-accent/70">
@@ -81,7 +81,7 @@ function LeaderboardTable({ entries, playerName }: LeaderboardRowsProps) {
               名前
             </th>
             <th scope="col" className="py-2 pr-2 font-semibold">
-              スコア
+              ハイスコア
             </th>
             <th scope="col" className="py-2 pr-2 font-semibold">
               ランク
@@ -274,7 +274,7 @@ export default function MiniGameSection({ playerName }: Props) {
                 id="minigame-ranking-heading"
                 className="text-lg font-bold text-white"
               >
-                ランキング
+                ハイスコアランキング
               </h3>
             </div>
             <div
@@ -313,7 +313,7 @@ export default function MiniGameSection({ playerName }: Props) {
             <div
               className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3"
               role="group"
-              aria-label="漱石タイピングの制限時間別ランキング"
+              aria-label="漱石タイピングの制限時間別ハイスコアランキング"
             >
               <span className="text-xs font-medium text-stone-500">
                 制限時間
@@ -340,7 +340,7 @@ export default function MiniGameSection({ playerName }: Props) {
 
           {error && (
             <p className="text-sm text-red-400" role="alert">
-              ランキングを読み込めませんでした。しばらくしてから再度お試しください。
+              ハイスコアランキングを読み込めませんでした。しばらくしてから再度お試しください。
             </p>
           )}
           {isLoading && !error && <LeaderboardLoadingSkeleton />}
@@ -348,16 +348,16 @@ export default function MiniGameSection({ playerName }: Props) {
             <p className="rounded-control border border-dashed border-edge bg-black/20 px-4 py-6 text-center text-sm text-stone-500">
               {rankTab === 'typing' ? (
                 <>
-                  {typingTimeSec}秒モードの記録はまだありません。
+                  {typingTimeSec}秒モードのハイスコアはまだありません。
                   <span className="mt-1 block text-xs text-stone-600">
-                    PLAY NOW から挑戦するとここに表示されます。
+                    PLAY NOW から挑戦してスコアを伸ばすとここに載ります。
                   </span>
                 </>
               ) : (
                 <>
-                  まだ記録がありません。
+                  まだハイスコアがありません。
                   <span className="mt-1 block text-xs text-stone-600">
-                    PLAY NOW から挑戦してください。
+                    PLAY NOW から挑戦してランキングを狙おう。
                   </span>
                 </>
               )}
