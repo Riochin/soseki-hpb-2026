@@ -220,10 +220,10 @@ export default function MiniGameSection({ playerName }: Props) {
             </div>
 
             <h3 className="mb-1 text-lg font-bold text-white">
-              漱石タイピング
+              名言タイピング
             </h3>
             <p className="mb-5 text-sm text-stone-400">
-              名言をタイピングしてCreditをゲット！漱石の言葉をマスターしよう。
+              まぁ、余裕ッスね。
             </p>
 
             <button
