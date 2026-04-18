@@ -89,9 +89,22 @@ func calcCoinReward(input gameRewardInput) int {
 	switch input.GameType {
 	case "typing":
 		return calcTypingReward(input.Rank, input.TimeLimit)
+	case "shooting":
+		return calcShootingReward(input.Rank)
 	default:
 		return 5 // 未知のゲームは最低報酬
 	}
+}
+
+// calcShootingReward はランクからシューティングゲームのコイン報酬を算出する。
+//
+// S=1500(15Cr), A=800(8Cr), B=400(4Cr), C=200(2Cr), D=100(1Cr)
+func calcShootingReward(rank string) int {
+	rewards := map[string]int{"S": 1500, "A": 800, "B": 400, "C": 200, "D": 100}
+	if r, ok := rewards[rank]; ok {
+		return r
+	}
+	return 100
 }
 
 // calcTypingReward はランクと制限時間からタイピングゲームのコイン報酬を算出する。

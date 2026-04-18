@@ -55,7 +55,7 @@ export default function MiniGameSection({ playerName }: Props) {
             <div className="mb-3 flex items-start justify-between">
               <Crosshair className="h-8 w-8 text-yellow-400" />
               <span className="rounded-full bg-yellow-400/10 px-3 py-1 text-xs font-bold text-yellow-400 border border-yellow-400/30">
-                +1 ~ 30 Credit
+                +1 ~ 15 Credit
               </span>
             </div>
 
