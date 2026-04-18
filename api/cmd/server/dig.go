@@ -22,13 +22,21 @@ func registerHandlers(c *dig.Container, database *db.DB, allowedOrigin string) e
 		return err
 	}
 
+	// 具体ストア（dig は *T → interface の自動注入を保証しないため、明示バインドする）
 	if err := c.Provide(handler.NewDBMessageStore); err != nil {
+		return err
+	}
+	if err := c.Provide(func(s *handler.DBMessageStore) handler.MessageStore { return s }); err != nil {
 		return err
 	}
 	if err := c.Provide(handler.NewMessages); err != nil {
 		return err
 	}
+
 	if err := c.Provide(handler.NewDBPlayerStore); err != nil {
+		return err
+	}
+	if err := c.Provide(func(s *handler.DBPlayerStore) handler.PlayerStore { return s }); err != nil {
 		return err
 	}
 	if err := c.Provide(handler.NewPlayers); err != nil {
@@ -37,31 +45,51 @@ func registerHandlers(c *dig.Container, database *db.DB, allowedOrigin string) e
 	if err := c.Provide(handler.NewBorrow); err != nil {
 		return err
 	}
+
 	if err := c.Provide(handler.NewDBGameRewardStore); err != nil {
+		return err
+	}
+	if err := c.Provide(func(s *handler.DBGameRewardStore) handler.GameRewardCommiter { return s }); err != nil {
 		return err
 	}
 	if err := c.Provide(handler.NewGameReward); err != nil {
 		return err
 	}
+
 	if err := c.Provide(handler.NewDBGameResultListStore); err != nil {
+		return err
+	}
+	if err := c.Provide(func(s *handler.DBGameResultListStore) handler.GameResultListStore { return s }); err != nil {
 		return err
 	}
 	if err := c.Provide(handler.NewGameResults); err != nil {
 		return err
 	}
+
 	if err := c.Provide(handler.NewDBGachaStore); err != nil {
+		return err
+	}
+	if err := c.Provide(func(s *handler.DBGachaStore) handler.GachaStore { return s }); err != nil {
 		return err
 	}
 	if err := c.Provide(handler.NewGacha); err != nil {
 		return err
 	}
+
 	if err := c.Provide(handler.NewDBConsumeStore); err != nil {
+		return err
+	}
+	if err := c.Provide(func(s *handler.DBConsumeStore) handler.ConsumeStore { return s }); err != nil {
 		return err
 	}
 	if err := c.Provide(handler.NewConsume); err != nil {
 		return err
 	}
+
 	if err := c.Provide(handler.NewDBCounterStore); err != nil {
+		return err
+	}
+	if err := c.Provide(func(s *handler.DBCounterStore) handler.CounterStore { return s }); err != nil {
 		return err
 	}
 	if err := c.Provide(handler.NewCounter); err != nil {
