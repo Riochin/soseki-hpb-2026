@@ -234,17 +234,22 @@
     const ctx = canvas.getContext('2d');
 
     const LANES = 3;
-    const CANVAS_W = 500; // fixed internal resolution — CSS handles display scaling
-    const CANVAS_H = 400; // 5:4 ratio
-    const HUD_H = 48;
-    const LANE_H = (CANVAS_H - HUD_H) / LANES; // ~117px per lane
+    const SCALE = 2;                 // logical resolution multiplier (500→1000, 400→800)
+    const CANVAS_W = 500 * SCALE;
+    const CANVAS_H = 400 * SCALE;
+    const HUD_H    =  48 * SCALE;
+    const LANE_H = (CANVAS_H - HUD_H) / LANES;
 
-    canvas.width  = CANVAS_W;
-    canvas.height = CANVAS_H;
+    // ── High-DPI (Retina) support ──────────────────────────────────────────
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width  = CANVAS_W * dpr;
+    canvas.height = CANVAS_H * dpr;
+    ctx.scale(dpr, dpr);
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
 
     // ── Responsive scaling ─────────────────────────────────────────────────
-    // Canvas stays at 500×400 internally; CSS transform scales to fit viewport
-    const TOUCH_CTRL_H = 96; // touch buttons height + margin
+    const TOUCH_CTRL_H = 96; // CSS px — not a canvas coordinate
     function fitCanvas() {
       const availW = window.innerWidth - 16;
       const availH = window.innerHeight - TOUCH_CTRL_H - 16;
@@ -263,7 +268,6 @@
     }
 
     // ── Draw helpers ───────────────────────────────────────────────────────
-    // object-fit: cover equivalent for canvas
     function drawBgCover(img, dx, dy, dw, dh) {
       if (!img.naturalWidth) return;
       const imgR = img.naturalWidth / img.naturalHeight;
@@ -278,28 +282,28 @@
       }
       ctx.drawImage(img, sx, sy, sw, sh, dx, dy, dw, dh);
     }
+
     function drawPlayer(x, lane) {
       const y = laneY(lane);
-      ctx.drawImage(playerImg, x - 30, y - 20, 60, 40);
+      ctx.drawImage(playerImg, x - 30*SCALE, y - 20*SCALE, 60*SCALE, 40*SCALE);
     }
 
     function drawEnemy(x, lane, hp) {
       const y = laneY(lane);
-      ctx.drawImage(enemyImg, x - 25, y - 18, 50, 36);
-      // HP pip dots above enemy
-      const pipW = 6, pipGap = 3;
+      ctx.drawImage(enemyImg, x - 25*SCALE, y - 18*SCALE, 50*SCALE, 36*SCALE);
+      const pipW = 6*SCALE, pipGap = 3*SCALE;
       const totalW = 5 * pipW + 4 * pipGap;
       let px = x - totalW / 2;
       for (let i = 0; i < 5; i++) {
         ctx.fillStyle = i < hp ? '#ffcc00' : '#333';
-        ctx.fillRect(px, y - 24, pipW, 3);
+        ctx.fillRect(px, y - 24*SCALE, pipW, 3*SCALE);
         px += pipW + pipGap;
       }
     }
 
     function drawItem(x, lane, lifeRatio) {
       const y = laneY(lane);
-      const r = 14;
+      const r = 14 * SCALE;
       ctx.save();
       ctx.globalAlpha = 0.4 + lifeRatio * 0.6;
       ctx.drawImage(itemImg, x - r, y - r, r * 2, r * 2);
@@ -308,13 +312,12 @@
 
     function drawBullet(x, lane) {
       const y = laneY(lane);
-      ctx.drawImage(bulletImg, x, y - 6, 20, 12);
+      ctx.drawImage(bulletImg, x, y - 6*SCALE, 20*SCALE, 12*SCALE);
     }
 
     // ── State ──────────────────────────────────────────────────────────────
     const MAX_HP = 5;
     const MAX_LEVEL = 6;
-    // Lv1=300ms … Lv6=140ms (32ms step)
     function levelToInterval(lv) { return 300 - (lv - 1) * 32; }
 
     let state;
@@ -323,24 +326,24 @@
       state = {
         started: false,
         over: false,
-        playerLane: 1,        // 0-2
+        playerLane: 1,
         hp: MAX_HP,
         level: 1,
         score: 0,
         kills: 0,
-        elapsed: 0,           // seconds survived
+        elapsed: 0,
         lastTime: 0,
-        enemies: [],          // { x, lane, hp, baseSpeed }
-        bullets: [],          // { x, lane }
-        items: [],            // { x, lane, life } level-up items
+        enemies: [],
+        bullets: [],
+        items: [],
         spawnTimer: 0,
-        spawnInterval: 2000,  // ms, decreases over time
+        spawnInterval: 2000,
         bulletTimer: 0,
         bulletInterval: levelToInterval(1),
-        laneMoveCooldown: 0,  // ms, prevents too-fast movement
+        laneMoveCooldown: 0,
         input: { up: false, down: false },
-        hitFlash: 0,          // frames to flash red on hit
-        levelFlash: 0,        // frames to flash on level up
+        hitFlash: 0,
+        levelFlash: 0,
       };
     }
 
@@ -362,7 +365,6 @@
     function update(dt) {
       state.elapsed += dt / 1000;
 
-      // Player lane movement
       state.laneMoveCooldown = Math.max(0, state.laneMoveCooldown - dt);
       if (state.laneMoveCooldown === 0) {
         if (state.input.up && state.playerLane > 0) {
@@ -374,49 +376,41 @@
         }
       }
 
-      // Autofire
       state.bulletTimer += dt;
       if (state.bulletTimer >= state.bulletInterval) {
         state.bulletTimer = 0;
-        state.bullets.push({ x: 82, lane: state.playerLane });
+        state.bullets.push({ x: 82*SCALE, lane: state.playerLane });
       }
 
-      // Move bullets
-      const bSpeed = CANVAS_W * 0.8 / 1000 * dt; // crosses ~80% of canvas per second
+      const bSpeed = CANVAS_W * 0.8 / 1000 * dt;
       state.bullets = state.bullets.filter(b => {
         b.x += bSpeed;
-        return b.x < CANVAS_W + 20;
+        return b.x < CANVAS_W + 20*SCALE;
       });
 
-      // Spawn enemies
       state.spawnTimer += dt;
-      const difficulty = Math.min(state.elapsed / 30, 1); // 0→1 over 30s
-      state.spawnInterval = 2000 - difficulty * 1200;      // 2000ms → 800ms
+      const difficulty = Math.min(state.elapsed / 30, 1);
+      state.spawnInterval = 2000 - difficulty * 1200;
       if (state.spawnTimer >= state.spawnInterval) {
         state.spawnTimer = 0;
         const lane = Math.floor(Math.random() * LANES);
-        const speed = (140 + difficulty * 120) * dt / 1000; // px per dt, will recalc in move
-        state.enemies.push({ x: CANVAS_W + 30, lane, baseSpeed: 140 + difficulty * 120, hp: 5 });
+        state.enemies.push({ x: CANVAS_W + 30*SCALE, lane, baseSpeed: (140 + difficulty * 120) * SCALE, hp: 5 });
       }
 
-      // Move enemies
       state.enemies = state.enemies.filter(e => {
         e.x -= e.baseSpeed * dt / 1000;
-        return e.x > -60;
+        return e.x > -60*SCALE;
       });
 
-      // Bullet–enemy collision
-      const BULLET_HIT_R = 30;
-      const ENEMY_HIT_W = 50;
-      const ENEMY_HIT_H = 36;
+      const BULLET_HIT_R = 30*SCALE;
+      const ENEMY_HIT_W  = 50*SCALE;
       for (let bi = state.bullets.length - 1; bi >= 0; bi--) {
         const b = state.bullets[bi];
         for (let ei = state.enemies.length - 1; ei >= 0; ei--) {
           const e = state.enemies[ei];
           if (b.lane !== e.lane) continue;
-          const ey = laneY(e.lane);
           if (
-            b.x + 14 > e.x - ENEMY_HIT_W / 2 &&
+            b.x + 14*SCALE > e.x - ENEMY_HIT_W / 2 &&
             b.x < e.x + ENEMY_HIT_W / 2
           ) {
             state.bullets.splice(bi, 1);
@@ -425,7 +419,6 @@
               state.enemies.splice(ei, 1);
               state.kills++;
               state.score += 10;
-              // 30% chance to drop a level-up item
               if (state.level < MAX_LEVEL && Math.random() < 0.20) {
                 state.items.push({ x: e.x, lane: e.lane, life: 5000, delay: 500 });
               }
@@ -435,12 +428,11 @@
         }
       }
 
-      // Enemy–player collision
-      const PLAYER_X = 54; // also used implicitly via PLAYER_PICKUP_X above
+      const PLAYER_X = 54 * SCALE;
       for (let ei = state.enemies.length - 1; ei >= 0; ei--) {
         const e = state.enemies[ei];
         if (e.lane !== state.playerLane) continue;
-        if (e.x - 25 < PLAYER_X + 28 && e.x + 25 > PLAYER_X - 28) {
+        if (e.x - 25*SCALE < PLAYER_X + 28*SCALE && e.x + 25*SCALE > PLAYER_X - 28*SCALE) {
           state.enemies.splice(ei, 1);
           state.hp--;
           state.hitFlash = 8;
@@ -451,19 +443,17 @@
         }
       }
 
-      // Move items (slow leftward drift)
-      const ITEM_R = 14;
-      const PLAYER_PICKUP_X = 54;
+      const ITEM_R = 14 * SCALE;
+      const PLAYER_PICKUP_X = 54 * SCALE;
       state.items = state.items.filter(item => {
-        item.x -= 60 * dt / 1000;
+        item.x -= 60*SCALE * dt / 1000;
         item.life -= dt;
         if (item.delay > 0) { item.delay -= dt; return true; }
         if (item.life <= 0 || item.x < -ITEM_R) return false;
-        // Player pickup: same lane, overlap, and not yet at max level
         if (
           state.level < MAX_LEVEL &&
           item.lane === state.playerLane &&
-          Math.abs(item.x - PLAYER_PICKUP_X) < ITEM_R + 28
+          Math.abs(item.x - PLAYER_PICKUP_X) < ITEM_R + 28*SCALE
         ) {
           state.level++;
           state.bulletInterval = levelToInterval(state.level);
@@ -473,7 +463,6 @@
         return true;
       });
 
-      // Survival time bonus score (every second)
       state.score = state.kills * 10 + Math.floor(state.elapsed);
 
       if (state.hitFlash > 0) state.hitFlash--;
@@ -481,14 +470,12 @@
     }
 
     function render() {
-      // Background
       ctx.fillStyle = state.hitFlash > 0 ? '#200000' : '#0d0d00';
       ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
       drawBgCover(bgImg, 0, HUD_H, CANVAS_W, CANVAS_H - HUD_H);
 
-      // Lane separators
       ctx.strokeStyle = 'rgba(245,196,0,0.06)';
-      ctx.lineWidth = 1;
+      ctx.lineWidth = SCALE;
       for (let i = 0; i <= LANES; i++) {
         const y = HUD_H + i * LANE_H;
         ctx.beginPath();
@@ -497,26 +484,18 @@
         ctx.stroke();
       }
 
-      // Player column line
       ctx.strokeStyle = 'rgba(0,255,255,0.08)';
       ctx.beginPath();
-      ctx.moveTo(82, HUD_H);
-      ctx.lineTo(82, CANVAS_H);
+      ctx.moveTo(82*SCALE, HUD_H);
+      ctx.lineTo(82*SCALE, CANVAS_H);
       ctx.stroke();
 
-      // Draw enemies
       for (const e of state.enemies) drawEnemy(e.x, e.lane, e.hp);
-
-      // Draw items
       for (const item of state.items) drawItem(item.x, item.lane, item.life / 5000);
-
-      // Draw bullets
       for (const b of state.bullets) drawBullet(b.x, b.lane);
 
-      // Draw player
-      drawPlayer(54, state.playerLane);
+      drawPlayer(54*SCALE, state.playerLane);
 
-      // HUD
       renderHUD();
     }
 
@@ -524,47 +503,42 @@
       ctx.fillStyle = '#111100';
       ctx.fillRect(0, 0, CANVAS_W, HUD_H);
       ctx.strokeStyle = 'rgba(245,196,0,0.15)';
-      ctx.lineWidth = 1;
+      ctx.lineWidth = SCALE;
       ctx.beginPath();
       ctx.moveTo(0, HUD_H);
       ctx.lineTo(CANVAS_W, HUD_H);
       ctx.stroke();
 
-      // Hearts
-      const heartSize = 22;
-      const heartGap = 6;
-      const heartStartX = 12;
+      const heartSize  = 22 * SCALE;
+      const heartGap   =  6 * SCALE;
+      const heartStartX = 12 * SCALE;
       for (let i = 0; i < MAX_HP; i++) {
-        drawHeart(heartStartX + i * (heartSize + heartGap), 13, heartSize, i < state.hp);
+        drawHeart(heartStartX + i * (heartSize + heartGap), 13*SCALE, heartSize, i < state.hp);
       }
 
-      // Level (center-stacked: label above bar)
       const lvColor = state.levelFlash > 0 ? '#00ffcc' : '#aaa';
       ctx.fillStyle = lvColor;
-      ctx.font = 'bold 12px "Courier New", monospace';
+      ctx.font = `bold ${12*SCALE}px "Courier New", monospace`;
       ctx.textAlign = 'center';
-      ctx.fillText(`LV ${state.level}`, CANVAS_W / 2, 18);
-      // Level bar (Lv1–6)
-      const barW = 72, barH = 5;
-      const barX = CANVAS_W / 2 - barW / 2, barY = 25;
+      ctx.fillText(`LV ${state.level}`, CANVAS_W / 2, 18*SCALE);
+      const barW = 72*SCALE, barH = 5*SCALE;
+      const barX = CANVAS_W / 2 - barW / 2, barY = 25*SCALE;
       ctx.fillStyle = '#333';
       ctx.fillRect(barX, barY, barW, barH);
       ctx.fillStyle = state.levelFlash > 0 ? '#00ffcc' : '#f5c400';
       ctx.fillRect(barX, barY, barW * (state.level / MAX_LEVEL), barH);
       ctx.textAlign = 'left';
 
-      // Score
       ctx.fillStyle = '#f5c400';
-      ctx.font = 'bold 15px "Courier New", monospace';
+      ctx.font = `bold ${15*SCALE}px "Courier New", monospace`;
       ctx.textAlign = 'right';
-      ctx.fillText(`SCORE: ${state.score}`, CANVAS_W - 12, 30);
+      ctx.fillText(`SCORE: ${state.score}`, CANVAS_W - 12*SCALE, 30*SCALE);
       ctx.textAlign = 'left';
 
-      // Time
       ctx.fillStyle = '#888';
-      ctx.font = '12px "Courier New", monospace';
+      ctx.font = `${12*SCALE}px "Courier New", monospace`;
       ctx.textAlign = 'right';
-      ctx.fillText(`${Math.floor(state.elapsed)}s`, CANVAS_W - 12, 44);
+      ctx.fillText(`${Math.floor(state.elapsed)}s`, CANVAS_W - 12*SCALE, 44*SCALE);
       ctx.textAlign = 'left';
     }
 
@@ -581,7 +555,7 @@
       ctx.fill();
       if (filled) {
         ctx.strokeStyle = '#ff99bb';
-        ctx.lineWidth = 1;
+        ctx.lineWidth = SCALE;
         ctx.stroke();
       }
       ctx.restore();
@@ -663,7 +637,6 @@
     // ── Touch controls ─────────────────────────────────────────────────────
     function bindTouchBtn(id, direction) {
       const btn = document.getElementById(id);
-      let interval = null;
 
       function start(e) {
         e.preventDefault();
