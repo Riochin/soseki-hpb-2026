@@ -11,23 +11,23 @@ vi.mock('@/hooks/useGameResults', () => ({
 }));
 
 describe('MiniGameSection', () => {
-  it('「漱石タイピング」のゲームカード見出しが表示される', () => {
+  it('「名言タイピング」のゲームカード見出しが表示される', () => {
     render(<MiniGameSection playerName={null} />);
     expect(
-      screen.getByRole('heading', { name: /漱石タイピング/ }),
+      screen.getByRole('heading', { name: /名言タイピング/ }),
     ).toBeInTheDocument();
   });
 
   it('+1 Credit バッジがゲームカードに表示される', () => {
     render(<MiniGameSection playerName={null} />);
     const badges = screen.getAllByText(/\+1.*Credit|Credit.*\+1/i);
-    expect(badges.length).toBeGreaterThanOrEqual(2);
+    expect(badges.length).toBeGreaterThanOrEqual(3);
   });
 
-  it('PLAY NOW ボタンが2つ表示される', () => {
+  it('PLAY NOW ボタンが3つ表示される', () => {
     render(<MiniGameSection playerName={null} />);
     const buttons = screen.getAllByRole('button', { name: /^PLAY NOW$/i });
-    expect(buttons).toHaveLength(2);
+    expect(buttons).toHaveLength(3);
     buttons.forEach((b) => expect(b).toBeEnabled());
   });
 

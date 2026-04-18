@@ -45,7 +45,7 @@ function buildGameResultsPath(
 }
 
 /**
- * @param timeLimitFilter 漱石タイピング: 制限秒数（30|60|120）。顔神経衰弱: モード（1=EASY, 2=ムズすぎるな）。API の `timeLimit` クエリに対応。
+ * @param timeLimitFilter 漱石タイピング: 制限秒数（30|60|120）。名場面神経衰弱: モード（1=EASY, 2=ムズすぎるな）。API の `timeLimit` クエリに対応。
  */
 export function useGameResults(
   gameType: MiniGameType,

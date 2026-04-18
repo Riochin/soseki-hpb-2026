@@ -17,7 +17,7 @@ interface Props {
 const TYPING_TIME_OPTIONS = [30, 60, 120] as const;
 type TypingTimeSeconds = (typeof TYPING_TIME_OPTIONS)[number];
 
-/** 顔神経衰弱のモード — `games/face-memory-game.html` と API の time_limit と一致（1=EASY, 2=ムズすぎるな） */
+/** 名場面神経衰弱のモード — `games/face-memory-game.html` と API の time_limit と一致（1=EASY, 2=ムズすぎるな） */
 const FACE_MEMORY_MODE_OPTIONS = [
   { value: 1 as const, label: 'EASY' },
   { value: 2 as const, label: 'ムズすぎるな' },
@@ -282,10 +282,10 @@ export default function MiniGameSection({ playerName }: Props) {
             </div>
 
             <h3 className="mb-1 text-lg font-bold text-white">
-              顔神経衰弱
+              名場面神経衰弱
             </h3>
             <p className="mb-5 text-sm text-stone-400">
-              同じ顔をそろえろ。60秒タイムアタック。
+              俺⁉️俺⁉️俺⁉️俺⁉️俺⁉️俺⁉️俺⁉️俺⁉️
             </p>
 
             <button
@@ -353,7 +353,7 @@ export default function MiniGameSection({ playerName }: Props) {
                 }`}
                 aria-pressed={rankTab === 'face_memory'}
               >
-                顔神経衰弱
+                名場面神経衰弱
               </button>
             </div>
           </div>
@@ -397,7 +397,7 @@ export default function MiniGameSection({ playerName }: Props) {
             <div
               className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3"
               role="group"
-              aria-label="顔神経衰弱のモード別ハイスコアランキング"
+              aria-label="名場面神経衰弱のモード別ハイスコアランキング"
             >
               <span className="text-xs font-medium text-stone-500">
                 モード
@@ -483,7 +483,7 @@ export default function MiniGameSection({ playerName }: Props) {
       <GameModal
         isOpen={faceMemoryOpen}
         onClose={() => setFaceMemoryOpen(false)}
-        title="顔神経衰弱"
+        title="名場面神経衰弱"
         gameUrl="/games/face-memory-game.html"
         playerName={playerName}
         mobileSupported

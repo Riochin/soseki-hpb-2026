@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>顔神経衰弱</title>
+  <title>名場面神経衰弱</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -118,13 +118,6 @@
     .mode-btn:hover {
       border-color: var(--accent);
       background: rgba(250, 204, 21, 0.08);
-    }
-    .mode-btn small {
-      display: block;
-      margin-top: 6px;
-      font-weight: normal;
-      font-size: 0.72rem;
-      color: var(--text-dim);
     }
 
     #screen-game {
@@ -260,18 +253,14 @@
   <div id="screen-start" class="screen active">
     <h1 class="title">顔<span>神経衰弱</span></h1>
     <p class="subtitle">
-      同じ顔のカードをめくってペアをそろえよう。<br>
-      EASY は 2行4列・4組（60秒・easy/ から毎回ランダム）。ムズすぎるなは 4×4・8組（90秒・difficult/ から毎回ランダム）。制限時間内に全部そろえればクリア。
+      俺⁉️俺⁉️俺⁉️俺⁉️俺⁉️俺⁉️俺⁉️俺⁉️
     </p>
-    <p class="subtitle" style="font-size:0.8rem;">※速さ換算スコアがランキングに記録されます（速いほど高得点）</p>
     <div class="mode-row" role="group" aria-label="難易度">
       <button type="button" class="mode-btn" id="btn-easy" data-mode="easy">
         EASY
-        <small>画像がでかい</small>
       </button>
       <button type="button" class="mode-btn" id="btn-hard" data-mode="hard">
         ムズすぎるな
-        <small>difficult/ 顔寄り・8組ランダム</small>
       </button>
     </div>
   </div>

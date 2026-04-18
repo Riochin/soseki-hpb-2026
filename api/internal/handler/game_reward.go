@@ -146,7 +146,7 @@ func calcTypingReward(rank string, timeLimit int) int {
 	return 1
 }
 
-// calcFaceMemoryReward は顔神経衰弱のコイン報酬を算出する。
+// calcFaceMemoryReward は名場面神経衰弱のコイン報酬を算出する。
 // 基準（EASY, timeLimit=1）: S=1200(12Cr), A=700, B=400, C=250, D=100
 // ムズすぎるな（timeLimit=2）は獲得コインを3倍。
 func calcFaceMemoryReward(rank string, timeLimit int) int {
