@@ -7,12 +7,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
-	"github.com/go-chi/cors"
-
 	"github.com/soseki-hpb-2026/api/internal/db"
-	"github.com/soseki-hpb-2026/api/internal/handler"
 )
 
 func main() {
@@ -51,59 +46,6 @@ func main() {
 	if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 		log.Fatalf("server error: %v", err)
 	}
-}
-
-// buildRouter はルーターを構築して返す（テストでも再利用できるよう切り出す）。
-func buildRouter(allowedOrigin string, database *db.DB) *chi.Mux {
-	r := chi.NewRouter()
-
-	r.Use(middleware.Logger)
-	r.Use(middleware.Recoverer)
-	r.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   []string{allowedOrigin},
-		AllowedMethods:   []string{"GET", "POST", "OPTIONS"},
-		AllowedHeaders:   []string{"Accept", "Content-Type"},
-		AllowCredentials: false,
-		MaxAge:           300,
-	}))
-
-	r.Get("/health", healthHandler)
-
-	// メッセージ CRUD
-	msgHandler := handler.NewMessages(handler.NewDBMessageStore(database))
-	r.Get("/api/messages", msgHandler.List)
-	r.Post("/api/messages", msgHandler.Create)
-
-	// プレイヤー管理・借金
-	playerStore := handler.NewDBPlayerStore(database)
-	playersHandler := handler.NewPlayers(playerStore)
-	borrowHandler := handler.NewBorrow(playerStore)
-	gameRewardStore := handler.NewDBGameRewardStore(database)
-	gameRewardHandler := handler.NewGameReward(gameRewardStore)
-	gameResultsListStore := handler.NewDBGameResultListStore(database)
-	gameResultsHandler := handler.NewGameResults(gameResultsListStore)
-
-	r.Post("/api/players", playersHandler.Create)
-	r.Get("/api/players/{name}", playersHandler.Get)
-	r.Post("/api/players/{name}/borrow", borrowHandler.Create)
-	r.Post("/api/players/{name}/game-reward", gameRewardHandler.Create)
-
-	r.Get("/api/game-results", gameResultsHandler.List)
-
-	// ガチャ
-	gachaHandler := handler.NewGacha(handler.NewDBGachaStore(database))
-	r.Post("/api/gacha", gachaHandler.Create)
-	r.Post("/api/gacha/multi", gachaHandler.CreateMulti)
-
-	// アイテム引き換え
-	consumeHandler := handler.NewConsume(handler.NewDBConsumeStore(database))
-	r.Post("/api/players/{name}/items/{item_id}/consume", consumeHandler.Create)
-
-	// アクセスカウンター
-	counterHandler := handler.NewCounter(handler.NewDBCounterStore(database))
-	r.Post("/api/counter", counterHandler.Create)
-
-	return r
 }
 
 // healthHandler は GET /health のレスポンスを返す。
