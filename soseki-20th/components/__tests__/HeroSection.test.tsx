@@ -30,6 +30,7 @@ describe('HeroSection', () => {
 
   it('引用文のテキストが表示される', () => {
     render(<HeroSection />);
-    expect(screen.getByText(/漱石/)).toBeInTheDocument();
+    // 大見出しの「アクメ漱石」と区別するため、引用の著者表記で検証する
+    expect(screen.getByText(/夏目漱石/)).toBeInTheDocument();
   });
 });

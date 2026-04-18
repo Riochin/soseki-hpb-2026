@@ -33,7 +33,8 @@ func NewDBGameRewardStore(database *db.DB) *DBGameRewardStore {
 	return &DBGameRewardStore{db: database}
 }
 
-// CommitGameReward は game_result を挿入し、成功時のみコインを加算する。
+// CommitGameReward は game_result に1プレイ1行を挿入する（ベストだけに置き換えたりはしない。履歴はすべて残る）。
+// 成功時のみコインを加算する。
 // 同一 session_id が既に存在する場合は ErrDuplicateGameSession を返す。
 // プレイヤーが存在しない場合は ErrNotFound を返す。
 func (s *DBGameRewardStore) CommitGameReward(ctx context.Context, in GameRewardCommit) (newCoins int, resultID int64, err error) {

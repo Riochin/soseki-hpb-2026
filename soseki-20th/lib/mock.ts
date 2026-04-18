@@ -53,7 +53,7 @@ export const MOCK_EARN_COINS_RESULT: EarnCoinsResult = {
   resultId: 1,
 };
 
-/** ミニゲームランキング（UIモック用） */
+/** ミニゲームランキング（UIモック用）。生データは同一プレイヤー複数行を含みうるが、useGameResults が本番APIと同様に集約する */
 export const MOCK_GAME_RESULTS_TYPING = [
   {
     rank: 1,
@@ -72,6 +72,13 @@ export const MOCK_GAME_RESULTS_TYPING = [
   {
     rank: 3,
     playerName: 'UIモックユーザー',
+    score: 8000,
+    gradeRank: 'A',
+    createdAt: '2026-04-22T10:00:00.000Z',
+  },
+  {
+    rank: 4,
+    playerName: 'UIモックユーザー',
     score: 4200,
     gradeRank: 'B',
     createdAt: '2026-04-22T15:00:00.000Z',
@@ -88,10 +95,24 @@ export const MOCK_GAME_RESULTS_SHOOTING = [
   },
   {
     rank: 2,
+    playerName: 'UIモックユーザー',
+    score: 50000,
+    gradeRank: 'S',
+    createdAt: '2026-04-21T09:00:00.000Z',
+  },
+  {
+    rank: 3,
     playerName: '匿名',
     score: 12000,
     gradeRank: 'A',
     createdAt: '2026-04-21T14:00:00.000Z',
+  },
+  {
+    rank: 4,
+    playerName: 'UIモックユーザー',
+    score: 3000,
+    gradeRank: 'C',
+    createdAt: '2026-04-22T11:00:00.000Z',
   },
 ];
 

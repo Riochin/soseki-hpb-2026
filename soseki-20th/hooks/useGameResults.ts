@@ -1,5 +1,7 @@
+import { useMemo } from 'react';
 import useSWR from 'swr';
 import { fetcher } from '@/lib/api';
+import { dedupeLeaderboardBestPerPlayer } from '@/lib/leaderboardDedupe';
 import {
   IS_UI_MOCK,
   MOCK_GAME_RESULTS_SHOOTING,
@@ -56,11 +58,24 @@ export function useGameResults(
     fetcher,
   );
 
-  const mockEntries =
-    gameType === 'typing' ? MOCK_GAME_RESULTS_TYPING : MOCK_GAME_RESULTS_SHOOTING;
+  const rawEntries = useMemo(() => {
+    if (IS_UI_MOCK) {
+      return gameType === 'typing' ? MOCK_GAME_RESULTS_TYPING : MOCK_GAME_RESULTS_SHOOTING;
+    }
+    return data?.entries ?? [];
+  }, [IS_UI_MOCK, gameType, data?.entries]);
+
+  // 本番: POST で game_result に全プレイが残り、GET /api/game-results がプレイヤー別ベストに集約した一覧を返す。
+  // モック: 生データに重複行がありうるため、本番APIと同じ規則でここだけ集約する。
+  const entries = useMemo(() => {
+    if (IS_UI_MOCK) {
+      return dedupeLeaderboardBestPerPlayer(rawEntries, limit);
+    }
+    return rawEntries;
+  }, [IS_UI_MOCK, rawEntries, limit]);
 
   return {
-    entries: IS_UI_MOCK ? mockEntries : (data?.entries ?? []),
+    entries,
     isLoading: IS_UI_MOCK ? false : isLoading,
     error: IS_UI_MOCK ? null : (error ?? null),
   };
