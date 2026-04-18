@@ -170,7 +170,7 @@ export default function QuoteOverlay() {
               「{q.text}」
             </p>
             <cite
-              className="not-italic text-yellow-400/55"
+              className="not-italic text-accent/55"
               style={{ fontSize: 'clamp(0.6rem, 0.9vw, 0.75rem)' }}
             >
               — {q.author}{q.source ? `『${q.source}』` : ''}

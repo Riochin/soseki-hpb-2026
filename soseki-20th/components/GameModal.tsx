@@ -29,6 +29,7 @@ export default function GameModal({
   useEffect(() => {
     if (!isOpen) return;
     sessionIdRef.current = crypto.randomUUID();
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- モーダルを開くたびにトーストをリセット
     setToast(null);
   }, [isOpen]);
 
@@ -67,25 +68,24 @@ export default function GameModal({
 
   if (!isOpen) return null;
 
-  // md未満はPC専用メッセージを表示
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-overlay p-4 backdrop-blur-sm"
       onClick={onClose}
     >
       <div
-        className="relative w-full max-w-4xl border-2 border-zinc-700 bg-zinc-900 overflow-hidden"
+        className="relative w-full max-w-4xl overflow-hidden rounded-panel border-2 border-edge bg-panel"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-700">
-          <span className="flex items-center gap-2 font-bold text-yellow-400">
+        <div className="flex items-center justify-between border-b border-edge px-4 py-3">
+          <span className="flex items-center gap-2 font-bold text-accent">
             <Keyboard className="h-4 w-4" /> {title}
           </span>
           <button
             onClick={onClose}
-            className="text-yellow-400 hover:text-yellow-300 transition-colors"
+            className="text-accent transition-colors hover:text-yellow-300"
             aria-label="閉じる"
           >
             <X className="h-5 w-5" />
@@ -93,21 +93,25 @@ export default function GameModal({
         </div>
 
         {isMobile && !mobileSupported ? (
-          <div className="flex flex-col items-center justify-center gap-4 py-16 px-6 text-center">
-            <Monitor className="h-12 w-12 text-yellow-400/60" />
-            <p className="text-lg font-bold text-yellow-400">PC専用ゲームです</p>
-            <p className="text-sm text-gray-400">このゲームはキーボード操作が必要なため、<br />PCからお楽しみください。</p>
+          <div className="flex flex-col items-center justify-center gap-4 px-6 py-16 text-center">
+            <Monitor className="h-12 w-12 text-accent/60" />
+            <p className="text-lg font-bold text-accent">PC専用ゲームです</p>
+            <p className="text-sm text-stone-400">
+              このゲームはキーボード操作が必要なため、
+              <br />
+              PCからお楽しみください。
+            </p>
           </div>
         ) : (
           <iframe
             src={gameUrl}
-            className="w-full h-[75vh] border-0"
+            className="h-[75vh] w-full border-0"
             title={title}
           />
         )}
 
         {toast && (
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 rounded bg-yellow-400 px-5 py-2 text-sm font-bold text-black shadow-lg">
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 rounded-control bg-accent px-5 py-2 text-sm font-bold text-black shadow-lg">
             +{toCredit(toast.coinsEarned)} Credit獲得！
           </div>
         )}

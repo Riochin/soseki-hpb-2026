@@ -10,37 +10,27 @@ export default function FooterCounter() {
   const display = String(count).padStart(6, '0');
 
   return (
-    <footer className="border-t border-yellow-400/20 bg-[#0c0a08] px-4 py-10 text-center">
-      {/* カウンター */}
+    <footer className="border-t border-edge bg-background px-4 py-10 text-center">
       <div className="mb-4">
-        <p className="mb-2 text-xs tracking-widest text-gray-500 uppercase">
-          Access Counter
-        </p>
-        <div className="inline-flex items-center gap-0.5 border-2 border-yellow-400/20 bg-[#141008] px-4 py-2">
+        <p className="mb-2 text-xs uppercase tracking-widest text-stone-500">Access Counter</p>
+        <div className="inline-flex items-center gap-0.5 rounded-control border-2 border-edge bg-surface px-4 py-2">
           {display.split('').map((digit, i) => (
-            <span
-              key={i}
-              className="font-mono text-2xl font-bold text-yellow-400"
-            >
+            <span key={i} className="font-mono text-2xl font-bold text-accent">
               {digit}
             </span>
           ))}
         </div>
       </div>
 
-      {/* ラッキーナンバー演出 */}
       {isLucky && (
-        <p className="mb-4 flex items-center justify-center gap-1 animate-pulse text-sm font-bold text-yellow-300">
+        <p className="mb-4 flex animate-pulse items-center justify-center gap-1 text-sm font-bold text-yellow-300">
           <Star className="h-4 w-4 fill-yellow-300" />
           LUCKY NUMBER!
           <Star className="h-4 w-4 fill-yellow-300" />
         </p>
       )}
 
-      {/* 著作権 */}
-      <p className="text-xs text-gray-600">
-        © 2026 SOSEKI 20th Fan Site. All rights reserved.
-      </p>
+      <p className="text-xs text-stone-600">© 2026 SOSEKI 20th Fan Site. All rights reserved.</p>
     </footer>
   );
 }

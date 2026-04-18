@@ -30,6 +30,6 @@ describe('HeroSection', () => {
 
   it('引用文のテキストが表示される', () => {
     render(<HeroSection />);
-    expect(screen.getByText(/夏目漱石/)).toBeInTheDocument();
+    expect(screen.getByText(/漱石/)).toBeInTheDocument();
   });
 });

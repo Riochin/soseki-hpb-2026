@@ -1,17 +1,18 @@
 export default function VideoSection() {
   return (
-    <section className="section-reveal px-4 py-16 md:px-8 lg:px-16">
-      <p className="mb-4 font-mono text-xs tracking-widest text-yellow-400/60">
-        — ANNIVERSARY FILM
-      </p>
-      <h2 className="mb-8 text-xl font-black tracking-tight text-white md:text-3xl" style={{ fontFamily: "var(--font-noto-serif-jp), serif" }}>
+    <section className="section-reveal section-padding">
+      <p className="mb-4 font-mono text-xs tracking-widest text-accent/60">— ANNIVERSARY FILM</p>
+      <h2
+        className="mb-8 text-xl font-black tracking-tight text-white md:text-3xl"
+        style={{ fontFamily: 'var(--font-noto-serif-jp), serif' }}
+      >
         誕生日記念動画
       </h2>
 
-      <div className="overflow-hidden border-2 border-yellow-400/20 bg-[#141008]">
-        <div className="relative aspect-video w-full cursor-pointer group">
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#1a120a] transition-colors group-hover:bg-[#1e1409]">
-            <div className="mb-3 flex h-16 w-16 items-center justify-center rounded-full border-2 border-yellow-400 text-yellow-400 transition-transform group-hover:scale-110">
+      <div className="overflow-hidden rounded-panel border-2 border-edge bg-surface">
+        <div className="group relative aspect-video w-full cursor-pointer">
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-video-back transition-colors group-hover:bg-video-back-hover">
+            <div className="mb-3 flex h-16 w-16 items-center justify-center rounded-full border-2 border-accent text-accent transition-transform group-hover:scale-110">
               <svg
                 viewBox="0 0 24 24"
                 fill="currentColor"
@@ -20,10 +21,10 @@ export default function VideoSection() {
                 <path d="M8 5v14l11-7z" />
               </svg>
             </div>
-            <p className="text-sm text-gray-400">近日公開</p>
+            <p className="text-sm text-stone-400">近日公開</p>
           </div>
         </div>
       </div>
     </section>
-  )
+  );
 }

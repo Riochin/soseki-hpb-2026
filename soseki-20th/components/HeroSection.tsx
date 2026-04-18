@@ -7,7 +7,7 @@ export default function HeroSection() {
       <QuoteOverlay />
 
       {/* 日付 */}
-      <p className="mb-3 font-mono text-sm tracking-widest text-yellow-400/70 text-center">
+      <p className="mb-3 text-center font-mono text-sm tracking-widest text-accent/70">
         2026年4月23日（木）— BIRTHDAY
       </p>
 
@@ -35,7 +35,7 @@ export default function HeroSection() {
       </div>
 
       {/* スクロール誘導 */}
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 text-yellow-400/50">
+      <div className="absolute bottom-8 left-1/2 flex -translate-x-1/2 flex-col items-center gap-1 text-accent/50">
         <span className="font-mono text-xs tracking-widest">SCROLL</span>
         <svg
           viewBox="0 0 24 24"

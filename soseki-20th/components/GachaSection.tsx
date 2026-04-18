@@ -5,20 +5,19 @@ import { X } from 'lucide-react';
 import { usePlayer, CollectionItem, GachaResult, MultiGachaResult } from '@/hooks/usePlayer';
 import { toCredit } from '@/lib/currency';
 import BorrowModal from '@/components/BorrowModal';
+import ModalFrame from '@/components/ModalFrame';
 import { IS_UI_MOCK } from '@/lib/mock';
 
-// レアリティごとのテキスト・ボーダークラス
-// UR=虹グラデーション / SSR=金 / R=銀 / N=銅
 const RARITY_TEXT: Record<string, string> = {
   UR: 'bg-gradient-to-r from-rose-400 via-yellow-300 via-green-400 via-blue-400 to-purple-400 bg-clip-text text-transparent',
-  SSR: 'text-yellow-400',
+  SSR: 'text-accent',
   R: 'text-slate-300',
   N: 'text-amber-600',
 };
 
 const RARITY_BORDER: Record<string, string> = {
   UR: 'border-white/50',
-  SSR: 'border-yellow-400',
+  SSR: 'border-accent',
   R: 'border-slate-300',
   N: 'border-amber-600',
 };
@@ -35,8 +34,8 @@ const RARITY_LABEL: Record<string, string> = {
 };
 
 function rarityClass(rarity: string): string {
-  const text = RARITY_TEXT[rarity] ?? 'text-gray-400';
-  const border = RARITY_BORDER[rarity] ?? 'border-gray-500';
+  const text = RARITY_TEXT[rarity] ?? 'text-stone-400';
+  const border = RARITY_BORDER[rarity] ?? 'border-stone-500';
   return `${text} ${border}`;
 }
 
@@ -45,44 +44,31 @@ function GachaResultModal({ result, onClose }: { result: GachaResult; onClose: (
   const colorClass = rarityClass(item.rarity);
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm"
-      onClick={onClose}
-    >
-      <div
-        className="relative w-full max-w-xs border-2 border-yellow-400/20 bg-[#050403] p-8 text-center"
-        onClick={(e) => e.stopPropagation()}
+    <ModalFrame onBackdropClick={onClose} maxWidthClass="max-w-xs" panelClassName="p-8 text-center">
+      {isNew && (
+        <p className="mb-4 animate-pulse font-mono text-xs tracking-widest text-accent">
+          ✦ NEW ITEM ✦
+        </p>
+      )}
+
+      <div className="mb-4 text-7xl">{item.icon}</div>
+
+      <span className={`rounded-control border px-3 py-1 text-xs font-bold tracking-widest ${colorClass}`}>
+        {item.rarity} — {RARITY_LABEL[item.rarity]}
+      </span>
+
+      <p className="mt-4 text-lg font-bold text-white">{item.name}</p>
+
+      <p className="mt-2 font-mono text-xs text-stone-500">残Credit: {toCredit(newCoins)}</p>
+
+      <button
+        type="button"
+        onClick={onClose}
+        className="mt-6 w-full rounded-control border-2 border-edge py-2 font-bold text-accent transition-colors hover:border-edge-strong hover:bg-accent/5"
       >
-        {/* NEW バッジ */}
-        {isNew && (
-          <p className="mb-4 font-mono text-xs tracking-widest text-yellow-400 animate-pulse">
-            ✦ NEW ITEM ✦
-          </p>
-        )}
-
-        {/* アイコン */}
-        <div className="mb-4 text-7xl">{item.icon}</div>
-
-        {/* レアリティ */}
-        <span className={`border px-3 py-1 text-xs font-bold tracking-widest ${colorClass}`}>
-          {item.rarity} — {RARITY_LABEL[item.rarity]}
-        </span>
-
-        {/* アイテム名 */}
-        <p className="mt-4 text-lg font-bold text-white">{item.name}</p>
-
-        {/* 残Credit */}
-        <p className="mt-2 font-mono text-xs text-gray-500">残Credit: {toCredit(newCoins)}</p>
-
-        {/* 閉じるボタン */}
-        <button
-          onClick={onClose}
-          className="mt-6 w-full border-2 border-yellow-400/20 py-2 font-bold text-yellow-400 transition-colors hover:border-yellow-400/60 hover:bg-yellow-400/5"
-        >
-          閉じる
-        </button>
-      </div>
-    </div>
+        閉じる
+      </button>
+    </ModalFrame>
   );
 }
 
@@ -94,58 +80,48 @@ function MultiGachaResultModal({
   onClose: () => void;
 }) {
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm"
-      onClick={onClose}
+    <ModalFrame
+      onBackdropClick={onClose}
+      maxWidthClass="max-w-2xl"
+      panelClassName="max-h-[90vh] overflow-y-auto p-6 text-center"
     >
-      <div
-        className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto border-2 border-yellow-400/20 bg-[#050403] p-6"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* ヘッダー */}
-        <p className="mb-4 font-mono text-xs tracking-widest text-yellow-400/60 text-center">
-          — 10連ガチャ結果
-        </p>
+      <p className="mb-4 text-center font-mono text-xs tracking-widest text-accent/60">— 10連ガチャ結果</p>
 
-        {/* 結果グリッド: モバイル2列、sm以上5列 */}
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-6">
-          {result.results.map((r, idx) => {
-            const colorClass = rarityClass(r.item.rarity);
-            return (
-              <div
-                key={idx}
-                className="relative border border-yellow-400/20 bg-[#0a0806] p-3 text-center"
-              >
-                {r.isNew && (
-                  <span className="absolute -top-2 -right-2 bg-yellow-400 text-black text-[10px] font-bold px-1.5 py-0.5 leading-none">
-                    NEW
-                  </span>
-                )}
-                <div className="mb-1.5 text-3xl">{r.item.icon}</div>
-                <p className="mb-1 text-xs font-medium text-white leading-tight truncate" title={r.item.name}>
-                  {r.item.name}
-                </p>
-                <span className={`border px-1.5 py-0.5 text-xs font-bold ${colorClass}`}>
-                  {r.item.rarity}
+      <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-5">
+        {result.results.map((r, idx) => {
+          const colorClass = rarityClass(r.item.rarity);
+          return (
+            <div key={idx} className="relative rounded-control border border-edge bg-panel-raised p-3 text-center">
+              {r.isNew && (
+                <span className="absolute -right-2 -top-2 bg-accent px-1.5 py-0.5 text-[10px] font-bold leading-none text-black">
+                  NEW
                 </span>
-              </div>
-            );
-          })}
-        </div>
-
-        {/* 残Credit */}
-        <p className="text-center font-mono text-xs text-gray-500 mb-4">
-          残Credit: {toCredit(result.newCoins)}
-        </p>
-
-        <button
-          onClick={onClose}
-          className="w-full border-2 border-yellow-400/20 py-2 font-bold text-yellow-400 transition-colors hover:border-yellow-400/60 hover:bg-yellow-400/5"
-        >
-          閉じる
-        </button>
+              )}
+              <div className="mb-1.5 text-3xl">{r.item.icon}</div>
+              <p
+                className="mb-1 truncate text-xs font-medium leading-tight text-white"
+                title={r.item.name}
+              >
+                {r.item.name}
+              </p>
+              <span className={`rounded-control border px-1.5 py-0.5 text-xs font-bold ${colorClass}`}>
+                {r.item.rarity}
+              </span>
+            </div>
+          );
+        })}
       </div>
-    </div>
+
+      <p className="mb-4 text-center font-mono text-xs text-stone-500">残Credit: {toCredit(result.newCoins)}</p>
+
+      <button
+        type="button"
+        onClick={onClose}
+        className="w-full rounded-control border-2 border-edge py-2 font-bold text-accent transition-colors hover:border-edge-strong hover:bg-accent/5"
+      >
+        閉じる
+      </button>
+    </ModalFrame>
   );
 }
 
@@ -179,97 +155,92 @@ function ItemDetailModal({
   }
 
   return (
-    <div
-      className="fixed inset-0 z-[60] flex items-center justify-center bg-black/85 p-4 backdrop-blur-sm"
-      onClick={onClose}
+    <ModalFrame
+      onBackdropClick={onClose}
+      overlayVariant="heavy"
+      zClass="z-[60]"
+      maxWidthClass="max-w-xs"
+      panelClassName="overflow-hidden p-8 text-center"
     >
-      <div
-        className="relative w-full max-w-xs border-2 border-yellow-400/20 bg-[#050403] p-8 text-center overflow-hidden"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* アイコン */}
-        <div className="mb-3 text-6xl">{item.icon}</div>
+      <div className="mb-3 text-6xl">{item.icon}</div>
 
-        {/* レアリティ */}
-        <span className={`border px-3 py-1 text-xs font-bold tracking-widest ${colorClass}`}>
-          {item.rarity} — {RARITY_LABEL[item.rarity]}
-        </span>
+      <span className={`rounded-control border px-3 py-1 text-xs font-bold tracking-widest ${colorClass}`}>
+        {item.rarity} — {RARITY_LABEL[item.rarity]}
+      </span>
 
-        {/* アイテム名 */}
-        <p className="mt-4 text-lg font-bold text-white">{item.name}</p>
+      <p className="mt-4 text-lg font-bold text-white">{item.name}</p>
 
-        {/* 提案者 */}
-        {item.proposed_by && (
-          <p className="mt-2 text-sm text-gray-400">
-            アイテム提案者:{' '}
-            <span className="text-yellow-300 font-bold">{item.proposed_by}</span>
+      {item.proposed_by && (
+        <p className="mt-2 text-sm text-stone-400">
+          アイテム提案者:{' '}
+          <span className="font-bold text-yellow-300">{item.proposed_by}</span>
+        </p>
+      )}
+
+      {item.is_giftable && !consumed && (
+        <>
+          <p className="mt-3 rounded-control border border-green-400/30 bg-green-400/5 px-3 py-2 text-xs text-green-400">
+            提案者の前で見せればもらえます
           </p>
-        )}
-
-        {/* ギフト情報 */}
-        {item.is_giftable && !consumed && (
-          <>
-            <p className="mt-3 border border-green-400/30 bg-green-400/5 px-3 py-2 text-xs text-green-400">
-              提案者の前で見せればもらえます
-            </p>
-            <button
-              onClick={() => setShowConfirm(true)}
-              className="mt-3 w-full border-2 border-green-400 py-2 text-sm font-bold text-green-400 transition-colors hover:bg-green-400/10"
-            >
-              交換する
-            </button>
-          </>
-        )}
-
-        {/* 交換済みバッジ */}
-        {(consumed) && (
-          <div className="mt-3 w-full border-2 border-gray-600 py-2 text-sm font-bold text-gray-500">
-            交換済み
-          </div>
-        )}
-
-        {error && <p className="mt-2 text-xs text-red-400">{error}</p>}
-
-        {/* 閉じるボタン */}
-        <button
-          onClick={onClose}
-          className="mt-4 w-full border border-yellow-400/20 py-2 text-sm text-gray-400 transition-colors hover:border-yellow-400/40 hover:text-white"
-        >
-          閉じる
-        </button>
-
-        {/* 交換確認オーバーレイ */}
-        {showConfirm && (
-          <div
-            className="absolute inset-0 flex items-center justify-center bg-black/90 p-6"
-            onClick={(e) => e.stopPropagation()}
+          <button
+            type="button"
+            onClick={() => setShowConfirm(true)}
+            className="mt-3 w-full rounded-control border-2 border-green-400 py-2 text-sm font-bold text-green-400 transition-colors hover:bg-green-400/10"
           >
-            <div className="text-center">
-              <p className="mb-3 font-mono text-xs tracking-widest text-yellow-400">⚠ 確認</p>
-              <p className="mb-1 text-base font-bold text-white">{item.name}</p>
-              <p className="mb-1 text-sm text-gray-300">を交換しますか？</p>
-              <p className="mb-5 text-xs text-red-400">※ 一度交換すると取り消せません</p>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setShowConfirm(false)}
-                  disabled={consuming}
-                  className="flex-1 border border-gray-600 py-2 text-sm text-gray-400 transition-colors hover:text-white disabled:opacity-50"
-                >
-                  やめる
-                </button>
-                <button
-                  onClick={handleConsume}
-                  disabled={consuming}
-                  className="flex-1 border-2 border-green-400 py-2 text-sm font-bold text-green-400 transition-colors hover:bg-green-400/10 disabled:opacity-50"
-                >
-                  {consuming ? '処理中...' : '交換する'}
-                </button>
-              </div>
+            交換する
+          </button>
+        </>
+      )}
+
+      {consumed && (
+        <div className="mt-3 w-full rounded-control border-2 border-stone-600 py-2 text-sm font-bold text-stone-500">
+          交換済み
+        </div>
+      )}
+
+      {error && <p className="mt-2 text-xs text-red-400">{error}</p>}
+
+      <button
+        type="button"
+        onClick={onClose}
+        className="mt-4 w-full rounded-control border border-edge py-2 text-sm text-stone-400 transition-colors hover:border-edge-strong hover:text-white"
+      >
+        閉じる
+      </button>
+
+      {showConfirm && (
+        <div
+          className="absolute inset-0 flex items-center justify-center bg-overlay-inner p-6"
+          onClick={(e) => e.stopPropagation()}
+          role="presentation"
+        >
+          <div className="text-center">
+            <p className="mb-3 font-mono text-xs tracking-widest text-accent">⚠ 確認</p>
+            <p className="mb-1 text-base font-bold text-white">{item.name}</p>
+            <p className="mb-1 text-sm text-stone-300">を交換しますか？</p>
+            <p className="mb-5 text-xs text-red-400">※ 一度交換すると取り消せません</p>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setShowConfirm(false)}
+                disabled={consuming}
+                className="flex-1 rounded-control border border-stone-600 py-2 text-sm text-stone-400 transition-colors hover:text-white disabled:opacity-50"
+              >
+                やめる
+              </button>
+              <button
+                type="button"
+                onClick={handleConsume}
+                disabled={consuming}
+                className="flex-1 rounded-control border-2 border-green-400 py-2 text-sm font-bold text-green-400 transition-colors hover:bg-green-400/10 disabled:opacity-50"
+              >
+                {consuming ? '処理中...' : '交換する'}
+              </button>
             </div>
           </div>
-        )}
-      </div>
-    </div>
+        </div>
+      )}
+    </ModalFrame>
   );
 }
 
@@ -299,95 +270,97 @@ function CollectionModal({
 
   return (
     <>
-      <div
-        className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
-        onClick={onClose}
+      <ModalFrame
+        onBackdropClick={onClose}
+        maxWidthClass="max-w-lg"
+        panelClassName="max-h-[80vh] overflow-y-auto p-6 text-left"
       >
-        <div
-          className="relative w-full max-w-lg max-h-[80vh] overflow-y-auto border-2 border-yellow-400/20 bg-[#050403] p-6"
-          onClick={(e) => e.stopPropagation()}
-        >
-          {/* ヘッダー */}
-          <div className="mb-4 flex items-center justify-between">
-            <div>
-              <p className="font-mono text-xs tracking-widest text-yellow-400/60">— COLLECTION</p>
-              <p className="text-sm text-gray-400 mt-0.5">{acquired} / {collection.length} 入手済み</p>
-            </div>
-            <button
-              onClick={onClose}
-              className="border border-yellow-400/20 p-1.5 text-gray-400 transition-colors hover:border-yellow-400/60 hover:text-white"
-            >
-              <X className="h-4 w-4" />
-            </button>
+        <div className="mb-4 flex items-center justify-between">
+          <div>
+            <p className="font-mono text-xs tracking-widest text-accent/60">— COLLECTION</p>
+            <p className="mt-0.5 text-sm text-stone-400">
+              {acquired} / {collection.length} 入手済み
+            </p>
           </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-control border border-edge p-1.5 text-stone-400 transition-colors hover:border-edge-strong hover:text-white"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
 
-          {/* 提案者フィルター */}
-          {proposers.length > 0 && (
-            <div className="mb-4 flex flex-wrap gap-1.5">
+        {proposers.length > 0 && (
+          <div className="mb-4 flex flex-wrap gap-1.5">
+            <button
+              type="button"
+              onClick={() => setFilterBy(null)}
+              className={`rounded-control px-2.5 py-1 font-mono text-xs transition-colors ${
+                filterBy === null
+                  ? 'border border-edge-muted bg-accent/10 text-accent'
+                  : 'border border-edge text-stone-400 hover:border-edge-strong hover:text-stone-200'
+              }`}
+            >
+              すべて
+            </button>
+            {proposers.map((name) => (
               <button
-                onClick={() => setFilterBy(null)}
-                className={`px-2.5 py-1 text-xs font-mono border transition-colors ${
-                  filterBy === null
-                    ? 'border-yellow-400/60 text-yellow-400 bg-yellow-400/10'
-                    : 'border-yellow-400/20 text-gray-400 hover:border-yellow-400/40 hover:text-gray-200'
+                key={name}
+                type="button"
+                onClick={() => setFilterBy(filterBy === name ? null : name)}
+                className={`rounded-control px-2.5 py-1 font-mono text-xs transition-colors ${
+                  filterBy === name
+                    ? 'border border-edge-muted bg-accent/10 text-accent'
+                    : 'border border-edge text-stone-400 hover:border-edge-strong hover:text-stone-200'
                 }`}
               >
-                すべて
+                {name}
               </button>
-              {proposers.map((name) => (
-                <button
-                  key={name}
-                  onClick={() => setFilterBy(filterBy === name ? null : name)}
-                  className={`px-2.5 py-1 text-xs font-mono border transition-colors ${
-                    filterBy === name
-                      ? 'border-yellow-400/60 text-yellow-400 bg-yellow-400/10'
-                      : 'border-yellow-400/20 text-gray-400 hover:border-yellow-400/40 hover:text-gray-200'
-                  }`}
-                >
-                  {name}
-                </button>
-              ))}
-            </div>
-          )}
-
-          {/* グリッド */}
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
-            {filtered.map((item) =>
-              item.acquired ? (
-                <button
-                  key={item.itemId}
-                  onClick={() => setSelectedItem(item)}
-                  className="relative border border-yellow-400/20 bg-[#0a0806] p-3 text-center transition-colors hover:border-yellow-400/50 hover:bg-[#120f06] active:scale-95"
-                >
-                  {item.is_giftable && !item.is_consumed && (
-                    <span className="absolute -top-1.5 -right-1.5 bg-green-400 text-black text-[9px] font-bold px-1.5 py-0.5 leading-none">
-                      GIFT
-                    </span>
-                  )}
-                  {item.is_consumed && (
-                    <span className="absolute -top-1.5 -right-1.5 bg-gray-600 text-gray-300 text-[9px] font-bold px-1.5 py-0.5 leading-none">
-                      済
-                    </span>
-                  )}
-                  <div className="mb-1.5 text-3xl">{item.icon}</div>
-                  <p className="mb-1 text-xs font-medium text-white leading-tight">{item.name}</p>
-                  <span className={`border px-1.5 py-0.5 text-xs font-bold ${rarityClass(item.rarity)}`}>
-                    {item.rarity}
-                  </span>
-                </button>
-              ) : (
-                <div key={item.itemId} className="border border-yellow-400/10 bg-[#0a0806] p-3 text-center opacity-40">
-                  <div className="mb-1.5 text-3xl text-gray-600">？</div>
-                  <p className="mb-1 text-xs font-medium text-gray-600">???</p>
-                  <span className={`border px-1.5 py-0.5 text-xs font-bold ${rarityClass(item.rarity)}`}>
-                    {item.rarity}
-                  </span>
-                </div>
-              )
-            )}
+            ))}
           </div>
+        )}
+
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
+          {filtered.map((item) =>
+            item.acquired ? (
+              <button
+                key={item.itemId}
+                type="button"
+                onClick={() => setSelectedItem(item)}
+                className="relative rounded-control border border-edge bg-panel-raised p-3 text-center transition-colors hover:border-edge-strong hover:bg-panel-hover active:scale-95"
+              >
+                {item.is_giftable && !item.is_consumed && (
+                  <span className="absolute -right-1.5 -top-1.5 bg-green-400 px-1.5 py-0.5 text-[9px] font-bold leading-none text-black">
+                    GIFT
+                  </span>
+                )}
+                {item.is_consumed && (
+                  <span className="absolute -right-1.5 -top-1.5 bg-stone-600 px-1.5 py-0.5 text-[9px] font-bold leading-none text-stone-300">
+                    済
+                  </span>
+                )}
+                <div className="mb-1.5 text-3xl">{item.icon}</div>
+                <p className="mb-1 text-xs font-medium leading-tight text-white">{item.name}</p>
+                <span className={`rounded-control border px-1.5 py-0.5 text-xs font-bold ${rarityClass(item.rarity)}`}>
+                  {item.rarity}
+                </span>
+              </button>
+            ) : (
+              <div
+                key={item.itemId}
+                className="rounded-control border border-edge-faint bg-panel-raised p-3 text-center opacity-40"
+              >
+                <div className="mb-1.5 text-3xl text-stone-600">？</div>
+                <p className="mb-1 text-xs font-medium text-stone-600">???</p>
+                <span className={`rounded-control border px-1.5 py-0.5 text-xs font-bold ${rarityClass(item.rarity)}`}>
+                  {item.rarity}
+                </span>
+              </div>
+            )
+          )}
         </div>
-      </div>
+      </ModalFrame>
 
       {selectedItem && (
         <ItemDetailModal
@@ -454,64 +427,64 @@ export default function GachaSection({ playerName }: Props) {
 
   return (
     <>
-      <section className="section-reveal px-4 py-12 md:px-8 lg:px-16">
-        <p className="mb-4 font-mono text-xs tracking-widest text-yellow-400/60">
-          — GACHA &amp; COLLECTION
-        </p>
-        <h2 className="mb-8 text-xl font-black tracking-tight text-white md:text-3xl" style={{ fontFamily: "var(--font-noto-serif-jp), serif" }}>
+      <section className="section-reveal section-padding">
+        <p className="mb-4 font-mono text-xs tracking-widest text-accent/60">— GACHA &amp; COLLECTION</p>
+        <h2
+          className="mb-8 text-xl font-black tracking-tight text-white md:text-3xl"
+          style={{ fontFamily: 'var(--font-noto-serif-jp), serif' }}
+        >
           ガチャ＆コレクション
         </h2>
 
-        {/* ガチャボタン: 2カラムグリッド */}
         <div className="mb-3 grid grid-cols-2 gap-2">
           <button
+            type="button"
             onClick={handleGacha}
             disabled={spinning}
-            className="bg-yellow-400 py-4 font-bold text-black transition-opacity hover:opacity-90 disabled:opacity-50"
+            className="rounded-control bg-accent py-4 font-bold text-black transition-opacity hover:opacity-90 disabled:opacity-50"
           >
             {spinning ? 'ガチャ中...' : '1回まわす'}
             <span className="block text-xs font-normal opacity-70">1クレ</span>
           </button>
 
           <button
+            type="button"
             onClick={handleMultiGacha}
             disabled={spinning || (player !== null && player.coins < 1000)}
-            className="border-2 border-yellow-400 py-4 font-bold text-yellow-400 transition-colors hover:bg-yellow-400 hover:text-black disabled:opacity-50"
+            className="rounded-control border-2 border-accent py-4 font-bold text-accent transition-colors hover:bg-accent hover:text-black disabled:opacity-50"
           >
             {spinning ? 'ガチャ中...' : '10回まわす'}
             <span className="block text-xs font-normal opacity-70">10クレ</span>
           </button>
         </div>
 
-        {/* 借金ボタン: 本番はコイン不足時のみ、モック時は常時表示 */}
         {!showBorrowModal && (IS_UI_MOCK || (player && player.coins < 100)) && (
           <div className="mb-3">
             <button
+              type="button"
               onClick={() => setShowBorrowModal(true)}
-              className="w-full border-2 border-red-500 py-3 font-bold text-red-400 transition-colors hover:bg-red-500/10"
+              className="w-full rounded-control border-2 border-red-500 py-3 font-bold text-red-400 transition-colors hover:bg-red-500/10"
             >
               借金する
             </button>
           </div>
         )}
 
-        {/* コレクション（別種アクション） */}
         <div className="mb-6">
           <button
+            type="button"
             onClick={() => setShowCollection(true)}
-            className="flex w-full items-center justify-between border border-yellow-400/20 px-4 py-3 text-sm text-yellow-400/70 transition-colors hover:border-yellow-400/40 hover:text-yellow-400"
+            className="flex w-full items-center justify-between rounded-control border border-edge px-4 py-3 text-sm text-accent/70 transition-colors hover:border-edge-strong hover:text-accent"
           >
             <span>コレクションを見る</span>
-            <span className="text-yellow-400/40">›</span>
+            <span className="text-accent/40">›</span>
           </button>
         </div>
 
         {message && (
           <p
             className={`text-sm font-medium ${
-              message.includes('エラー') || message.includes('不足')
-                ? 'text-red-400'
-                : 'text-green-400'
+              message.includes('エラー') || message.includes('不足') ? 'text-red-400' : 'text-green-400'
             }`}
           >
             {message}
