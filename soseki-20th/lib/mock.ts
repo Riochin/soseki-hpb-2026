@@ -85,6 +85,30 @@ export const MOCK_GAME_RESULTS_TYPING = [
   },
 ];
 
+export const MOCK_GAME_RESULTS_FACE_MEMORY = [
+  {
+    rank: 1,
+    playerName: '鏡子',
+    score: 52000,
+    gradeRank: 'S',
+    createdAt: '2026-04-20T10:00:00.000Z',
+  },
+  {
+    rank: 2,
+    playerName: 'UIモックユーザー',
+    score: 41000,
+    gradeRank: 'A',
+    createdAt: '2026-04-21T09:00:00.000Z',
+  },
+  {
+    rank: 3,
+    playerName: '匿名',
+    score: 25000,
+    gradeRank: 'B',
+    createdAt: '2026-04-22T14:00:00.000Z',
+  },
+];
+
 export const MOCK_GAME_RESULTS_SHOOTING = [
   {
     rank: 1,

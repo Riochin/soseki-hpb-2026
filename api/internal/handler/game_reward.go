@@ -29,7 +29,7 @@ func NewGameReward(c GameRewardCommiter) *GameReward {
 type gameRewardInput struct {
 	GameType  string `json:"gameType"`  // "typing" | "shooting" | 将来の他ゲーム
 	Rank      string `json:"rank"`      // typing 用: "S"|"A"|"B"|"C"|"D"
-	TimeLimit int    `json:"timeLimit"` // typing 用: 30 | 60 | 120
+	TimeLimit int    `json:"timeLimit"` // typing: 30|60|120, face_memory: 1=EASY, 2=ムズすぎるな
 	Score     int    `json:"score"`     // ランキング用スコア（未送信時は 0）
 	SessionID string `json:"sessionId"` // クライアント側で生成した UUID
 }
@@ -52,7 +52,7 @@ func (h *GameReward) Create(w http.ResponseWriter, r *http.Request) {
 	amount := calcCoinReward(input)
 
 	var timeLimit *int
-	if input.GameType == "typing" {
+	if input.GameType == "typing" || input.GameType == "face_memory" {
 		tl := input.TimeLimit
 		timeLimit = &tl
 	}
@@ -99,6 +99,8 @@ func calcCoinReward(input gameRewardInput) int {
 		return calcTypingReward(input.Rank, input.TimeLimit)
 	case "shooting":
 		return calcShootingReward(input.Rank)
+	case "face_memory":
+		return calcFaceMemoryReward(input.Rank, input.TimeLimit)
 	default:
 		return 5 // 未知のゲームは最低報酬
 	}
@@ -137,6 +139,24 @@ func calcTypingReward(rank string, timeLimit int) int {
 		mult = 1.0
 	default: // 60 または未知
 		mult = 2.0
+	}
+	if reward := int(float64(base) * mult); reward > 0 {
+		return reward
+	}
+	return 1
+}
+
+// calcFaceMemoryReward は顔神経衰弱のコイン報酬を算出する。
+// 基準（EASY, timeLimit=1）: S=1200(12Cr), A=700, B=400, C=250, D=100
+// ムズすぎるな（timeLimit=2）は獲得コインを3倍。
+func calcFaceMemoryReward(rank string, timeLimit int) int {
+	base := map[string]int{"S": 1200, "A": 700, "B": 400, "C": 250, "D": 100}[rank]
+	if base == 0 {
+		base = 100
+	}
+	mult := 1.0
+	if timeLimit == 2 {
+		mult = 3.0
 	}
 	if reward := int(float64(base) * mult); reward > 0 {
 		return reward

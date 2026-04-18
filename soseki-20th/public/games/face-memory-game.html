@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>顔神経衰弱</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #0c0a08;
+      --surface: #141008;
+      --accent: #facc15;
+      --text: #e8dcc8;
+      --text-dim: #a8a29e;
+      --correct: #aadd00;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Courier New', monospace;
+      min-height: 100svh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      overflow-x: hidden;
+      overflow-y: auto;
+      position: relative;
+    }
+
+    .bg-grid {
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(245,196,0,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(245,196,0,0.04) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+    }
+
+    .screen {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+      width: 100%;
+      max-width: 520px;
+      padding: 16px;
+      position: relative;
+      z-index: 1;
+      min-height: 100svh;
+      justify-content: center;
+    }
+    .screen.active { display: flex; }
+
+    .title {
+      font-size: 1.75rem;
+      font-weight: bold;
+      letter-spacing: 0.08em;
+      text-align: center;
+    }
+    .title span { color: var(--accent); }
+
+    .subtitle {
+      color: var(--text-dim);
+      font-size: 0.9rem;
+      text-align: center;
+      line-height: 1.65;
+    }
+
+    .btn {
+      background: var(--accent);
+      color: #000;
+      border: none;
+      padding: 12px 36px;
+      font-size: 1rem;
+      font-family: 'Courier New', monospace;
+      letter-spacing: 0.12em;
+      cursor: pointer;
+      clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
+      transition: opacity 0.2s, transform 0.1s;
+    }
+    .btn:hover { opacity: 0.85; transform: scale(1.02); }
+    .btn:active { transform: scale(0.98); }
+
+    .btn-ghost {
+      background: transparent;
+      border: 1px solid var(--text-dim);
+      color: var(--text-dim);
+      clip-path: none;
+    }
+    .btn-ghost:hover { border-color: var(--text); color: var(--text); }
+
+    .mode-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: center;
+      width: 100%;
+    }
+
+    .mode-btn {
+      flex: 1 1 140px;
+      max-width: 220px;
+      padding: 16px 12px;
+      border: 2px solid rgba(250, 204, 21, 0.35);
+      background: var(--surface);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 0.85rem;
+      font-weight: bold;
+      cursor: pointer;
+      border-radius: 4px;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .mode-btn:hover {
+      border-color: var(--accent);
+      background: rgba(250, 204, 21, 0.08);
+    }
+    .mode-btn small {
+      display: block;
+      margin-top: 6px;
+      font-weight: normal;
+      font-size: 0.72rem;
+      color: var(--text-dim);
+    }
+
+    #screen-game {
+      justify-content: flex-start;
+      padding-top: 8px;
+      min-height: 0;
+      gap: 10px;
+    }
+
+    .hud {
+      display: flex;
+      width: 100%;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.85rem;
+      font-variant-numeric: tabular-nums;
+    }
+    .hud span.accent { color: var(--accent); font-weight: bold; }
+
+    .timer-bar {
+      width: 100%;
+      height: 6px;
+      background: #1a1510;
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .timer-bar-inner {
+      height: 100%;
+      background: linear-gradient(90deg, var(--correct), var(--accent));
+      width: 100%;
+      transition: width 0.1s linear;
+    }
+
+    .card-grid {
+      display: grid;
+      gap: 8px;
+      width: 100%;
+    }
+
+    /* EASY: 2行4列（4ペア＝8枚） */
+    .card-grid.mode-easy {
+      grid-template-columns: repeat(4, 1fr);
+      grid-template-rows: repeat(2, auto);
+      max-width: 440px;
+    }
+
+    /* HARD: 4×4（8ペア） */
+    .card-grid.mode-hard {
+      grid-template-columns: repeat(4, 1fr);
+      max-width: 440px;
+    }
+
+    .card {
+      aspect-ratio: 1;
+      perspective: 400px;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .card-inner {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      transition: transform 0.35s ease;
+      transform-style: preserve-3d;
+    }
+    .card.flipped .card-inner,
+    .card.matched .card-inner {
+      transform: rotateY(180deg);
+    }
+    .card.matched {
+      pointer-events: none;
+      opacity: 0.55;
+    }
+
+    .card-face {
+      position: absolute;
+      inset: 0;
+      backface-visibility: hidden;
+      border-radius: 6px;
+      border: 1px solid rgba(255,255,255,0.12);
+      overflow: hidden;
+      background: var(--surface);
+    }
+    .card-back {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+      font-weight: bold;
+      color: var(--accent);
+      background: linear-gradient(145deg, #1a1510, #0a0806);
+    }
+    .card-front {
+      transform: rotateY(180deg);
+      padding: 0;
+    }
+
+    .card-front img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    /* EASY: 画像を大きく（カード全体にフィット） */
+    .mode-easy .card-front img {
+      object-position: center center;
+    }
+
+    /* HARD: difficult/ は顔寄り切り抜き想定。カード内はフィット表示 */
+    .mode-hard .card-front img {
+      object-position: center center;
+    }
+
+    .result-block {
+      text-align: center;
+      width: 100%;
+    }
+    .result-value {
+      font-size: 2rem;
+      font-weight: bold;
+      color: var(--accent);
+    }
+    .result-row {
+      margin-top: 12px;
+      font-size: 0.95rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-grid" aria-hidden="true"></div>
+
+  <div id="screen-start" class="screen active">
+    <h1 class="title">顔<span>神経衰弱</span></h1>
+    <p class="subtitle">
+      同じ顔のカードをめくってペアをそろえよう。<br>
+      EASY は 2行4列・4組（60秒・easy/ から毎回ランダム）。ムズすぎるなは 4×4・8組（90秒・difficult/ から毎回ランダム）。制限時間内に全部そろえればクリア。
+    </p>
+    <p class="subtitle" style="font-size:0.8rem;">※速さ換算スコアがランキングに記録されます（速いほど高得点）</p>
+    <div class="mode-row" role="group" aria-label="難易度">
+      <button type="button" class="mode-btn" id="btn-easy" data-mode="easy">
+        EASY
+        <small>画像がでかい</small>
+      </button>
+      <button type="button" class="mode-btn" id="btn-hard" data-mode="hard">
+        ムズすぎるな
+        <small>difficult/ 顔寄り・8組ランダム</small>
+      </button>
+    </div>
+  </div>
+
+  <div id="screen-game" class="screen">
+    <div class="hud">
+      <span>MODE: <span class="accent" id="hud-mode">EASY</span></span>
+      <span>TIME: <span class="accent" id="hud-time">60.0</span>s</span>
+    </div>
+    <div class="timer-bar" aria-hidden="true">
+      <div class="timer-bar-inner" id="timer-bar"></div>
+    </div>
+    <div id="card-grid" class="card-grid"></div>
+  </div>
+
+  <div id="screen-result" class="screen">
+    <h2 class="title">RESULT</h2>
+    <div class="result-block">
+      <div class="result-row">ランク <span id="res-rank" class="result-value">—</span></div>
+      <div class="result-row">タイム <span id="res-time">—</span></div>
+      <div class="result-row">換算スコア <span id="res-score">0</span></div>
+    </div>
+    <button type="button" class="btn" id="btn-retry">もう一度</button>
+    <button type="button" class="btn btn-ghost" id="btn-title">タイトルへ</button>
+  </div>
+
+  <script>
+    (function () {
+      /** EASY: easy/01.png … 15.png から毎回ランダムで4種を選ぶ */
+      const EASY_IMG_PATHS = (function () {
+        const paths = [];
+        for (let i = 1; i <= 15; i++) {
+          paths.push('face-memory/easy/' + String(i).padStart(2, '0') + '.png');
+        }
+        return paths;
+      })();
+
+      /** HARD: difficult/01.png … 15.png から毎回ランダムで8種（8ペア） */
+      const DIFFICULT_IMG_PATHS = (function () {
+        const paths = [];
+        for (let i = 1; i <= 15; i++) {
+          paths.push('face-memory/difficult/' + String(i).padStart(2, '0') + '.png');
+        }
+        return paths;
+      })();
+
+      const TIME_LIMIT_EASY = 60;
+      const TIME_LIMIT_HARD = 90;
+
+      /** API time_limit: 1 = EASY, 2 = HARD */
+      const MODE_TIME_LIMIT = { easy: 1, hard: 2 };
+
+      const state = {
+        mode: 'easy',
+        cards: [],
+        flipped: [],
+        matched: new Set(),
+        lock: false,
+        startedAt: 0,
+        over: false,
+        won: false,
+        rafId: 0,
+      };
+
+      function getTimeLimitSec() {
+        return state.mode === 'hard' ? TIME_LIMIT_HARD : TIME_LIMIT_EASY;
+      }
+
+      function shuffle(arr) {
+        const a = arr.slice();
+        for (let i = a.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [a[i], a[j]] = [a[j], a[i]];
+        }
+        return a;
+      }
+
+      function buildDeckFromSources(sources) {
+        const deck = [];
+        let id = 0;
+        sources.forEach(function (src, pairIdx) {
+          deck.push({ id: id++, pairId: pairIdx, src });
+          deck.push({ id: id++, pairId: pairIdx, src });
+        });
+        return shuffle(deck);
+      }
+
+      function buildDeckEasy() {
+        const pool = shuffle(EASY_IMG_PATHS.slice());
+        const picked = pool.slice(0, 4);
+        return buildDeckFromSources(picked);
+      }
+
+      function buildDeckHard() {
+        const pool = shuffle(DIFFICULT_IMG_PATHS.slice());
+        const picked = pool.slice(0, 8);
+        return buildDeckFromSources(picked);
+      }
+
+      function showScreen(id) {
+        document.querySelectorAll('.screen').forEach(function (s) {
+          s.classList.remove('active');
+        });
+        document.getElementById(id).classList.add('active');
+      }
+
+      function encodeScore(elapsedSec, limitSec) {
+        const t = Math.min(limitSec, Math.max(0, elapsedSec));
+        return Math.max(0, Math.floor((limitSec - t) * 1000));
+      }
+
+      function rankFromTime(sec, cleared) {
+        if (!cleared) return 'D';
+        if (sec <= 18) return 'S';
+        if (sec <= 32) return 'A';
+        if (sec <= 46) return 'B';
+        return 'C';
+      }
+
+      function elapsedSec() {
+        return (Date.now() - state.startedAt) / 1000;
+      }
+
+      function renderGrid() {
+        const grid = document.getElementById('card-grid');
+        grid.innerHTML = '';
+        grid.className = 'card-grid mode-' + state.mode;
+
+        state.cards.forEach(function (c, index) {
+          const wrap = document.createElement('div');
+          wrap.className = 'card';
+          wrap.dataset.cardIdx = String(index);
+          wrap.innerHTML =
+            '<div class="card-inner">' +
+            '<div class="card-face card-back">?</div>' +
+            '<div class="card-face card-front"><img src="' + c.src + '" alt="" loading="lazy" draggable="false"></div>' +
+            '</div>';
+          wrap.addEventListener('click', function () { onCardClick(index); });
+          grid.appendChild(wrap);
+        });
+      }
+
+      function cardElByIdx(cardIdx) {
+        return document.querySelector('#card-grid .card[data-card-idx="' + cardIdx + '"]');
+      }
+
+      function updateHud() {
+        const limit = getTimeLimitSec();
+        const el = Math.max(0, limit - elapsedSec());
+        document.getElementById('hud-time').textContent = el.toFixed(1);
+        const pct = Math.max(0, Math.min(100, (el / limit) * 100));
+        document.getElementById('timer-bar').style.width = pct + '%';
+      }
+
+      function tick() {
+        if (state.over) return;
+        updateHud();
+        if (elapsedSec() >= getTimeLimitSec()) {
+          endGame(false);
+          return;
+        }
+        state.rafId = requestAnimationFrame(tick);
+      }
+
+      function onCardClick(cardIdx) {
+        if (state.over || state.lock) return;
+        if (state.matched.has(cardIdx)) return;
+        if (state.flipped.includes(cardIdx)) return;
+        if (state.flipped.length >= 2) return;
+
+        state.flipped.push(cardIdx);
+        const el = cardElByIdx(cardIdx);
+        if (el) el.classList.add('flipped');
+
+        if (state.flipped.length < 2) return;
+
+        const i0 = state.flipped[0];
+        const i1 = state.flipped[1];
+        const p0 = state.cards[i0].pairId;
+        const p1 = state.cards[i1].pairId;
+
+        if (p0 === p1) {
+          state.matched.add(i0);
+          state.matched.add(i1);
+          state.flipped = [];
+          const e0 = cardElByIdx(i0);
+          const e1 = cardElByIdx(i1);
+          if (e0) e0.classList.add('matched');
+          if (e1) e1.classList.add('matched');
+
+          if (state.matched.size === state.cards.length) {
+            endGame(true);
+          }
+        } else {
+          state.lock = true;
+          window.setTimeout(function () {
+            const f0 = cardElByIdx(i0);
+            const f1 = cardElByIdx(i1);
+            if (f0) f0.classList.remove('flipped');
+            if (f1) f1.classList.remove('flipped');
+            state.flipped = [];
+            state.lock = false;
+          }, 700);
+        }
+      }
+
+      function endGame(won) {
+        if (state.over) return;
+        state.over = true;
+        state.won = won;
+        cancelAnimationFrame(state.rafId);
+
+        const limit = getTimeLimitSec();
+        const tRaw = elapsedSec();
+        const t = Math.min(limit, tRaw);
+        const cleared = won;
+        const rank = rankFromTime(t, cleared);
+        const score = cleared ? encodeScore(t, limit) : 0;
+
+        document.getElementById('res-rank').textContent = rank;
+        document.getElementById('res-time').textContent = cleared
+          ? t.toFixed(2) + ' 秒'
+          : 'タイムアップ（' + limit + '秒）';
+        document.getElementById('res-score').textContent = String(score);
+
+        showScreen('screen-result');
+
+        if (window.parent !== window) {
+          window.parent.postMessage(
+            {
+              type: 'MINI_GAME_RESULT',
+              payload: {
+                gameType: 'face_memory',
+                rank: rank,
+                timeLimit: MODE_TIME_LIMIT[state.mode],
+                score: score,
+              },
+            },
+            '*'
+          );
+        }
+      }
+
+      function startGame(mode) {
+        state.mode = mode;
+        if (mode === 'easy') {
+          state.cards = buildDeckEasy();
+        } else {
+          state.cards = buildDeckHard();
+        }
+        state.flipped = [];
+        state.matched = new Set();
+        state.lock = false;
+        state.startedAt = Date.now();
+        state.over = false;
+        state.won = false;
+
+        document.getElementById('hud-mode').textContent = mode === 'easy' ? 'EASY' : 'ムズすぎるな';
+        renderGrid();
+        showScreen('screen-game');
+        updateHud();
+        state.rafId = requestAnimationFrame(tick);
+      }
+
+      document.getElementById('btn-easy').addEventListener('click', function () {
+        startGame('easy');
+      });
+      document.getElementById('btn-hard').addEventListener('click', function () {
+        startGame('hard');
+      });
+      document.getElementById('btn-retry').addEventListener('click', function () {
+        startGame(state.mode);
+      });
+      document.getElementById('btn-title').addEventListener('click', function () {
+        showScreen('screen-start');
+      });
+
+      document.addEventListener('keydown', function (e) {
+        const start = document.getElementById('screen-start').classList.contains('active');
+        const result = document.getElementById('screen-result').classList.contains('active');
+        if (e.key === 'Enter') {
+          if (start) startGame('easy');
+          if (result) startGame(state.mode);
+        }
+      });
+    })();
+  </script>
+</body>
+</html>

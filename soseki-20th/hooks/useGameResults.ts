@@ -4,11 +4,12 @@ import { fetcher } from '@/lib/api';
 import { dedupeLeaderboardBestPerPlayer } from '@/lib/leaderboardDedupe';
 import {
   IS_UI_MOCK,
+  MOCK_GAME_RESULTS_FACE_MEMORY,
   MOCK_GAME_RESULTS_SHOOTING,
   MOCK_GAME_RESULTS_TYPING,
 } from '@/lib/mock';
 
-export type MiniGameType = 'typing' | 'shooting';
+export type MiniGameType = 'typing' | 'shooting' | 'face_memory';
 
 export interface GameResultLeaderboardEntry {
   rank: number;
@@ -27,31 +28,31 @@ export interface UseGameResultsResult {
 function buildGameResultsPath(
   gameType: MiniGameType,
   limit: number,
-  timeLimitForTyping?: number | null,
+  timeLimitFilter?: number | null,
 ): string {
   const params = new URLSearchParams({
     gameType,
     limit: String(limit),
   });
   if (
-    gameType === 'typing' &&
-    timeLimitForTyping != null &&
-    timeLimitForTyping > 0
+    (gameType === 'typing' || gameType === 'face_memory') &&
+    timeLimitFilter != null &&
+    timeLimitFilter > 0
   ) {
-    params.set('timeLimit', String(timeLimitForTyping));
+    params.set('timeLimit', String(timeLimitFilter));
   }
   return `/api/game-results?${params.toString()}`;
 }
 
 /**
- * @param timeLimitForTyping 漱石タイピングのみ。秒数（例: 30, 60, 120）。API の `timeLimit` クエリに対応。
+ * @param timeLimitFilter 漱石タイピング: 制限秒数（30|60|120）。顔神経衰弱: モード（1=EASY, 2=ムズすぎるな）。API の `timeLimit` クエリに対応。
  */
 export function useGameResults(
   gameType: MiniGameType,
   limit = 10,
-  timeLimitForTyping?: number | null,
+  timeLimitFilter?: number | null,
 ): UseGameResultsResult {
-  const path = buildGameResultsPath(gameType, limit, timeLimitForTyping);
+  const path = buildGameResultsPath(gameType, limit, timeLimitFilter);
 
   const { data, error, isLoading } = useSWR<{ entries: GameResultLeaderboardEntry[] }>(
     IS_UI_MOCK ? null : path,
@@ -60,7 +61,9 @@ export function useGameResults(
 
   const rawEntries = useMemo(() => {
     if (IS_UI_MOCK) {
-      return gameType === 'typing' ? MOCK_GAME_RESULTS_TYPING : MOCK_GAME_RESULTS_SHOOTING;
+      if (gameType === 'typing') return MOCK_GAME_RESULTS_TYPING;
+      if (gameType === 'face_memory') return MOCK_GAME_RESULTS_FACE_MEMORY;
+      return MOCK_GAME_RESULTS_SHOOTING;
     }
     return data?.entries ?? [];
   }, [IS_UI_MOCK, gameType, data?.entries]);

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Keyboard, Crosshair, Trophy } from 'lucide-react';
+import { Keyboard, Crosshair, LayoutGrid, Trophy } from 'lucide-react';
 import GameModal from './GameModal';
 import {
   useGameResults,
@@ -16,6 +16,12 @@ interface Props {
 /** タイピングゲームの制限時間（秒）— `games/typing-game.html` の diff-btn と一致 */
 const TYPING_TIME_OPTIONS = [30, 60, 120] as const;
 type TypingTimeSeconds = (typeof TYPING_TIME_OPTIONS)[number];
+
+/** 顔神経衰弱のモード — `games/face-memory-game.html` と API の time_limit と一致（1=EASY, 2=ムズすぎるな） */
+const FACE_MEMORY_MODE_OPTIONS = [
+  { value: 1 as const, label: 'EASY' },
+  { value: 2 as const, label: 'ムズすぎるな' },
+];
 
 function formatLeaderboardDate(iso: string): string {
   try {
@@ -185,10 +191,17 @@ function LeaderboardCards({ entries, playerName }: LeaderboardRowsProps) {
 export default function MiniGameSection({ playerName }: Props) {
   const [typingOpen, setTypingOpen] = useState(false);
   const [shootingOpen, setShootingOpen] = useState(false);
+  const [faceMemoryOpen, setFaceMemoryOpen] = useState(false);
   const [rankTab, setRankTab] = useState<MiniGameType>('typing');
   const [typingTimeSec, setTypingTimeSec] = useState<TypingTimeSeconds>(30);
+  const [faceMemoryMode, setFaceMemoryMode] = useState<1 | 2>(1);
 
-  const timeLimitArg = rankTab === 'typing' ? typingTimeSec : null;
+  const timeLimitArg =
+    rankTab === 'typing'
+      ? typingTimeSec
+      : rankTab === 'face_memory'
+        ? faceMemoryMode
+        : null;
   const { entries, isLoading, error } = useGameResults(
     rankTab,
     15,
@@ -259,6 +272,30 @@ export default function MiniGameSection({ playerName }: Props) {
               PLAY NOW
             </button>
           </div>
+
+          <div className="rounded-panel border-2 border-edge bg-surface p-6 transition-colors hover:border-edge-strong">
+            <div className="mb-3 flex items-start justify-between">
+              <LayoutGrid className="h-8 w-8 text-accent" aria-hidden />
+              <span className="rounded-full border border-accent/30 bg-accent/10 px-3 py-1 text-xs font-bold text-accent">
+                +1 ~ 36 Credit
+              </span>
+            </div>
+
+            <h3 className="mb-1 text-lg font-bold text-white">
+              顔神経衰弱
+            </h3>
+            <p className="mb-5 text-sm text-stone-400">
+              同じ顔をそろえろ。60秒タイムアタック。
+            </p>
+
+            <button
+              type="button"
+              onClick={() => setFaceMemoryOpen(true)}
+              className="w-full rounded-control bg-accent py-2 text-center font-bold text-black transition-opacity hover:opacity-90"
+            >
+              PLAY NOW
+            </button>
+          </div>
         </div>
 
         <div
@@ -306,8 +343,26 @@ export default function MiniGameSection({ playerName }: Props) {
               >
                 インファイト花京院
               </button>
+              <button
+                type="button"
+                onClick={() => setRankTab('face_memory')}
+                className={`rounded-control px-3 py-1.5 text-xs font-bold transition-colors ${
+                  rankTab === 'face_memory'
+                    ? 'bg-accent text-black'
+                    : 'text-accent/80 hover:bg-accent/10'
+                }`}
+                aria-pressed={rankTab === 'face_memory'}
+              >
+                顔神経衰弱
+              </button>
             </div>
           </div>
+
+          {rankTab === 'face_memory' && (
+            <p className="mb-3 text-xs text-stone-500">
+              ※ランキングは速さ換算スコアです（クリアが速いほど高い値）。
+            </p>
+          )}
 
           {rankTab === 'typing' && (
             <div
@@ -338,6 +393,35 @@ export default function MiniGameSection({ playerName }: Props) {
             </div>
           )}
 
+          {rankTab === 'face_memory' && (
+            <div
+              className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3"
+              role="group"
+              aria-label="顔神経衰弱のモード別ハイスコアランキング"
+            >
+              <span className="text-xs font-medium text-stone-500">
+                モード
+              </span>
+              <div className="flex flex-wrap gap-1">
+                {FACE_MEMORY_MODE_OPTIONS.map((opt) => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => setFaceMemoryMode(opt.value)}
+                    className={`rounded-control border px-2.5 py-1 text-xs font-bold transition-colors ${
+                      faceMemoryMode === opt.value
+                        ? 'border-accent bg-accent/15 text-accent'
+                        : 'border-accent/25 text-accent/70 hover:border-accent/50 hover:text-accent'
+                    }`}
+                    aria-pressed={faceMemoryMode === opt.value}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           {error && (
             <p className="text-sm text-red-400" role="alert">
               ハイスコアランキングを読み込めませんでした。しばらくしてから再度お試しください。
@@ -351,6 +435,15 @@ export default function MiniGameSection({ playerName }: Props) {
                   {typingTimeSec}秒モードのハイスコアはまだありません。
                   <span className="mt-1 block text-xs text-stone-600">
                     PLAY NOW から挑戦してスコアを伸ばすとここに載ります。
+                  </span>
+                </>
+              ) : rankTab === 'face_memory' ? (
+                <>
+                  {FACE_MEMORY_MODE_OPTIONS.find((o) => o.value === faceMemoryMode)
+                    ?.label ?? ''}{' '}
+                  のハイスコアはまだありません。
+                  <span className="mt-1 block text-xs text-stone-600">
+                    PLAY NOW から挑戦するとここに載ります。
                   </span>
                 </>
               ) : (
@@ -384,6 +477,14 @@ export default function MiniGameSection({ playerName }: Props) {
         onClose={() => setShootingOpen(false)}
         title="インファイト花京院"
         gameUrl="/games/shooting-game.html"
+        playerName={playerName}
+        mobileSupported
+      />
+      <GameModal
+        isOpen={faceMemoryOpen}
+        onClose={() => setFaceMemoryOpen(false)}
+        title="顔神経衰弱"
+        gameUrl="/games/face-memory-game.html"
         playerName={playerName}
         mobileSupported
       />
