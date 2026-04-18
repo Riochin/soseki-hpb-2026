@@ -24,7 +24,7 @@ export default function ScrollToTopButton({ visible }: Props) {
   };
 
   return (
-    <div className={`fixed bottom-6 right-6 z-30 flex flex-col items-center gap-2 transition-all duration-300 ${
+    <div className={`fixed bottom-6 -right-2 sm:right-6 z-30 flex flex-col items-center gap-2 transition-all duration-300 ${
       visible ? 'translate-y-0 opacity-100' : 'translate-y-16 opacity-0 pointer-events-none'
     }`}>
       <span
