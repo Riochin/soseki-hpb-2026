@@ -33,7 +33,7 @@ func NewPlayers(store PlayerStore) *Players {
 }
 
 // Create は POST /api/players を処理する。
-// 初回は coins=500 で INSERT、既存は SELECT（upsert）。
+// 初回は coins=1000（10クレ）で INSERT、既存は SELECT（upsert）。
 func (h *Players) Create(w http.ResponseWriter, r *http.Request) {
 	var input struct {
 		Name string `json:"name"`
