@@ -78,11 +78,17 @@ func buildRouter(allowedOrigin string, database *db.DB) *chi.Mux {
 	playerStore := handler.NewDBPlayerStore(database)
 	playersHandler := handler.NewPlayers(playerStore)
 	borrowHandler := handler.NewBorrow(playerStore)
-	gameRewardHandler := handler.NewGameReward(playerStore)
+	gameRewardStore := handler.NewDBGameRewardStore(database)
+	gameRewardHandler := handler.NewGameReward(gameRewardStore)
+	gameResultsListStore := handler.NewDBGameResultListStore(database)
+	gameResultsHandler := handler.NewGameResults(gameResultsListStore)
+
 	r.Post("/api/players", playersHandler.Create)
 	r.Get("/api/players/{name}", playersHandler.Get)
 	r.Post("/api/players/{name}/borrow", borrowHandler.Create)
 	r.Post("/api/players/{name}/game-reward", gameRewardHandler.Create)
+
+	r.Get("/api/game-results", gameResultsHandler.List)
 
 	// ガチャ
 	gachaHandler := handler.NewGacha(handler.NewDBGachaStore(database))

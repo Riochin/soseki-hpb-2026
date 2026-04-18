@@ -50,7 +50,50 @@ export const MOCK_MULTI_GACHA_RESULT: MultiGachaResult = {
 export const MOCK_EARN_COINS_RESULT: EarnCoinsResult = {
   coinsEarned: 30,
   newCoins: 530,
+  resultId: 1,
 };
+
+/** ミニゲームランキング（UIモック用） */
+export const MOCK_GAME_RESULTS_TYPING = [
+  {
+    rank: 1,
+    playerName: '正岡子規',
+    score: 12500,
+    gradeRank: 'S',
+    createdAt: '2026-04-20T12:00:00.000Z',
+  },
+  {
+    rank: 2,
+    playerName: '匿名',
+    score: 9800,
+    gradeRank: 'A',
+    createdAt: '2026-04-21T08:30:00.000Z',
+  },
+  {
+    rank: 3,
+    playerName: 'UIモックユーザー',
+    score: 4200,
+    gradeRank: 'B',
+    createdAt: '2026-04-22T15:00:00.000Z',
+  },
+];
+
+export const MOCK_GAME_RESULTS_SHOOTING = [
+  {
+    rank: 1,
+    playerName: '花京院',
+    score: 99999,
+    gradeRank: 'S',
+    createdAt: '2026-04-20T10:00:00.000Z',
+  },
+  {
+    rank: 2,
+    playerName: '匿名',
+    score: 12000,
+    gradeRank: 'A',
+    createdAt: '2026-04-21T14:00:00.000Z',
+  },
+];
 
 export const MOCK_MESSAGES: Message[] = [
   {

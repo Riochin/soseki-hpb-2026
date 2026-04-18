@@ -40,6 +40,8 @@ export interface MultiGachaResult {
 export interface EarnCoinsResult {
   coinsEarned: number;
   newCoins: number;
+  /** サーバーが game_result に保存した行の ID（任意） */
+  resultId?: number;
 }
 
 export interface UsePlayerResult {

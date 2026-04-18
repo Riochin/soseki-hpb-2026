@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -33,7 +34,7 @@ func integrationDB(t *testing.T) *db.DB {
 func cleanTables(t *testing.T, database *db.DB) {
 	t.Helper()
 	ctx := context.Background()
-	tables := []string{"collections", "messages", "players"}
+	tables := []string{"collections", "game_result", "messages", "players"}
 	for _, tbl := range tables {
 		if _, err := database.Pool.Exec(ctx, "DELETE FROM "+tbl); err != nil {
 			t.Fatalf("テーブル %s のクリア失敗: %v", tbl, err)
@@ -333,5 +334,133 @@ func TestIntegration_Gacha_InsufficientCoins_Returns402(t *testing.T) {
 	}
 	if player.Coins != 0 {
 		t.Errorf("coins should remain 0 after failed gacha, got %d", player.Coins)
+	}
+}
+
+// --- ミニゲーム報酬・ランキング ---
+
+// TestIntegration_GameReward_SavesResultAndEarnsCoins: game_result 保存とコイン加算が一括で行われることを検証する
+func TestIntegration_GameReward_SavesResultAndEarnsCoins(t *testing.T) {
+	database := integrationDB(t)
+	cleanTables(t, database)
+	r := buildRouter("*", database)
+
+	playerName := "報酬テスト"
+	reqP := httptest.NewRequest(http.MethodPost, "/api/players", bytes.NewBufferString(fmt.Sprintf(`{"name":%q}`, playerName)))
+	reqP.Header.Set("Content-Type", "application/json")
+	wP := httptest.NewRecorder()
+	r.ServeHTTP(wP, reqP)
+	if wP.Code != http.StatusCreated {
+		t.Fatalf("プレイヤー作成: %d", wP.Code)
+	}
+	var created model.Player
+	if err := json.NewDecoder(wP.Body).Decode(&created); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+
+	sessionID := "11111111-1111-1111-1111-111111111111"
+	body := fmt.Sprintf(`{"gameType":"shooting","rank":"D","score":42,"sessionId":%q}`, sessionID)
+	path := "/api/players/" + playerName + "/game-reward"
+	req := httptest.NewRequest(http.MethodPost, path, bytes.NewBufferString(body))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+	if w.Code != http.StatusOK {
+		t.Fatalf("game-reward: expected 200, got %d: %s", w.Code, w.Body.String())
+	}
+	var out struct {
+		CoinsEarned int   `json:"coinsEarned"`
+		NewCoins    int   `json:"newCoins"`
+		ResultID    int64 `json:"resultId"`
+	}
+	if err := json.NewDecoder(w.Body).Decode(&out); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	if out.CoinsEarned != 100 {
+		t.Errorf("coinsEarned: expected 100 (D rank shooting), got %d", out.CoinsEarned)
+	}
+	if out.NewCoins != created.Coins+out.CoinsEarned {
+		t.Errorf("newCoins: expected %d, got %d", created.Coins+out.CoinsEarned, out.NewCoins)
+	}
+	if out.ResultID == 0 {
+		t.Error("resultId should be non-zero")
+	}
+
+	reqG := httptest.NewRequest(http.MethodGet, "/api/game-results?gameType=shooting&limit=5", nil)
+	wG := httptest.NewRecorder()
+	r.ServeHTTP(wG, reqG)
+	if wG.Code != http.StatusOK {
+		t.Fatalf("game-results: %d", wG.Code)
+	}
+	var board struct {
+		Entries []struct {
+			Rank       int    `json:"rank"`
+			PlayerName string `json:"playerName"`
+			Score      int    `json:"score"`
+			GradeRank  string `json:"gradeRank"`
+		} `json:"entries"`
+	}
+	if err := json.NewDecoder(wG.Body).Decode(&board); err != nil {
+		t.Fatalf("decode board: %v", err)
+	}
+	if len(board.Entries) != 1 {
+		t.Fatalf("entries: expected 1, got %d", len(board.Entries))
+	}
+	if board.Entries[0].PlayerName != playerName || board.Entries[0].Score != 42 || board.Entries[0].GradeRank != "D" {
+		t.Errorf("unexpected entry: %+v", board.Entries[0])
+	}
+}
+
+// TestIntegration_GameReward_DuplicateSession_Returns429: 同一 sessionId の2回目は 429 となりコインが増えないことを検証する
+func TestIntegration_GameReward_DuplicateSession_Returns429(t *testing.T) {
+	database := integrationDB(t)
+	cleanTables(t, database)
+	r := buildRouter("*", database)
+
+	playerName := "二重テスト"
+	reqP := httptest.NewRequest(http.MethodPost, "/api/players", bytes.NewBufferString(fmt.Sprintf(`{"name":%q}`, playerName)))
+	reqP.Header.Set("Content-Type", "application/json")
+	wP := httptest.NewRecorder()
+	r.ServeHTTP(wP, reqP)
+	if wP.Code != http.StatusCreated {
+		t.Fatalf("プレイヤー作成: %d", wP.Code)
+	}
+
+	sessionID := "22222222-2222-2222-2222-222222222222"
+	body := fmt.Sprintf(`{"gameType":"shooting","rank":"C","score":10,"sessionId":%q}`, sessionID)
+	path := "/api/players/" + playerName + "/game-reward"
+
+	req1 := httptest.NewRequest(http.MethodPost, path, bytes.NewBufferString(body))
+	req1.Header.Set("Content-Type", "application/json")
+	w1 := httptest.NewRecorder()
+	r.ServeHTTP(w1, req1)
+	if w1.Code != http.StatusOK {
+		t.Fatalf("1回目: %d %s", w1.Code, w1.Body.String())
+	}
+
+	var first struct {
+		NewCoins int `json:"newCoins"`
+	}
+	if err := json.NewDecoder(w1.Body).Decode(&first); err != nil {
+		t.Fatalf("1回目 decode: %v", err)
+	}
+
+	req2 := httptest.NewRequest(http.MethodPost, path, bytes.NewBufferString(body))
+	req2.Header.Set("Content-Type", "application/json")
+	w2 := httptest.NewRecorder()
+	r.ServeHTTP(w2, req2)
+	if w2.Code != http.StatusTooManyRequests {
+		t.Fatalf("2回目: expected 429, got %d: %s", w2.Code, w2.Body.String())
+	}
+
+	req3 := httptest.NewRequest(http.MethodGet, "/api/players/"+playerName, nil)
+	w3 := httptest.NewRecorder()
+	r.ServeHTTP(w3, req3)
+	var p model.Player
+	if err := json.NewDecoder(w3.Body).Decode(&p); err != nil {
+		t.Fatalf("get player: %v", err)
+	}
+	if p.Coins != first.NewCoins {
+		t.Errorf("2回目失敗後もコインは変わらないこと: expected %d, got %d", first.NewCoins, p.Coins)
 	}
 }
