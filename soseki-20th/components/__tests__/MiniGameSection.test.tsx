@@ -1,27 +1,34 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import MiniGameSection from '../MiniGameSection';
 
+vi.mock('@/hooks/useGameResults', () => ({
+  useGameResults: () => ({
+    entries: [],
+    isLoading: false,
+    error: null,
+  }),
+}));
+
 describe('MiniGameSection', () => {
-  it('「漱石タイピング」のゲームカードタイトルが表示される', () => {
+  it('「漱石タイピング」のゲームカード見出しが表示される', () => {
     render(<MiniGameSection playerName={null} />);
-    expect(screen.getByText(/漱石タイピング/)).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: /漱石タイピング/ }),
+    ).toBeInTheDocument();
   });
 
-  it('+1 Credit バッジが表示される', () => {
+  it('+1 Credit バッジがゲームカードに表示される', () => {
     render(<MiniGameSection playerName={null} />);
-    expect(screen.getByText(/\+1.*Credit|Credit.*\+1/i)).toBeInTheDocument();
+    const badges = screen.getAllByText(/\+1.*Credit|Credit.*\+1/i);
+    expect(badges.length).toBeGreaterThanOrEqual(2);
   });
 
-  it('PLAY NOW ボタンが表示される', () => {
+  it('PLAY NOW ボタンが2つ表示される', () => {
     render(<MiniGameSection playerName={null} />);
-    expect(screen.getByRole('button', { name: /play now/i })).toBeInTheDocument();
-  });
-
-  it('PLAY NOW ボタンをクリックできる', () => {
-    render(<MiniGameSection playerName={null} />);
-    const button = screen.getByRole('button', { name: /play now/i });
-    expect(button).toBeEnabled();
+    const buttons = screen.getAllByRole('button', { name: /^PLAY NOW$/i });
+    expect(buttons).toHaveLength(2);
+    buttons.forEach((b) => expect(b).toBeEnabled());
   });
 
   it('ゲームモーダルが閉じた状態で初期表示される', () => {
