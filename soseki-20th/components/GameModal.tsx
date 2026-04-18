@@ -11,6 +11,7 @@ interface GameModalProps {
   title: string;
   gameUrl: string;
   playerName?: string | null;
+  mobileSupported?: boolean;
 }
 
 export default function GameModal({
@@ -19,6 +20,7 @@ export default function GameModal({
   title,
   gameUrl,
   playerName,
+  mobileSupported = false,
 }: GameModalProps) {
   const { earnCoins } = usePlayer(playerName ?? null);
   const [toast, setToast] = useState<{ coinsEarned: number } | null>(null);
@@ -90,7 +92,7 @@ export default function GameModal({
           </button>
         </div>
 
-        {isMobile ? (
+        {isMobile && !mobileSupported ? (
           <div className="flex flex-col items-center justify-center gap-4 py-16 px-6 text-center">
             <Monitor className="h-12 w-12 text-yellow-400/60" />
             <p className="text-lg font-bold text-yellow-400">PC専用ゲームです</p>
