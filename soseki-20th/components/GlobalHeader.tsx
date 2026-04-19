@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import { Star, AlertTriangle } from 'lucide-react';
 import { toCredit } from '@/lib/currency';
+import { useSosekiName } from '@/hooks/useU18Mode';
 
 interface Props {
   coins: number;
@@ -11,10 +12,11 @@ interface Props {
 }
 
 export default function GlobalHeader({ coins, debt, visible }: Props) {
+  const sosekiName = useSosekiName();
   const tickerContent = (
     <span className="inline-flex items-center gap-2 whitespace-nowrap">
       <Star className="inline h-3 w-3" /> HAPPY 20th BIRTHDAY ACME SOSEKI <Star className="inline h-3 w-3" />{' '}
-      <AlertTriangle className="inline h-3 w-3" /> このサイトはアクメ漱石ッズ数名によって合作されました <AlertTriangle className="inline h-3 w-3" />{' '}
+      <AlertTriangle className="inline h-3 w-3" /> このサイトは{sosekiName}ッズ数名によって合作されました <AlertTriangle className="inline h-3 w-3" />{' '}
       <Star className="inline h-3 w-3" /> 2026年4月23日、伝説の誕生日 <Star className="inline h-3 w-3" />{' '}
       <Star className="inline h-3 w-3" /> 祝！酒・タバコ解禁 <Star className="inline h-3 w-3" />{' '}
       <AlertTriangle className="inline h-3 w-3" /> 連コ注意: ガチャには依存性があります <AlertTriangle className="inline h-3 w-3" />{' '}

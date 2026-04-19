@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useSosekiName } from '@/hooks/useU18Mode'
 
 const quotes = [
   {
@@ -93,6 +94,7 @@ type Item = {
 }
 
 export default function QuoteOverlay() {
+  const sosekiName = useSosekiName()
   const [items, setItems] = useState<Item[]>([])
 
   useEffect(() => {
@@ -178,7 +180,7 @@ export default function QuoteOverlay() {
               className="not-italic text-accent/55"
               style={{ fontSize: 'clamp(0.6rem, 0.9vw, 0.75rem)' }}
             >
-              — {q.author}{q.source ? `『${q.source}』` : ''}
+              — {q.author === 'アクメ漱石' ? sosekiName : q.author}{q.source ? `『${q.source}』` : ''}
             </cite>
           </div>
         )

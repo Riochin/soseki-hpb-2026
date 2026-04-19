@@ -1,7 +1,11 @@
+'use client'
+
 import Image from 'next/image'
 import QuoteOverlay from './QuoteOverlay'
+import { useSosekiName } from '@/hooks/useU18Mode'
 
 export default function HeroSection() {
+  const sosekiName = useSosekiName()
   return (
     <section className="section-reveal relative flex min-h-screen flex-col items-center justify-center px-4 md:px-8 lg:px-16">
       <QuoteOverlay />
@@ -16,7 +20,7 @@ export default function HeroSection() {
         className="mb-8 text-center text-3xl leading-relaxed tracking-wider text-white sm:text-4xl md:text-6xl lg:text-7xl"
         style={{ fontFamily: "var(--font-yuji-syuku), serif" }}
       >
-        アクメ漱石
+        {sosekiName}
         <br />
         誕生日おめでとう
       </h1>

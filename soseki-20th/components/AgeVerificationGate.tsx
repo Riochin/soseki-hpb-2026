@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, ReactNode } from 'react';
+import { U18ModeContext } from '@/hooks/useU18Mode';
 
 interface Props {
   children: ReactNode;
@@ -8,6 +9,7 @@ interface Props {
 
 export default function AgeVerificationGate({ children }: Props) {
   const [isVerified, setIsVerified] = useState(false);
+  const [u18Mode, setU18Mode] = useState(false);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -24,6 +26,11 @@ export default function AgeVerificationGate({ children }: Props) {
     setIsVerified(true);
   }
 
+  function handleNo() {
+    setU18Mode(true);
+    setIsVerified(true);
+  }
+
   if (!mounted) return null;
 
   return (
@@ -33,7 +40,7 @@ export default function AgeVerificationGate({ children }: Props) {
           <p className="mb-2 text-sm uppercase tracking-widest text-accent">アクセス制限</p>
           <h1 className="mb-6 text-3xl font-bold tracking-tight">年齢確認</h1>
           <p className="mb-8 text-center text-stone-300">
-            このサイトは18歳以上を対象としています。
+            このサイトには卑猥な単語が登場するため、18歳以上を対象としています。
             <br />
             あなたは18歳以上ですか？
           </p>
@@ -47,9 +54,7 @@ export default function AgeVerificationGate({ children }: Props) {
             </button>
             <button
               type="button"
-              onClick={() => {
-                window.location.href = 'https://www.google.com';
-              }}
+              onClick={handleNo}
               className="rounded-control border-2 border-stone-600 px-8 py-3 font-bold text-stone-400 transition-colors hover:bg-stone-800"
             >
               いいえ
@@ -58,7 +63,11 @@ export default function AgeVerificationGate({ children }: Props) {
         </div>
       )}
 
-      {isVerified && <>{children}</>}
+      {isVerified && (
+        <U18ModeContext.Provider value={u18Mode}>
+          {children}
+        </U18ModeContext.Provider>
+      )}
     </>
   );
 }
