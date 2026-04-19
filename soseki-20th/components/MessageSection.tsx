@@ -99,10 +99,6 @@ export default function MessageSection() {
     return () => clearInterval(id);
   }, [paused, maxIndex]);
 
-  useEffect(() => {
-    setCurrentIndex(0);
-  }, [messages.length]);
-
   const slidePercent = 100 / visibleCount;
 
   return (
