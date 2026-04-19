@@ -38,18 +38,18 @@ const notoSansJP = Noto_Sans_JP({
 
 
 export const metadata: Metadata = {
-  title: "SOSEKI 20th | Happy Birthday!",
-  description: "アクメ漱石 20歳誕生日記念ファンサイト",
+  title: "アクメ漱石 生誕20周年祭",
+  description: "誕生日おめでとう‼️‼️‼️‼️",
   openGraph: {
-    title: "SOSEKI 20th | Happy Birthday!",
-    description: "アクメ漱石 20歳誕生日記念ファンサイト",
+    title: "アクメ漱石 生誕20周年祭",
+    description: "誕生日おめでとう‼️‼️‼️‼️",
     images: ["https://soseki-20th.vercel.app/ogp.png?v=2"],
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "SOSEKI 20th | Happy Birthday!",
-    description: "アクメ漱石 20歳誕生日記念ファンサイト",
+    title: "アクメ漱石 生誕20周年祭",
+    description: "誕生日おめでとう‼️‼️‼️‼️",
     images: ["https://soseki-20th.vercel.app/ogp.png?v=2"],
   },
 };
