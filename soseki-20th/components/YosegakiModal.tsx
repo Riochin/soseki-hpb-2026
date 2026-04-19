@@ -71,11 +71,13 @@ const AUTHOR_COLOR: Record<BgColor, string> = {
 
 const MAX_MESSAGE_LENGTH = 140;
 
-function getPreviewSizeClass(len: number): string {
-  if (len <= 15) return 'text-xl leading-snug';
-  if (len <= 30) return 'text-base leading-snug';
-  if (len <= 50) return 'text-sm leading-relaxed';
-  if (len <= 80) return 'text-xs leading-relaxed';
+function getPreviewSizeClass(text: string): string {
+  const lines = (text.match(/\n/g) ?? []).length + 1;
+  const effective = Math.max(text.length, lines * 25);
+  if (effective <= 15) return 'text-xl leading-snug';
+  if (effective <= 30) return 'text-base leading-snug';
+  if (effective <= 50) return 'text-sm leading-relaxed';
+  if (effective <= 80) return 'text-xs leading-relaxed';
   return 'text-[9px] leading-tight';
 }
 
@@ -192,7 +194,7 @@ export default function YosegakiModal({ onClose, onSubmit }: Props) {
                 fontFamily: FONT_FAMILY[font],
               }}
             >
-              <p className={`whitespace-pre-wrap ${getPreviewSizeClass(text.trim().length)} ${TEXT_COLOR[bgColor]}`}>
+              <p className={`whitespace-pre-wrap break-words ${getPreviewSizeClass(text.trim())} ${TEXT_COLOR[bgColor]}`}>
                 {text.trim() || "メッセージのプレビュー"}
               </p>
               <p
