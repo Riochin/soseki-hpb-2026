@@ -11,6 +11,7 @@ import OverviewSection from '@/components/OverviewSection';
 import MessageSection from '@/components/MessageSection';
 import MiniGameSection from '@/components/MiniGameSection';
 import GachaSection from '@/components/GachaSection';
+import CreditsSection from '@/components/CreditsSection';
 import FooterCounter from '@/components/FooterCounter';
 import IntroOverlay from '@/components/IntroOverlay';
 import { usePlayer } from '@/hooks/usePlayer';
@@ -79,6 +80,7 @@ export default function Home() {
               <MessageSection />
               <MiniGameSection playerName={playerName} />
               <GachaSection playerName={playerName} />
+              <CreditsSection />
             </main>
             <FooterCounter />
           </>
