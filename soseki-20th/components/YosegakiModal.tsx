@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 import { X } from "lucide-react";
 import ModalFrame from "@/components/ModalFrame";
 import type {
