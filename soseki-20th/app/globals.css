@@ -171,6 +171,17 @@ body {
   display: inline-block;
 }
 
+@keyframes ticker-reverse {
+  0%   { transform: translateX(-50%); }
+  100% { transform: translateX(0); }
+}
+
+.animate-ticker-reverse {
+  animation: ticker-reverse linear infinite;
+  white-space: nowrap;
+  display: inline-block;
+}
+
 /* セクション内コンテンツの共通出現アニメーション */
 @keyframes section-content-reveal {
   from {

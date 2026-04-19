@@ -7,6 +7,7 @@ import GlobalHeader from '@/components/GlobalHeader';
 import ScrollToTopButton from '@/components/ScrollToTopButton';
 import HeroSection from '@/components/HeroSection';
 import VideoSection from '@/components/VideoSection';
+import OverviewSection from '@/components/OverviewSection';
 import MessageSection from '@/components/MessageSection';
 import MiniGameSection from '@/components/MiniGameSection';
 import GachaSection from '@/components/GachaSection';
@@ -74,6 +75,7 @@ export default function Home() {
                 <HeroSection />
               </div>
               <VideoSection />
+              <OverviewSection />
               <MessageSection />
               <MiniGameSection playerName={playerName} />
               <GachaSection playerName={playerName} />
