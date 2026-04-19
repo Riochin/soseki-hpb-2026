@@ -318,19 +318,19 @@
 
   <script>
     (function () {
-      /** EASY: easy/01.png … 15.png から毎回ランダムで4種を選ぶ */
+      /** EASY: easy/01.png … 26.png から毎回ランダムで4種を選ぶ */
       const EASY_IMG_PATHS = (function () {
         const paths = [];
-        for (let i = 1; i <= 15; i++) {
+        for (let i = 1; i <= 26; i++) {
           paths.push('face-memory/easy/' + String(i).padStart(2, '0') + '.png');
         }
         return paths;
       })();
 
-      /** HARD: difficult/01.png … 15.png から毎回ランダムで8種（8ペア） */
+      /** HARD: difficult/01.png … 26.png から毎回ランダムで8種（8ペア） */
       const DIFFICULT_IMG_PATHS = (function () {
         const paths = [];
-        for (let i = 1; i <= 15; i++) {
+        for (let i = 1; i <= 26; i++) {
           paths.push('face-memory/difficult/' + String(i).padStart(2, '0') + '.png');
         }
         return paths;
