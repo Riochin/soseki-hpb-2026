@@ -1,14 +1,14 @@
 @import "tailwindcss";
 
-/* たぬき油性マジック・ふい字: public/fonts/ にフォントファイルを配置すると有効になります */
+/* カスタムフォントは public 配下の実ファイルパスを参照する */
 @font-face {
   font-family: "TanukiMagic";
-  src: url("/fonts/tanuki.woff2") format("woff2");
+  src: url("/yosegaki/TanukiMagic.ttf") format("truetype");
   font-display: swap;
 }
 @font-face {
   font-family: "FudeJi";
-  src: url("/fonts/fude-ji.woff2") format("woff2");
+  src: url("/yosegaki/HuiFontP29.ttf") format("truetype");
   font-display: swap;
 }
 
