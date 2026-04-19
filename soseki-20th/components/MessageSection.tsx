@@ -37,6 +37,15 @@ function bgImagePath(color: BgColor, style: BgStyle): string {
   return `/yosegaki/${color}${style === 'normal' ? '' : `-${style}`}.png`;
 }
 
+function getTextSizeClass(len: number): string {
+  if (len <= 15) return 'text-3xl leading-snug';
+  if (len <= 30) return 'text-2xl leading-snug';
+  if (len <= 50) return 'text-xl leading-relaxed';
+  if (len <= 80) return 'text-base leading-relaxed';
+  if (len <= 120) return 'text-sm leading-relaxed';
+  return 'text-xs leading-relaxed';
+}
+
 function MessageCard({ msg }: { msg: Message }) {
   return (
     <div
@@ -48,7 +57,7 @@ function MessageCard({ msg }: { msg: Message }) {
         fontFamily: FONT_FAMILY[msg.font],
       }}
     >
-      <p className={`text-xs leading-relaxed ${TEXT_COLOR[msg.bgColor]}`}>{msg.text}</p>
+      <p className={`whitespace-pre-wrap ${getTextSizeClass(msg.text.length)} ${TEXT_COLOR[msg.bgColor]}`}>{msg.text}</p>
       <p className={`absolute bottom-3 left-4 text-[10px] ${AUTHOR_COLOR[msg.bgColor]}`}>— {msg.author}</p>
       {msg.stamp && (
         <div className="absolute bottom-2 right-2 flex h-10 w-10 items-center justify-center rounded-full bg-white/70 text-[8px] text-stone-700 shadow-sm backdrop-blur-sm leading-tight text-center">

@@ -71,6 +71,14 @@ const AUTHOR_COLOR: Record<BgColor, string> = {
 
 const MAX_MESSAGE_LENGTH = 140;
 
+function getPreviewSizeClass(len: number): string {
+  if (len <= 15) return 'text-xl leading-snug';
+  if (len <= 30) return 'text-base leading-snug';
+  if (len <= 50) return 'text-sm leading-relaxed';
+  if (len <= 80) return 'text-xs leading-relaxed';
+  return 'text-[9px] leading-tight';
+}
+
 function bgImagePath(color: BgColor, style: BgStyle): string {
   return `/yosegaki/${color}${style === "normal" ? "" : `-${style}`}.png`;
 }
@@ -184,7 +192,7 @@ export default function YosegakiModal({ onClose, onSubmit }: Props) {
                 fontFamily: FONT_FAMILY[font],
               }}
             >
-              <p className={`text-[9px] leading-tight ${TEXT_COLOR[bgColor]}`}>
+              <p className={`whitespace-pre-wrap ${getPreviewSizeClass(text.trim().length)} ${TEXT_COLOR[bgColor]}`}>
                 {text.trim() || "メッセージのプレビュー"}
               </p>
               <p
