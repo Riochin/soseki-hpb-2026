@@ -179,9 +179,21 @@ func (s *DBGachaStore) ExecuteMultiGacha(ctx context.Context, playerName string)
 	// rng を1つ生成して10回使い回す
 	rng := rand.New(rand.NewSource(time.Now().UnixNano()))
 
+	var highRarityItems []model.Item
+	for _, item := range items {
+		if item.Rarity == "UR" || item.Rarity == "SSR" {
+			highRarityItems = append(highRarityItems, item)
+		}
+	}
+
 	results := make([]GachaResult, 0, 10)
 	for i := 0; i < 10; i++ {
-		selected := SelectWeightedItem(items, rng)
+		var selected model.Item
+		if i == 9 && len(highRarityItems) > 0 {
+			selected = SelectWeightedItem(highRarityItems, rng)
+		} else {
+			selected = SelectWeightedItem(items, rng)
+		}
 
 		tag, err := tx.Exec(ctx,
 			`INSERT INTO collections (player_name, item_id) VALUES ($1, $2) ON CONFLICT DO NOTHING`,

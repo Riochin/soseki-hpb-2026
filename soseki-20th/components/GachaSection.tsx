@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { X } from 'lucide-react';
 import { usePlayer, CollectionItem, GachaResult, MultiGachaResult } from '@/hooks/usePlayer';
 import { toCredit } from '@/lib/currency';
@@ -437,25 +438,37 @@ export default function GachaSection({ playerName }: Props) {
         </h2>
 
         <div className="mb-3 grid grid-cols-2 gap-2">
-          <button
-            type="button"
-            onClick={handleGacha}
-            disabled={spinning}
-            className="rounded-control bg-accent py-4 font-bold text-black transition-opacity hover:opacity-90 disabled:opacity-50"
-          >
-            {spinning ? 'ガチャ中...' : '1回まわす'}
-            <span className="block text-xs font-normal opacity-70">1クレ</span>
-          </button>
+          <div className="flex flex-col">
+            <p className="mb-1 h-4" />
+            <button
+              type="button"
+              onClick={handleGacha}
+              disabled={spinning}
+              className="rounded-control bg-accent py-4 font-bold text-black transition-opacity hover:opacity-90 disabled:opacity-50"
+            >
+              {spinning ? 'ガチャ中...' : '1回まわす'}
+              <span className="flex items-center justify-center gap-1 text-xs font-normal opacity-70">
+                <Image src="/1credit.png" alt="" width={12} height={12} className="h-3 w-3" />
+                1クレ
+              </span>
+            </button>
+          </div>
 
-          <button
-            type="button"
-            onClick={handleMultiGacha}
-            disabled={spinning || (player !== null && player.coins < 1000)}
-            className="rounded-control border-2 border-accent py-4 font-bold text-accent transition-colors hover:bg-accent hover:text-black disabled:opacity-50"
-          >
-            {spinning ? 'ガチャ中...' : '10回まわす'}
-            <span className="block text-xs font-normal opacity-70">10クレ</span>
-          </button>
+          <div className="flex flex-col">
+            <p className="mb-1 text-center font-mono text-xs tracking-widest text-accent/60">SSR以上1個確定</p>
+            <button
+              type="button"
+              onClick={handleMultiGacha}
+              disabled={spinning || (player !== null && player.coins < 1000)}
+              className="rounded-control bg-accent py-4 font-bold text-black transition-opacity hover:opacity-90 disabled:opacity-50"
+            >
+              {spinning ? 'ガチャ中...' : '10回まわす'}
+              <span className="flex items-center justify-center gap-1 text-xs font-normal opacity-70">
+                <Image src="/1credit.png" alt="" width={12} height={12} className="h-3 w-3" />
+                10クレ
+              </span>
+            </button>
+          </div>
         </div>
 
         {!showBorrowModal && (IS_UI_MOCK || (player && player.coins < 100)) && (
