@@ -28,14 +28,28 @@ func (m *mockMessageStore) ListMessages(_ context.Context) ([]model.Message, err
 	return m.messages, nil
 }
 
-func (m *mockMessageStore) CreateMessage(_ context.Context, author, text string) (model.Message, error) {
+func (m *mockMessageStore) CreateMessage(
+	_ context.Context,
+	author string,
+	username *string,
+	text string,
+	bgColor string,
+	bgStyle string,
+	font string,
+	stamp *string,
+) (model.Message, error) {
 	if m.err != nil {
 		return model.Message{}, m.err
 	}
 	msg := model.Message{
 		ID:        len(m.messages) + 1,
 		Author:    author,
+		Username:  username,
 		Text:      text,
+		BgColor:   bgColor,
+		BgStyle:   bgStyle,
+		Font:      font,
+		Stamp:     stamp,
 		CreatedAt: time.Now(),
 	}
 	m.messages = append(m.messages, msg)

@@ -20,7 +20,8 @@ func NewDBMessageStore(database *db.DB) *DBMessageStore {
 // ListMessages は messages テーブルから全件を作成日降順で取得する。
 func (s *DBMessageStore) ListMessages(ctx context.Context) ([]model.Message, error) {
 	rows, err := s.db.Pool.Query(ctx,
-		`SELECT id, author, text, created_at FROM messages ORDER BY created_at DESC`,
+		`SELECT id, author, username, text, bg_color, bg_style, font, stamp, created_at
+		 FROM messages ORDER BY created_at DESC`,
 	)
 	if err != nil {
 		return nil, err
@@ -30,7 +31,11 @@ func (s *DBMessageStore) ListMessages(ctx context.Context) ([]model.Message, err
 	var msgs []model.Message
 	for rows.Next() {
 		var m model.Message
-		if err := rows.Scan(&m.ID, &m.Author, &m.Text, &m.CreatedAt); err != nil {
+		if err := rows.Scan(
+			&m.ID, &m.Author, &m.Username, &m.Text,
+			&m.BgColor, &m.BgStyle, &m.Font, &m.Stamp,
+			&m.CreatedAt,
+		); err != nil {
 			return nil, err
 		}
 		msgs = append(msgs, m)
@@ -46,12 +51,27 @@ func (s *DBMessageStore) ListMessages(ctx context.Context) ([]model.Message, err
 }
 
 // CreateMessage は messages テーブルに1件挿入して返す。
-func (s *DBMessageStore) CreateMessage(ctx context.Context, author, text string) (model.Message, error) {
+func (s *DBMessageStore) CreateMessage(
+	ctx context.Context,
+	author string,
+	username *string,
+	text string,
+	bgColor string,
+	bgStyle string,
+	font string,
+	stamp *string,
+) (model.Message, error) {
 	var m model.Message
 	err := s.db.Pool.QueryRow(ctx,
-		`INSERT INTO messages (author, text) VALUES ($1, $2) RETURNING id, author, text, created_at`,
-		author, text,
-	).Scan(&m.ID, &m.Author, &m.Text, &m.CreatedAt)
+		`INSERT INTO messages (author, username, text, bg_color, bg_style, font, stamp)
+		 VALUES ($1, $2, $3, $4, $5, $6, $7)
+		 RETURNING id, author, username, text, bg_color, bg_style, font, stamp, created_at`,
+		author, username, text, bgColor, bgStyle, font, stamp,
+	).Scan(
+		&m.ID, &m.Author, &m.Username, &m.Text,
+		&m.BgColor, &m.BgStyle, &m.Font, &m.Stamp,
+		&m.CreatedAt,
+	)
 	if err != nil {
 		return model.Message{}, err
 	}

@@ -6,6 +6,11 @@ import "time"
 type Message struct {
 	ID        int       `json:"id"`
 	Author    string    `json:"author"`
+	Username  *string   `json:"username,omitempty"`
 	Text      string    `json:"text"`
+	BgColor   string    `json:"bgColor"`
+	BgStyle   string    `json:"bgStyle"`
+	Font      string    `json:"font"`
+	Stamp     *string   `json:"stamp,omitempty"`
 	CreatedAt time.Time `json:"createdAt"`
 }
