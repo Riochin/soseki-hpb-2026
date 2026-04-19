@@ -44,7 +44,7 @@ export default function Home() {
           observer.unobserve(entry.target);
         }
       },
-      { threshold: 0.45, rootMargin: '0px 0px -20% 0px' }
+      { threshold: 0.1, rootMargin: '0px 0px -5% 0px' }
     );
 
     sections.forEach((section) => observer.observe(section));
