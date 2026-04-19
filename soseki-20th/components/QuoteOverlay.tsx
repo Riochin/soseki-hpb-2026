@@ -50,6 +50,7 @@ const quotes = [
   { text: "鉄は熱いうちに打とう", author: "アクメ漱石", source: "LINE" },
   { text: "宵越しの銭は持たない", author: "アクメ漱石", source: "パチンコ屋" },
   { text: "ﾊｱﾞｱﾞｱﾞｱﾞｱﾞﾏｯｽﾞ‼️‼️‼️", author: "アクメ漱石", source: "namco松戸店" },
+  { text: "俺たちの別れに涙は似合わない。だってまた会ったときに恥ずかしいからね", author: "アクメ漱石", source: "namco巣鴨店" },
 ];
 
 // 見切れにくい小さめの角度バリエーション
