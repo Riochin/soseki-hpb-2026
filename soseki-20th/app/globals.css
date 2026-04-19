@@ -1,5 +1,22 @@
 @import "tailwindcss";
 
+/* たぬき油性マジック・ふい字: public/fonts/ にフォントファイルを配置すると有効になります */
+@font-face {
+  font-family: "TanukiMagic";
+  src: url("/fonts/tanuki.woff2") format("woff2");
+  font-display: swap;
+}
+@font-face {
+  font-family: "FudeJi";
+  src: url("/fonts/fude-ji.woff2") format("woff2");
+  font-display: swap;
+}
+
+:root {
+  --font-tanuki: "TanukiMagic";
+  --font-fude-ji: "FudeJi";
+}
+
 /* セマンティックトークン（コンポーネントは bg-panel / border-border-subtle 等で参照） */
 :root {
   --background: #0c0a08;

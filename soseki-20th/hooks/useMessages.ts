@@ -2,16 +2,34 @@ import useSWR from 'swr';
 import { fetcher, apiFetch } from '@/lib/api';
 import { IS_UI_MOCK, MOCK_MESSAGES } from '@/lib/mock';
 
+export type BgColor = 'white' | 'beige' | 'purple';
+export type BgStyle = 'normal' | 'line' | 'grid';
+export type CardFont = 'noto-sans' | 'tanuki' | 'fude-ji' | 'fude';
+export type Stamp =
+  | 'dio' | 'joseph' | 'jotaro' | 'kakyoin' | 'DIO'
+  | 'josuke' | 'rohan' | 'bucciarati' | 'giorno'
+  | 'diavolo' | 'jolyne' | 'anasui';
+
 export interface Message {
   id: number;
   author: string;
+  username?: string;
   text: string;
+  bgColor: BgColor;
+  bgStyle: BgStyle;
+  font: CardFont;
+  stamp?: Stamp;
   createdAt: string;
 }
 
 export interface PostMessageInput {
   author: string;
+  username?: string;
   text: string;
+  bgColor: BgColor;
+  bgStyle: BgStyle;
+  font: CardFont;
+  stamp?: Stamp;
 }
 
 export interface UseMessagesResult {
@@ -36,7 +54,6 @@ export function useMessages(): UseMessagesResult {
       body: JSON.stringify(input),
     });
 
-    // オプティミスティック更新: 既存一覧の先頭に追加（降順なので先頭）
     await mutate(
       (current) => (current ? [newMessage, ...current] : [newMessage]),
       { revalidate: false },

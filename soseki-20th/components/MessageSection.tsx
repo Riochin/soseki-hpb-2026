@@ -1,86 +1,114 @@
 'use client';
 
-import { CSSProperties, useState, FormEvent, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';
 import { useMessages } from '@/hooks/useMessages';
-
-// SVGノイズで紙のグレイン感を再現（外部画像不要）
-const paperStyle: CSSProperties = {
-  backgroundImage: [
-    "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.35'/%3E%3C/svg%3E\")",
-    'linear-gradient(160deg, #fef9f0 0%, #fdf3e3 60%, #fcefd8 100%)',
-  ].join(', '),
-  backgroundColor: '#fef9f0',
-};
+import type { BgColor, BgStyle, CardFont, Message } from '@/hooks/useMessages';
+import YosegakiModal from '@/components/YosegakiModal';
 
 const AUTO_PLAY_INTERVAL = 4000;
 
+const FONT_FAMILY: Record<CardFont, string> = {
+  'noto-sans': 'var(--font-noto-sans-jp), sans-serif',
+  'tanuki':    'var(--font-tanuki), sans-serif',
+  'fude-ji':   'var(--font-fude-ji), sans-serif',
+  'fude':      'var(--font-yuji-syuku), serif',
+};
+
+const TEXT_COLOR: Record<BgColor, string> = {
+  white:  'text-stone-800',
+  beige:  'text-stone-700',
+  purple: 'text-stone-800',
+};
+
+const AUTHOR_COLOR: Record<BgColor, string> = {
+  white:  'text-stone-500',
+  beige:  'text-amber-700',
+  purple: 'text-purple-700',
+};
+
+const STAMP_LABEL: Record<string, string> = {
+  dio: 'ディオ', joseph: 'ジョセフ', jotaro: '承太郎', kakyoin: '花京院', DIO: 'DIO',
+  josuke: '仗助', rohan: '露伴', bucciarati: 'ブチャラティ', giorno: 'ジョルノ',
+  diavolo: 'ディアボロ', jolyne: '徐倫', anasui: 'アナスイ',
+};
+
+function bgImagePath(color: BgColor, style: BgStyle): string {
+  return `/yosegaki/${color}${style === 'normal' ? '' : `-${style}`}.png`;
+}
+
+function MessageCard({ msg }: { msg: Message }) {
+  return (
+    <div
+      className="relative aspect-square w-full rounded-sm border border-stone-300/30 p-4 shadow-[2px_4px_12px_rgba(0,0,0,0.35)] overflow-hidden"
+      style={{
+        backgroundImage: `url(${bgImagePath(msg.bgColor, msg.bgStyle)})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        fontFamily: FONT_FAMILY[msg.font],
+      }}
+    >
+      <p className={`text-xs leading-relaxed ${TEXT_COLOR[msg.bgColor]}`}>{msg.text}</p>
+      <p className={`absolute bottom-3 left-4 text-[10px] ${AUTHOR_COLOR[msg.bgColor]}`}>— {msg.author}</p>
+      {msg.stamp && (
+        <div className="absolute bottom-2 right-2 flex h-10 w-10 items-center justify-center rounded-full bg-white/70 text-[8px] text-stone-700 shadow-sm backdrop-blur-sm leading-tight text-center">
+          {STAMP_LABEL[msg.stamp] ?? msg.stamp}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function MessageSection() {
   const { messages, isLoading, error, postMessage } = useMessages();
-  const [showForm, setShowForm] = useState(false);
-  const [author, setAuthor] = useState('');
-  const [text, setText] = useState('');
-  const [formError, setFormError] = useState('');
-  const [submitting, setSubmitting] = useState(false);
+  const [showModal, setShowModal] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [paused, setPaused] = useState(false);
+  const [visibleCount, setVisibleCount] = useState(1);
   const touchStartX = useRef<number | null>(null);
 
-  // messages + 追加カード 1枚
-  const totalSlides = messages.length + 1;
+  useEffect(() => {
+    const update = () => setVisibleCount(window.innerWidth >= 640 ? 3 : 1);
+    update();
+    window.addEventListener('resize', update);
+    return () => window.removeEventListener('resize', update);
+  }, []);
+
+  const totalItems = messages.length + 1;
+  const maxIndex = Math.max(0, totalItems - visibleCount);
 
   const goTo = useCallback(
-    (index: number) => setCurrentIndex((index + totalSlides) % totalSlides),
-    [totalSlides],
+    (index: number) => setCurrentIndex(Math.max(0, Math.min(index, maxIndex))),
+    [maxIndex],
   );
 
-  // 自動再生
   useEffect(() => {
-    if (paused || totalSlides <= 1) return;
+    if (paused || maxIndex === 0) return;
     const id = setInterval(() => {
-      setCurrentIndex((i) => (i + 1) % totalSlides);
+      setCurrentIndex((i) => (i >= maxIndex ? 0 : i + 1));
     }, AUTO_PLAY_INTERVAL);
     return () => clearInterval(id);
-  }, [paused, totalSlides]);
+  }, [paused, maxIndex]);
 
-  // メッセージ追加後は追加カードのインデックスをリセット
   useEffect(() => {
     setCurrentIndex(0);
   }, [messages.length]);
 
-  async function handleSubmit(e: FormEvent) {
-    e.preventDefault();
-    if (!text.trim()) {
-      setFormError('本文を入力してください');
-      return;
-    }
-    setFormError('');
-    setSubmitting(true);
-    try {
-      await postMessage({ author: author.trim() || '匿名', text: text.trim() });
-      setAuthor('');
-      setText('');
-      setShowForm(false);
-    } catch (err) {
-      setFormError(`エラー: ${err instanceof Error ? err.message : '送信に失敗しました'}`);
-    } finally {
-      setSubmitting(false);
-    }
-  }
+  const slidePercent = 100 / visibleCount;
 
   return (
     <section className="section-reveal section-padding">
-      <p className="mb-4 font-mono text-xs tracking-widest text-accent/60">
-        — MESSAGES
-      </p>
-      <h2 className="mb-8 text-xl font-black tracking-tight text-white md:text-3xl" style={{ fontFamily: "var(--font-noto-serif-jp), serif" }}>
+      <p className="mb-4 font-mono text-xs tracking-widest text-accent/60">— MESSAGES</p>
+      <h2
+        className="mb-8 text-xl font-black tracking-tight text-white md:text-3xl"
+        style={{ fontFamily: 'var(--font-noto-serif-jp), serif' }}
+      >
         みんなからのメッセージ
       </h2>
 
       {isLoading && <p className="text-stone-400">読み込み中...</p>}
       {error && <p className="text-red-400">メッセージの取得に失敗しました</p>}
 
-      {/* カルーセル */}
       {!isLoading && (
         <div
           className="relative"
@@ -99,131 +127,70 @@ export default function MessageSection() {
             goTo(currentIndex + (delta < 0 ? 1 : -1));
           }}
         >
-          {/* スライドトラック */}
-          <div className="overflow-hidden">
+          <div className="overflow-hidden px-8">
             <div
               className="flex transition-transform duration-500 ease-in-out"
-              style={{ transform: `translateX(-${currentIndex * 100}%)` }}
+              style={{ transform: `translateX(-${currentIndex * slidePercent}%)` }}
             >
               {messages.map((msg) => (
-                <div key={msg.id} className="min-w-full px-10">
-                  <div
-                    className="min-h-[140px] border border-amber-200/60 p-6 shadow-[2px_4px_12px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,255,255,0.6)]"
-                    style={paperStyle}
-                  >
-                    <p className="mb-3 text-sm leading-relaxed text-stone-700">{msg.text}</p>
-                    <p className="text-xs text-amber-700">— {msg.author}</p>
-                  </div>
+                <div key={msg.id} className="min-w-full sm:min-w-[33.333%] px-2">
+                  <MessageCard msg={msg} />
                 </div>
               ))}
 
-              {/* 追加カード（右端） */}
-              <div className="min-w-full px-10">
+              {/* 追加カード */}
+              <div className="min-w-full sm:min-w-[33.333%] px-2">
                 <button
-                  onClick={() => setShowForm(true)}
-                  className="flex min-h-[140px] w-full flex-col items-center justify-center gap-3 rounded-panel border-2 border-dashed border-accent/50 bg-transparent text-accent transition-colors hover:border-accent hover:bg-accent/5"
+                  onClick={() => setShowModal(true)}
+                  className="flex aspect-square w-full flex-col items-center justify-center gap-3 rounded-panel border-2 border-dashed border-accent/50 bg-transparent text-accent transition-colors hover:border-accent hover:bg-accent/5"
                 >
-                  <Plus className="h-8 w-8" />
-                  <span className="text-sm font-medium">追加する</span>
+                  <Plus className="h-6 w-6" />
+                  <span className="text-xs font-medium">追加する</span>
                 </button>
               </div>
             </div>
           </div>
 
-          {/* 前へ */}
           <button
             onClick={() => goTo(currentIndex - 1)}
-            className="absolute left-0 top-1/2 -translate-y-1/2 rounded-control border-2 border-edge bg-surface/80 p-1.5 text-accent backdrop-blur transition-colors hover:border-accent hover:bg-video-back"
+            className="absolute left-0 top-1/2 -translate-y-1/2 rounded-control border-2 border-edge bg-surface/80 p-1.5 text-accent backdrop-blur transition-colors hover:border-accent hover:bg-video-back disabled:opacity-30"
             aria-label="前のメッセージ"
+            disabled={currentIndex === 0}
           >
             <ChevronLeft className="h-5 w-5" />
           </button>
 
-          {/* 次へ */}
           <button
             onClick={() => goTo(currentIndex + 1)}
-            className="absolute right-0 top-1/2 -translate-y-1/2 rounded-control border-2 border-edge bg-surface/80 p-1.5 text-accent backdrop-blur transition-colors hover:border-accent hover:bg-video-back"
+            className="absolute right-0 top-1/2 -translate-y-1/2 rounded-control border-2 border-edge bg-surface/80 p-1.5 text-accent backdrop-blur transition-colors hover:border-accent hover:bg-video-back disabled:opacity-30"
             aria-label="次のメッセージ"
+            disabled={currentIndex >= maxIndex}
           >
             <ChevronRight className="h-5 w-5" />
           </button>
 
-          {/* ドットインジケーター */}
-          <div className="mt-4 flex justify-center gap-2">
-            {Array.from({ length: totalSlides }).map((_, i) => (
-              <button
-                key={i}
-                onClick={() => goTo(i)}
-                aria-label={`スライド ${i + 1}`}
-                className={`h-2 rounded-full transition-all duration-300 ${
-                  i === currentIndex
-                    ? 'w-6 bg-accent'
-                    : 'w-2 bg-stone-600 hover:bg-stone-400'
-                }`}
-              />
-            ))}
-          </div>
+          {maxIndex > 0 && (
+            <div className="mt-4 flex justify-center gap-2">
+              {Array.from({ length: maxIndex + 1 }).map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => goTo(i)}
+                  aria-label={`スライド ${i + 1}`}
+                  className={`h-2 rounded-full transition-all duration-300 ${
+                    i === currentIndex ? 'w-6 bg-accent' : 'w-2 bg-stone-600 hover:bg-stone-400'
+                  }`}
+                />
+              ))}
+            </div>
+          )}
         </div>
       )}
 
-      {/* 投稿フォーム */}
-      {showForm && (
-        <form
-          onSubmit={handleSubmit}
-          noValidate
-          className="mt-8 rounded-panel border-2 border-edge bg-surface p-6"
-        >
-          <h3 className="mb-4 font-bold text-white">メッセージを投稿する</h3>
-
-          <label className="mb-1 block text-sm text-stone-400" htmlFor="msg-author">
-            お名前（任意）
-          </label>
-          <input
-            id="msg-author"
-            type="text"
-            value={author}
-            onChange={(e) => setAuthor(e.target.value)}
-            placeholder="お名前（省略可）"
-            maxLength={50}
-            className="mb-3 w-full rounded-control border-b-2 border-edge bg-transparent px-2 py-2 text-white placeholder-stone-500 focus:border-accent focus:outline-none"
-          />
-
-          <label className="mb-1 block text-sm text-stone-400" htmlFor="msg-text">
-            本文
-          </label>
-          <textarea
-            id="msg-text"
-            aria-label="本文"
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            placeholder="漱石へのメッセージを書いてください"
-            maxLength={500}
-            rows={4}
-            className="mb-3 w-full rounded-control border-b-2 border-edge bg-transparent px-2 py-2 text-white placeholder-stone-500 focus:border-accent focus:outline-none"
-          />
-
-          {formError && <p className="mb-3 text-sm text-red-400">{formError}</p>}
-
-          <div className="flex gap-3">
-            <button
-              type="submit"
-              disabled={submitting}
-              className="rounded-control bg-accent px-6 py-2 font-bold text-black transition-opacity hover:opacity-90 disabled:opacity-50"
-            >
-              {submitting ? '送信中...' : '送信'}
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setShowForm(false);
-                setFormError('');
-              }}
-              className="rounded-control border-2 border-stone-600 px-6 py-2 text-stone-400 transition-colors hover:bg-video-back"
-            >
-              キャンセル
-            </button>
-          </div>
-        </form>
+      {showModal && (
+        <YosegakiModal
+          onClose={() => setShowModal(false)}
+          onSubmit={postMessage}
+        />
       )}
     </section>
   );
