@@ -49,6 +49,7 @@ const quotes = [
   { text: "namco巣鴨が実家", author: "アクメ漱石", source: "Twitter" },
   { text: "鉄は熱いうちに打とう", author: "アクメ漱石", source: "LINE" },
   { text: "宵越しの銭は持たない", author: "アクメ漱石", source: "パチンコ屋" },
+  { text: "ﾊｱﾞｱﾞｱﾞｱﾞｱﾞﾏｯｽﾞ‼️‼️‼️", author: "アクメ漱石", source: "namco巣鴨店" },
 ];
 
 // 見切れにくい小さめの角度バリエーション
