@@ -39,13 +39,13 @@ function bgImagePath(color: BgColor, style: BgStyle): string {
 
 function getTextSizeClass(text: string): string {
   const lines = (text.match(/\n/g) ?? []).length + 1;
-  const effective = Math.max(text.length, lines * 25);
-  if (effective <= 15) return 'text-3xl leading-snug';
-  if (effective <= 30) return 'text-2xl leading-snug';
-  if (effective <= 50) return 'text-xl leading-relaxed';
-  if (effective <= 80) return 'text-base leading-relaxed';
-  if (effective <= 120) return 'text-sm leading-relaxed';
-  return 'text-xs leading-relaxed';
+  const effective = Math.max(text.length, lines * 20);
+  if (effective <= 15) return 'text-xl sm:text-lg leading-snug';
+  if (effective <= 30) return 'text-lg sm:text-base leading-snug';
+  if (effective <= 50) return 'text-base sm:text-sm leading-relaxed';
+  if (effective <= 80) return 'text-sm sm:text-xs leading-relaxed';
+  if (effective <= 120) return 'text-xs leading-relaxed';
+  return 'text-[10px] leading-relaxed';
 }
 
 function MessageCard({ msg }: { msg: Message }) {
