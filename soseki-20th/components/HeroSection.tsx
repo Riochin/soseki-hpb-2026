@@ -7,7 +7,7 @@ import { useSosekiName } from '@/hooks/useU18Mode'
 export default function HeroSection() {
   const sosekiName = useSosekiName()
   return (
-    <section className="section-reveal relative flex min-h-screen flex-col items-center justify-center px-4 md:px-8 lg:px-16">
+    <section className="section-reveal relative flex min-h-screen flex-col items-center justify-center px-4 pb-24 md:px-8 lg:px-16">
       <QuoteOverlay />
 
       {/* 日付 */}
@@ -26,14 +26,14 @@ export default function HeroSection() {
       </h1>
 
       {/* hpb画像 */}
-      <div className="mb-6 mt-2">
+      <div className="mb-6 -mt-4">
         <Image
           src="/hpb.png"
           alt="Happy Birthday"
-          width={160}
-          height={160}
+          width={320}
+          height={320}
           className="object-contain"
-          style={{ width: 160, height: 160 }}
+          style={{ width: 320, height: 320 }}
           priority
         />
       </div>
