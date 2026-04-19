@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 
 const quotes = [
   {
-    text: "智に働けば角が立つ。情に棹させば流される。意地を通せば窮屈だ。とかくに人の世は住みにくい。",
+    text: "智に働けば角が立つ。\n情に棹させば流される。意地を通せば窮屈だ。\nとかくに人の世は住みにくい。",
     author: "夏目漱石",
     source: "草枕",
   },
@@ -24,13 +24,13 @@ const quotes = [
     source: "こころ",
   },
   {
-    text: "義務は大事だ。しかし義務は一種の牢獄だよ。",
+    text: "義務は大事だ。\nしかし義務は一種の牢獄だよ。",
     author: "夏目漱石",
     source: "行人",
   },
   { text: "月が綺麗ですね。", author: "夏目漱石", source: "（伝説）" },
   {
-    text: "誠実さのない天才よりも、才能のない誠実さの方が世の中の役に立つ。",
+    text: "誠実さのない天才よりも、\n才能のない誠実さの方が世の中の役に立つ。",
     author: "夏目漱石",
     source: "吾輩は猫である",
   },
@@ -50,7 +50,7 @@ const quotes = [
   { text: "鉄は熱いうちに打とう", author: "アクメ漱石", source: "LINE" },
   { text: "宵越しの銭は持たない", author: "アクメ漱石", source: "パチンコ屋" },
   { text: "ﾊｱﾞｱﾞｱﾞｱﾞｱﾞﾏｯｽﾞ‼️‼️‼️", author: "アクメ漱石", source: "namco松戸店" },
-  { text: "俺たちの別れに涙は似合わない。だってまた会ったときに恥ずかしいからね", author: "アクメ漱石", source: "namco巣鴨店" },
+  { text: "俺たちの別れに涙は似合わない。\nだってまた会ったときに恥ずかしいからね", author: "アクメ漱石", source: "namco巣鴨店" },
 ];
 
 // 見切れにくい小さめの角度バリエーション
@@ -169,7 +169,7 @@ export default function QuoteOverlay() {
           >
             <p
               className="font-bold tracking-widest text-yellow-100/75 drop-shadow-lg"
-              style={{ fontSize: getQuoteFontSize(q.text), whiteSpace: 'nowrap' }}
+              style={{ fontSize: getQuoteFontSize(q.text), whiteSpace: 'pre-line', maxInlineSize: '60vh' }}
             >
               「{q.text}」
             </p>
