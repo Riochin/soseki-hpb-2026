@@ -301,13 +301,15 @@
       ctx.drawImage(img, x - PLAYER_W / 2, y - PLAYER_H / 2, PLAYER_W, PLAYER_H);
     }
 
-    function drawEnemy(x, lane, hp) {
+    function drawEnemy(x, lane, hp, maxHp) {
       const y = laneY(lane);
       ctx.drawImage(enemyImg, x - 25*SCALE, y - 18*SCALE, 50*SCALE, 36*SCALE);
-      const pipW = 6*SCALE, pipGap = 3*SCALE;
-      const totalW = 5 * pipW + 4 * pipGap;
+      const totalW = 48*SCALE;
+      const pipCount = maxHp;
+      const pipGap = Math.min(2*SCALE, totalW / pipCount * 0.2);
+      const pipW = (totalW - pipGap * (pipCount - 1)) / pipCount;
       let px = x - totalW / 2;
-      for (let i = 0; i < 5; i++) {
+      for (let i = 0; i < pipCount; i++) {
         ctx.fillStyle = i < hp ? '#ffcc00' : '#333';
         ctx.fillRect(px, y - 24*SCALE, pipW, 3*SCALE);
         px += pipW + pipGap;
@@ -409,7 +411,8 @@
       if (state.spawnTimer >= state.spawnInterval) {
         state.spawnTimer = 0;
         const lane = Math.floor(Math.random() * LANES);
-        state.enemies.push({ x: CANVAS_W + 30*SCALE, lane, baseSpeed: (100 + difficulty * 88) * SCALE, hp: 5 });
+        const enemyHp = 5 + Math.floor(state.score / 500);
+        state.enemies.push({ x: CANVAS_W + 30*SCALE, lane, baseSpeed: (100 + difficulty * 88) * SCALE, hp: enemyHp, maxHp: enemyHp });
       }
 
       state.enemies = state.enemies.filter(e => {
@@ -515,7 +518,7 @@
       ctx.lineTo(82*SCALE, CANVAS_H);
       ctx.stroke();
 
-      for (const e of state.enemies) drawEnemy(e.x, e.lane, e.hp);
+      for (const e of state.enemies) drawEnemy(e.x, e.lane, e.hp, e.maxHp);
       for (const item of state.items) drawItem(item.x, item.lane, item.life / 5000);
       for (const b of state.bullets) drawBullet(b.x, b.lane);
 
