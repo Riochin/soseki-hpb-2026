@@ -76,10 +76,10 @@ export default function GameModal({
       onClick={onClose}
     >
       <div
-        className="relative w-full max-w-4xl overflow-hidden rounded-panel border-2 border-edge bg-panel"
+        className="relative flex h-[85dvh] max-h-[min(900px,92dvh)] w-full max-w-4xl flex-col overflow-hidden rounded-panel border-2 border-edge bg-panel sm:h-[88dvh]"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between border-b border-edge px-4 py-3">
+        <div className="flex shrink-0 items-center justify-between border-b border-edge px-4 py-3">
           <span className="flex items-center gap-2 font-bold text-accent">
             <Keyboard className="h-4 w-4" /> {title}
           </span>
@@ -105,7 +105,7 @@ export default function GameModal({
         ) : (
           <iframe
             src={gameUrl}
-            className="h-[75vh] w-full border-0"
+            className="min-h-0 w-full flex-1 border-0"
             title={title}
           />
         )}

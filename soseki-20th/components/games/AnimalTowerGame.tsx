@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import animalCollisionData from '@/data/games/animal-tower-collision.json';
 import {
   Bodies,
@@ -44,18 +44,55 @@ function getCollisionEntry(src: string): AnimalCollisionEntry | null {
 }
 
 const DESKTOP_CANVAS_WIDTH = 960;
-const DESKTOP_CANVAS_HEIGHT = 600;
 /** 描画しているサミット画像の高さ（床ラインは画像上端）。下端は常にキャンバス下端に一致 */
 const SUMMIT_VISUAL_HEIGHT = 88;
-/** スマホ用キャンバス（積み上げエリア + サミット高さ） */
-const MOBILE_CANVAS_WIDTH = 420;
-const MOBILE_STACK_AREA_HEIGHT = 440;
-const MOBILE_CANVAS_HEIGHT = MOBILE_STACK_AREA_HEIGHT + SUMMIT_VISUAL_HEIGHT;
+/** スマホ用キャンバス幅 */
+const MOBILE_CANVAS_WIDTH = 540;
+/** iframe 埋め込み時の積み上げエリア高さ */
+const MOBILE_STACK_AREA_HEIGHT_IFRAME = 520;
+/** 直開きページのみ：積み上げエリアをやや拡張 */
+const MOBILE_STACK_AREA_HEIGHT_STANDALONE = 660;
 const MOBILE_BREAKPOINT = 768;
 
 const DESKTOP_STAGE_WIDTH = 520;
-const MOBILE_STAGE_WIDTH = 360;
+const MOBILE_STAGE_WIDTH = 468;
+const DESKTOP_CANVAS_HEIGHT_IFRAME = 600;
+/** 直開き時：デスクトップもプレイエリアを少し拡張 */
+const DESKTOP_CANVAS_HEIGHT_STANDALONE = 740;
+/** 下端からのゲームオーバー判定ライン（px） */
+const DANGER_LINE_FROM_BOTTOM = 28;
+/** サミット下の全幅の炎帯（🔥🔥🔥 行） */
+const FIRE_BOTTOM_ROW_HEIGHT_MOBILE = 150;
+const FIRE_BOTTOM_ROW_HEIGHT_DESKTOP = 120;
+/** 炎をsummit下端より上にはみ出させるオフセット（summitが後描きで隠す） */
+const FIRE_OVERLAP_PX = 64;
+/** 炎ブロック全体を上方向にずらす量（サイズを変えず下端を上げる） */
+const FIRE_RAISE_PX = 100;
 const STAGE_HEIGHT = 24;
+
+/** Matter 重力 scale（小さいほど加速が弱い） */
+const ENGINE_GRAVITY_SCALE = 0.00112;
+/** 1 未満でシミュレーション全体がゆったりする */
+const ENGINE_TIME_SCALE = 0.9;
+const ANIMAL_RESTITUTION = 0.12;
+const ANIMAL_FRICTION = 0.58;
+const ANIMAL_FRICTION_AIR = 0.016;
+const ANIMAL_DENSITY = 0.0014;
+const SPAWN_ANGULAR_VELOCITY_RANGE = 0.08;
+const GROUND_RESTITUTION = 0.06;
+/** 1 個置いた直後はこの時間（ms）再配置できない（連打抑制） */
+const DROP_COOLDOWN_MS = 1000;
+
+const PAIR_PLAYER_NAME: Record<1 | 2, string> = {
+  1: 'しゆう',
+  2: 'オーガスト',
+};
+
+/** ペアモードのターン表示色（しゆう＝黄、オーガスト＝ピンク） */
+const PAIR_TURN_TEXT_COLOR: Record<1 | 2, string> = {
+  1: '#facc15',
+  2: '#f472b6',
+};
 
 type AnimalSprite = {
   image: HTMLImageElement;
@@ -114,6 +151,7 @@ export default function AnimalTowerGame() {
   const animalsRef = useRef<AnimalBody[]>([]);
   const spritesRef = useRef<AnimalSprite[]>([]);
   const summitImageRef = useRef<HTMLImageElement | null>(null);
+  const fireImageRef = useRef<HTMLImageElement | null>(null);
   const currentDropRef = useRef<DropCandidate | null>(null);
   const nextDropRef = useRef<DropCandidate | null>(null);
   const moveDirRef = useRef<-1 | 0 | 1>(0);
@@ -122,18 +160,39 @@ export default function AnimalTowerGame() {
   const scoreRef = useRef(0);
   const gameOverRef = useRef(false);
   const resultSentRef = useRef(false);
+  const placeCooldownUntilRef = useRef(0);
 
   const instruction = useMemo(
     () =>
-      'ステージ上で漱石を積み上げろ。サミット地帯に落ちたらゲームオーバー。',
+      '限界までアクメ漱石を積み上げろ。',
     [],
   );
 
+  const isEmbedded = useSyncExternalStore(
+    () => () => {},
+    () => typeof window !== 'undefined' && window.parent !== window,
+    () => false,
+  );
+
+  const fireBottomRowHeight = useMemo(() => {
+    return isMobile ? FIRE_BOTTOM_ROW_HEIGHT_MOBILE : FIRE_BOTTOM_ROW_HEIGHT_DESKTOP;
+  }, [isMobile]);
+
   const canvasWidth = isMobile ? MOBILE_CANVAS_WIDTH : DESKTOP_CANVAS_WIDTH;
-  const canvasHeight = isMobile ? MOBILE_CANVAS_HEIGHT : DESKTOP_CANVAS_HEIGHT;
+  const canvasHeight = useMemo(() => {
+    if (isMobile) {
+      const stack = isEmbedded ? MOBILE_STACK_AREA_HEIGHT_IFRAME : MOBILE_STACK_AREA_HEIGHT_STANDALONE;
+      return stack + SUMMIT_VISUAL_HEIGHT + fireBottomRowHeight;
+    }
+    return (isEmbedded ? DESKTOP_CANVAS_HEIGHT_IFRAME : DESKTOP_CANVAS_HEIGHT_STANDALONE) + fireBottomRowHeight;
+  }, [isMobile, isEmbedded, fireBottomRowHeight]);
+
   const stageWidth = isMobile ? MOBILE_STAGE_WIDTH : DESKTOP_STAGE_WIDTH;
-  const stageTopY = canvasHeight - SUMMIT_VISUAL_HEIGHT;
-  const dangerZoneTop = canvasHeight - 28;
+  const stageTopY = useMemo(
+    () => canvasHeight - fireBottomRowHeight - SUMMIT_VISUAL_HEIGHT,
+    [canvasHeight, fireBottomRowHeight],
+  );
+  const dangerZoneTop = canvasHeight - DANGER_LINE_FROM_BOTTOM;
 
   useEffect(() => {
     const syncViewport = () => {
@@ -159,8 +218,9 @@ export default function AnimalTowerGame() {
     ensureMatterDecomp();
 
     const engine = Engine.create({
-      gravity: { x: 0, y: 1, scale: 0.0018 },
+      gravity: { x: 0, y: 1, scale: ENGINE_GRAVITY_SCALE },
     });
+    engine.timing.timeScale = ENGINE_TIME_SCALE;
     engineRef.current = engine;
 
     const runner = Runner.create();
@@ -175,7 +235,7 @@ export default function AnimalTowerGame() {
       {
         isStatic: true,
         friction: 0.92,
-        restitution: 0.08,
+        restitution: GROUND_RESTITUTION,
         label: 'ground',
       },
     );
@@ -209,6 +269,7 @@ export default function AnimalTowerGame() {
         scoreRef.current = 0;
         gameOverRef.current = false;
         resultSentRef.current = false;
+        placeCooldownUntilRef.current = 0;
         setPairLoser(null);
         setTurnPlayer(1);
         turnPlayerRef.current = 1;
@@ -224,6 +285,7 @@ export default function AnimalTowerGame() {
 
     const spawnAnimal = () => {
       resetGameState();
+      if (performance.now() < placeCooldownUntilRef.current) return;
       const current = currentDropRef.current;
       if (!current) return;
 
@@ -235,10 +297,10 @@ export default function AnimalTowerGame() {
       );
       const entry = getCollisionEntry(current.sprite.src);
       const bodyOptions = {
-        restitution: 0.16,
-        friction: 0.55,
-        frictionAir: 0.01,
-        density: 0.0014,
+        restitution: ANIMAL_RESTITUTION,
+        friction: ANIMAL_FRICTION,
+        frictionAir: ANIMAL_FRICTION_AIR,
+        density: ANIMAL_DENSITY,
         label: 'animal',
         minimumArea: 0,
       } as const;
@@ -257,7 +319,7 @@ export default function AnimalTowerGame() {
             )
           : Bodies.circle(clampedX, dropY, radius, { ...bodyOptions });
 
-      Body.setAngularVelocity(body, (Math.random() - 0.5) * 0.12);
+      Body.setAngularVelocity(body, (Math.random() - 0.5) * SPAWN_ANGULAR_VELOCITY_RANGE);
       animalsRef.current.push({
         body,
         radius,
@@ -279,6 +341,8 @@ export default function AnimalTowerGame() {
         turnPlayerRef.current = nextPlayer;
         setTurnPlayer(nextPlayer);
       }
+
+      placeCooldownUntilRef.current = performance.now() + DROP_COOLDOWN_MS;
     };
 
     const scoreToRank = (score: number): 'S' | 'A' | 'B' | 'C' | 'D' => {
@@ -362,6 +426,15 @@ export default function AnimalTowerGame() {
         ctx.fill();
       }
 
+      // 炎はsummitより下の位置に先に描く（summitが手前になるよう summit は後で描く）
+      const fireImg = fireImageRef.current;
+      if (fireImg?.complete && fireImg.naturalWidth > 0) {
+        const hb = fireBottomRowHeight;
+        const fireTop = stageTopY + SUMMIT_VISUAL_HEIGHT - FIRE_OVERLAP_PX - FIRE_RAISE_PX;
+        ctx.drawImage(fireImg, 0, fireTop, canvasWidth, hb + FIRE_OVERLAP_PX);
+      }
+
+      // summitは炎より後（手前）に描く
       const summitImage = summitImageRef.current;
       if (summitImage) {
         ctx.drawImage(summitImage, stageLeft, stageTopY, stageWidth, SUMMIT_VISUAL_HEIGHT);
@@ -383,13 +456,22 @@ export default function AnimalTowerGame() {
         ctx.restore();
       });
 
-      ctx.fillStyle = '#11283a';
-      ctx.font = isMobile ? 'bold 20px sans-serif' : 'bold 28px sans-serif';
       ctx.textAlign = 'left';
       if (playMode === 'solo') {
+        ctx.fillStyle = '#11283a';
+        ctx.font = isMobile ? 'bold 20px sans-serif' : 'bold 28px sans-serif';
         ctx.fillText(`SCORE: ${scoreRef.current}`, 14, isMobile ? 30 : 42);
       } else {
-        ctx.fillText(`TURN: P${turnPlayerRef.current}`, 14, isMobile ? 30 : 42);
+        const p = turnPlayerRef.current;
+        const turnLabel = `TURN: ${PAIR_PLAYER_NAME[p]}`;
+        const turnY = isMobile ? 30 : 42;
+        ctx.font = isMobile ? 'bold 20px sans-serif' : 'bold 28px sans-serif';
+        ctx.strokeStyle = 'rgba(17, 40, 58, 0.55)';
+        ctx.lineWidth = isMobile ? 4 : 5;
+        ctx.lineJoin = 'round';
+        ctx.strokeText(turnLabel, 14, turnY);
+        ctx.fillStyle = PAIR_TURN_TEXT_COLOR[p];
+        ctx.fillText(turnLabel, 14, turnY);
       }
 
       const current = currentDropRef.current;
@@ -462,9 +544,13 @@ export default function AnimalTowerGame() {
             canvasHeight / 2 + 36,
           );
         } else {
-          const loserText = pairLoser ? `PLAYER ${pairLoser} の負け` : '判定中...';
+          const loserText = pairLoser ? `${PAIR_PLAYER_NAME[pairLoser]} の負け` : '判定中...';
+          if (pairLoser) {
+            ctx.fillStyle = PAIR_TURN_TEXT_COLOR[pairLoser];
+          }
           ctx.fillText(loserText, canvasWidth / 2, canvasHeight / 2 + 36);
         }
+        ctx.fillStyle = '#ffffff';
         ctx.font = isMobile ? 'bold 16px sans-serif' : 'bold 23px sans-serif';
         ctx.fillText(
           '画面をクリックしてリスタート',
@@ -489,6 +575,11 @@ export default function AnimalTowerGame() {
         summitImage.src = '/summit.png';
         summitImage.onload = () => {
           summitImageRef.current = summitImage;
+        };
+        const fireImage = new Image();
+        fireImage.src = '/games/fire.png';
+        fireImage.onload = () => {
+          fireImageRef.current = fireImage;
         };
         currentDropRef.current = createCandidate();
         nextDropRef.current = createCandidate();
@@ -516,21 +607,34 @@ export default function AnimalTowerGame() {
       animalsRef.current = [];
       spritesRef.current = [];
       summitImageRef.current = null;
+      fireImageRef.current = null;
       currentDropRef.current = null;
       nextDropRef.current = null;
       moveDirRef.current = 0;
       scoreRef.current = 0;
       gameOverRef.current = false;
       resultSentRef.current = false;
+      placeCooldownUntilRef.current = 0;
     };
-  }, [canvasHeight, canvasWidth, dangerZoneTop, isMobile, pairLoser, playMode, stageTopY, stageWidth]);
+  }, [
+    canvasHeight,
+    canvasWidth,
+    dangerZoneTop,
+    fireBottomRowHeight,
+    isEmbedded,
+    isMobile,
+    pairLoser,
+    playMode,
+    stageTopY,
+    stageWidth,
+  ]);
 
   return (
     <main
-      className={`relative flex min-h-screen flex-col items-center bg-[#c9ebff] text-[#1b1b1b] ${
+      className={`relative flex min-h-0 flex-1 flex-col bg-[#c9ebff] text-[#1b1b1b] ${
         playMode != null && isMobile
-          ? 'justify-start gap-2 px-3 pb-3 pt-3'
-          : 'justify-center gap-3 p-4'
+          ? 'w-full items-stretch justify-start gap-0 px-0 pb-0 pt-3'
+          : 'items-center justify-center gap-3 p-4'
       }`}
     >
       {playMode == null ? (
@@ -576,16 +680,26 @@ export default function AnimalTowerGame() {
         </div>
       ) : (
         <div
-          className={`flex flex-col items-stretch ${isMobile ? 'mx-auto w-full gap-2' : 'w-full max-w-[960px] gap-3'}`}
-          style={isMobile ? { maxWidth: MOBILE_CANVAS_WIDTH } : undefined}
+          className={`flex flex-col items-stretch ${isMobile ? 'min-h-0 w-full flex-1 gap-0' : 'w-full max-w-[960px] gap-3'}`}
         >
-          <canvas
-            ref={canvasRef}
-            width={canvasWidth}
-            height={canvasHeight}
-            className="h-auto w-full rounded-lg border border-[#4a6476] bg-[#8dd0ff] shadow-[0_10px_30px_rgba(0,0,0,0.25)]"
-          />
-          <div className="flex w-full shrink-0 items-stretch justify-center gap-2 md:hidden">
+          {isMobile ? (
+            <div className="flex min-h-0 w-full flex-1 items-center justify-center overflow-hidden">
+              <canvas
+                ref={canvasRef}
+                width={canvasWidth}
+                height={canvasHeight}
+                className="block max-h-full max-w-full bg-[#8dd0ff] object-contain"
+              />
+            </div>
+          ) : (
+            <canvas
+              ref={canvasRef}
+              width={canvasWidth}
+              height={canvasHeight}
+              className="block h-auto w-full rounded-lg border border-[#4a6476] bg-[#8dd0ff] shadow-[0_10px_30px_rgba(0,0,0,0.25)]"
+            />
+          )}
+          <div className="flex shrink-0 items-stretch gap-3 px-4 pb-3 md:hidden">
             <button
               type="button"
               className="min-h-12 flex-1 rounded-md bg-[#1e3a55] px-3 py-2.5 text-base font-black text-white active:scale-95"
