@@ -114,6 +114,7 @@ type DropCandidate = {
   /** JSON の halfExtent（画像正規化空間）。ステージクランプは radius * halfExtent */
   halfExtent: number;
   x: number;
+  angle: number;
 };
 
 type PlayMode = 'solo' | 'pair';
@@ -157,6 +158,7 @@ export default function AnimalTowerGame() {
   const currentDropRef = useRef<DropCandidate | null>(null);
   const nextDropRef = useRef<DropCandidate | null>(null);
   const moveDirRef = useRef<-1 | 0 | 1>(0);
+  const rotateDirRef = useRef<-1 | 0 | 1>(0);
   const turnPlayerRef = useRef<1 | 2>(1);
   const lastDropPlayerRef = useRef<1 | 2>(1);
   const pairLoserRef = useRef<1 | 2 | null>(null);
@@ -271,6 +273,7 @@ export default function AnimalTowerGame() {
         radius,
         halfExtent,
         x: canvasWidth / 2,
+        angle: 0,
       };
     };
 
@@ -333,6 +336,7 @@ export default function AnimalTowerGame() {
             )
           : Bodies.circle(clampedX, dropY, radius, { ...bodyOptions });
 
+      Body.setAngle(body, current.angle);
       Body.setAngularVelocity(body, (Math.random() - 0.5) * SPAWN_ANGULAR_VELOCITY_RANGE);
       animalsRef.current.push({
         body,
@@ -512,15 +516,18 @@ export default function AnimalTowerGame() {
       const current = currentDropRef.current;
       if (current && !gameOverRef.current) {
         const moveSpeed = 5;
+        const rotateSpeed = 0.04;
         const edge = current.radius * current.halfExtent;
         current.x = Math.max(
           stageLeft + edge + 6,
           Math.min(stageRight - edge - 6, current.x + moveDirRef.current * moveSpeed),
         );
+        current.angle += rotateDirRef.current * rotateSpeed;
 
         ctx.save();
         ctx.globalAlpha = 0.9;
         ctx.translate(current.x, dropY);
+        ctx.rotate(current.angle);
         ctx.drawImage(
           current.sprite.image,
           -current.radius,
@@ -694,7 +701,7 @@ export default function AnimalTowerGame() {
             <div className="mt-6 flex flex-col gap-2">
               <button
                 type="button"
-                className="w-full rounded-lg bg-[#facc15] py-3 text-base font-black text-[#1a1a1a] transition hover:brightness-105 active:scale-95"
+                className="w-full select-none rounded-lg bg-[#facc15] py-3 text-base font-black text-[#1a1a1a] transition hover:brightness-105 active:scale-95"
                 onClick={() => {
                   setPlayMode('solo');
                   setTurnPlayer(1);
@@ -705,7 +712,7 @@ export default function AnimalTowerGame() {
               </button>
               <button
                 type="button"
-                className="w-full rounded-lg bg-[#facc15] py-3 text-base font-black text-[#1a1a1a] transition hover:brightness-105 active:scale-95"
+                className="w-full select-none rounded-lg bg-[#facc15] py-3 text-base font-black text-[#1a1a1a] transition hover:brightness-105 active:scale-95"
                 onClick={() => {
                   setPlayMode('pair');
                   setTurnPlayer(1);
@@ -744,7 +751,7 @@ export default function AnimalTowerGame() {
           <div className="flex shrink-0 items-stretch gap-3 px-4 pb-3 md:hidden">
             <button
               type="button"
-              className="min-h-12 flex-1 rounded-md bg-[#1e3a55] px-3 py-2.5 text-base font-black text-white active:scale-95"
+              className="min-h-12 flex-1 select-none rounded-md bg-[#1e3a55] px-3 py-2.5 text-base font-black text-white active:scale-95"
               onPointerDown={() => {
                 moveDirRef.current = -1;
               }}
@@ -762,7 +769,7 @@ export default function AnimalTowerGame() {
             </button>
             <button
               type="button"
-              className="min-h-12 flex-1 rounded-md bg-[#1e3a55] px-3 py-2.5 text-base font-black text-white active:scale-95"
+              className="min-h-12 flex-1 select-none rounded-md bg-[#1e3a55] px-3 py-2.5 text-base font-black text-white active:scale-95"
               onPointerDown={() => {
                 moveDirRef.current = 1;
               }}
@@ -777,6 +784,24 @@ export default function AnimalTowerGame() {
               }}
             >
               右 →
+            </button>
+            <button
+              type="button"
+              className="min-h-12 flex-1 select-none rounded-md bg-[#1e3a55] px-3 py-2.5 text-base font-black text-white active:scale-95"
+              onPointerDown={() => {
+                rotateDirRef.current = 1;
+              }}
+              onPointerUp={() => {
+                rotateDirRef.current = 0;
+              }}
+              onPointerLeave={() => {
+                rotateDirRef.current = 0;
+              }}
+              onPointerCancel={() => {
+                rotateDirRef.current = 0;
+              }}
+            >
+              ↻
             </button>
           </div>
         </div>
