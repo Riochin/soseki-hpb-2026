@@ -302,7 +302,7 @@ export default function MiniGameSection({ playerName }: Props) {
     },
     {
       key: 'animal_tower',
-      thumbnailSrc: '/games/thumbnails/animal-tower-game.svg',
+      thumbnailSrc: '/games/thumbnails/animal-tower-game.png',
       thumbnailAlt: 'FORK サミットバトルのサムネイル',
       creditLabel: '+1 ~ 5 Credit',
       title: 'FORK サミットバトル',
