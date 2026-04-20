@@ -24,7 +24,7 @@ interface MiniGameCardProps {
 }
 
 interface MiniGameCardConfig extends Omit<MiniGameCardProps, 'onPlay'> {
-  key: 'typing' | 'shooting' | 'face_memory' | 'quiz';
+  key: 'typing' | 'shooting' | 'face_memory' | 'quiz' | 'animal_tower';
 }
 
 /** タイピングゲームの制限時間（秒）— `games/typing-game.html` の diff-btn と一致 */
@@ -249,6 +249,7 @@ export default function MiniGameSection({ playerName }: Props) {
   const [shootingOpen, setShootingOpen] = useState(false);
   const [faceMemoryOpen, setFaceMemoryOpen] = useState(false);
   const [quizOpen, setQuizOpen] = useState(false);
+  const [animalTowerOpen, setAnimalTowerOpen] = useState(false);
   const [rankTab, setRankTab] = useState<MiniGameType>('typing');
   const [typingTimeSec, setTypingTimeSec] = useState<TypingTimeSeconds>(30);
   const [faceMemoryMode, setFaceMemoryMode] = useState<1 | 2>(1);
@@ -299,6 +300,14 @@ export default function MiniGameSection({ playerName }: Props) {
       title: '効果測定',
       description: '俺言ってない‼️',
     },
+    {
+      key: 'animal_tower',
+      thumbnailSrc: '/games/thumbnails/animal-tower-game.svg',
+      thumbnailAlt: 'FORK サミットバトルのサムネイル',
+      creditLabel: '+1 ~ 5 Credit',
+      title: 'FORK サミットバトル',
+      description: 'サミットの上に漱石を限界まで積み上げろ。',
+    },
   ];
 
   const openByGame: Record<MiniGameCardConfig['key'], () => void> = {
@@ -306,6 +315,7 @@ export default function MiniGameSection({ playerName }: Props) {
     shooting: () => setShootingOpen(true),
     face_memory: () => setFaceMemoryOpen(true),
     quiz: () => setQuizOpen(true),
+    animal_tower: () => setAnimalTowerOpen(true),
   };
 
   return (
@@ -548,6 +558,14 @@ export default function MiniGameSection({ playerName }: Props) {
         onClose={() => setQuizOpen(false)}
         title="効果測定"
         gameUrl="/games/quiz-game.html"
+        playerName={playerName}
+        mobileSupported
+      />
+      <GameModal
+        isOpen={animalTowerOpen}
+        onClose={() => setAnimalTowerOpen(false)}
+        title="FORK サミットバトル"
+        gameUrl="/games/animal-tower"
         playerName={playerName}
         mobileSupported
       />

@@ -24,10 +24,10 @@ describe('MiniGameSection', () => {
     expect(badges.length).toBeGreaterThanOrEqual(3);
   });
 
-  it('ゲーム開始ボタン（カード全体）が4つ表示される', () => {
+  it('ゲーム開始ボタン（カード全体）が5つ表示される', () => {
     render(<MiniGameSection playerName={null} />);
     const buttons = screen.getAllByRole('button', { name: /をプレイ$/ });
-    expect(buttons).toHaveLength(4);
+    expect(buttons).toHaveLength(5);
     buttons.forEach((b) => expect(b).toBeEnabled());
   });
 
