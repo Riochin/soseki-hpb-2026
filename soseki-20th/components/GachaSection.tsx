@@ -26,6 +26,8 @@ const RARITY_BORDER: Record<string, string> = {
 
 interface Props {
   playerName: string;
+  onUrStart?: () => void;
+  onUrEnd?: () => void;
 }
 
 const RARITY_LABEL: Record<string, string> = {
@@ -59,7 +61,7 @@ function URConfirmedOverlay({ visible }: { visible: boolean }) {
   );
 }
 
-function GachaResultModal({ result, onClose }: { result: GachaResult; onClose: () => void }) {
+function GachaResultModal({ result, onClose, onUrStart, onUrEnd }: { result: GachaResult; onClose: () => void; onUrStart?: () => void; onUrEnd?: () => void }) {
   const { item, isNew, newCoins } = result;
   const hasUR = item.rarity === 'UR';
   const colorClass = rarityClass(item.rarity);
@@ -69,16 +71,16 @@ function GachaResultModal({ result, onClose }: { result: GachaResult; onClose: (
 
   useEffect(() => {
     if (hasUR) {
-      const tGif  = setTimeout(() => setUrPhase('gif'),       500);
-      const tReveal = setTimeout(() => setUrPhase('revealed'), 500 + UR_GIF_DURATION);
-      const tFade = setTimeout(() => setRevealVisible(false), 500 + UR_GIF_DURATION + 1000);
-      const tFull = setTimeout(() => setPhase('full'),        500 + UR_GIF_DURATION + 1500);
+      const tGif    = setTimeout(() => { setUrPhase('gif'); onUrStart?.(); },      500);
+      const tReveal = setTimeout(() => { setUrPhase('revealed'); onUrEnd?.(); },   500 + UR_GIF_DURATION);
+      const tFade   = setTimeout(() => setRevealVisible(false),                    500 + UR_GIF_DURATION + 1000);
+      const tFull   = setTimeout(() => setPhase('full'),                           500 + UR_GIF_DURATION + 1500);
       return () => { clearTimeout(tGif); clearTimeout(tReveal); clearTimeout(tFade); clearTimeout(tFull); };
     }
     const t1 = setTimeout(() => setRevealVisible(false), 500);
     const t2 = setTimeout(() => setPhase('full'), 1000);
     return () => { clearTimeout(t1); clearTimeout(t2); };
-  }, [hasUR]);
+  }, [hasUR, onUrStart, onUrEnd]);
 
   return (
     <>
@@ -160,9 +162,13 @@ function GachaResultModal({ result, onClose }: { result: GachaResult; onClose: (
 function MultiGachaResultModal({
   result,
   onClose,
+  onUrStart,
+  onUrEnd,
 }: {
   result: MultiGachaResult;
   onClose: () => void;
+  onUrStart?: () => void;
+  onUrEnd?: () => void;
 }) {
   const hasUR = result.results.some((r) => r.item.rarity === 'UR');
   const [revealVisible, setRevealVisible] = useState(true);
@@ -171,16 +177,16 @@ function MultiGachaResultModal({
 
   useEffect(() => {
     if (hasUR) {
-      const tGif    = setTimeout(() => setUrPhase('gif'),       500);
-      const tReveal = setTimeout(() => setUrPhase('revealed'),  500 + UR_GIF_DURATION);
-      const tFade   = setTimeout(() => setRevealVisible(false), 500 + UR_GIF_DURATION + 1000);
-      const tFull   = setTimeout(() => setPhase('full'),        500 + UR_GIF_DURATION + 1500);
+      const tGif    = setTimeout(() => { setUrPhase('gif'); onUrStart?.(); },      500);
+      const tReveal = setTimeout(() => { setUrPhase('revealed'); onUrEnd?.(); },   500 + UR_GIF_DURATION);
+      const tFade   = setTimeout(() => setRevealVisible(false),                    500 + UR_GIF_DURATION + 1000);
+      const tFull   = setTimeout(() => setPhase('full'),                           500 + UR_GIF_DURATION + 1500);
       return () => { clearTimeout(tGif); clearTimeout(tReveal); clearTimeout(tFade); clearTimeout(tFull); };
     }
     const t1 = setTimeout(() => setRevealVisible(false), 500);
     const t2 = setTimeout(() => setPhase('full'), 1000);
     return () => { clearTimeout(t1); clearTimeout(t2); };
-  }, [hasUR]);
+  }, [hasUR, onUrStart, onUrEnd]);
 
   return (
     <>
@@ -508,7 +514,7 @@ function CollectionModal({
   );
 }
 
-export default function GachaSection({ playerName }: Props) {
+export default function GachaSection({ playerName, onUrStart, onUrEnd }: Props) {
   const { player, spinGacha, spinGachaMulti, borrowCoins, consumeItem } = usePlayer(playerName);
   const [spinning, setSpinning] = useState(false);
   const [gachaResult, setGachaResult] = useState<GachaResult | null>(null);
@@ -640,11 +646,11 @@ export default function GachaSection({ playerName }: Props) {
       </section>
 
       {gachaResult && (
-        <GachaResultModal result={gachaResult} onClose={() => setGachaResult(null)} />
+        <GachaResultModal result={gachaResult} onClose={() => setGachaResult(null)} onUrStart={onUrStart} onUrEnd={onUrEnd} />
       )}
 
       {multiGachaResult && (
-        <MultiGachaResultModal result={multiGachaResult} onClose={() => setMultiGachaResult(null)} />
+        <MultiGachaResultModal result={multiGachaResult} onClose={() => setMultiGachaResult(null)} onUrStart={onUrStart} onUrEnd={onUrEnd} />
       )}
 
       {showCollection && collection.length > 0 && (

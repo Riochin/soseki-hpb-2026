@@ -21,7 +21,45 @@ export default function Home() {
   const { player } = usePlayer(playerName);
   const [pastHero, setPastHero] = useState(false);
   const [showIntro, setShowIntro] = useState(false);
+  const [isMuted, setIsMuted] = useState(true);
   const heroRef = useRef<HTMLDivElement>(null);
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const urAudioRef = useRef<HTMLAudioElement>(null);
+
+  useEffect(() => {
+    if (audioRef.current) audioRef.current.volume = 0.15;
+  }, []);
+
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    if (isMuted) {
+      audio.pause();
+    } else {
+      audio.play().catch(() => {});
+    }
+  }, [isMuted]);
+
+  const handleUrStart = useCallback(() => {
+    if (isMuted) return;
+    audioRef.current?.pause();
+    const urAudio = urAudioRef.current;
+    if (urAudio) {
+      urAudio.currentTime = 0;
+      urAudio.play().catch(() => {});
+    }
+  }, [isMuted]);
+
+  const handleUrEnd = useCallback(() => {
+    const urAudio = urAudioRef.current;
+    if (urAudio) {
+      urAudio.pause();
+      urAudio.currentTime = 0;
+    }
+    if (!isMuted) {
+      audioRef.current?.play().catch(() => {});
+    }
+  }, [isMuted]);
 
   useEffect(() => {
     const el = heroRef.current;
@@ -60,6 +98,8 @@ export default function Home() {
 
   return (
     <div className="min-h-screen text-white">
+      <audio ref={audioRef} src="/musics/krasnoshchok-happy-birthday-404431.mp3" loop />
+      <audio ref={urAudioRef} src="/musics/ur-confirmed.mp3" />
       {/* イントロオーバーレイ: ログイン完了後に毎回再生 */}
       {showIntro && (
         <IntroOverlay onDone={() => setShowIntro(false)} />
@@ -73,13 +113,13 @@ export default function Home() {
             <ScrollToTopButton visible={pastHero} />
             <main>
               <div ref={heroRef}>
-                <HeroSection />
+                <HeroSection isMuted={isMuted} onToggleMute={() => setIsMuted((v) => !v)} />
               </div>
               <VideoSection />
               <OverviewSection />
               <MessageSection playerName={playerName} />
               <MiniGameSection playerName={playerName} />
-              <GachaSection playerName={playerName} />
+              <GachaSection playerName={playerName} onUrStart={handleUrStart} onUrEnd={handleUrEnd} />
               <CreditsSection />
             </main>
             <FooterCounter />
