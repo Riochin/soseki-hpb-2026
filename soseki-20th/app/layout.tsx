@@ -38,17 +38,17 @@ const notoSansJP = Noto_Sans_JP({
 
 
 export const metadata: Metadata = {
-  title: "アクメ漱石 生誕20周年祭",
+  title: "漱石 生誕20周年祭",
   description: "誕生日おめでとう‼️‼️‼️‼️",
   openGraph: {
-    title: "アクメ漱石 生誕20周年祭",
+    title: "漱石 生誕20周年祭",
     description: "誕生日おめでとう‼️‼️‼️‼️",
     images: ["https://soseki-20th.vercel.app/ogp.png?v=2"],
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "アクメ漱石 生誕20周年祭",
+    title: "漱石 生誕20周年祭",
     description: "誕生日おめでとう‼️‼️‼️‼️",
     images: ["https://soseki-20th.vercel.app/ogp.png?v=2"],
   },
