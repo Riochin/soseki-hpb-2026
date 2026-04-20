@@ -77,8 +77,8 @@ const ENGINE_GRAVITY_SCALE = 0.00112;
 /** 1 未満でシミュレーション全体がゆったりする */
 const ENGINE_TIME_SCALE = 0.9;
 const ANIMAL_RESTITUTION = 0.12;
-const ANIMAL_FRICTION = 0.58;
-const ANIMAL_FRICTION_AIR = 0.016;
+const ANIMAL_FRICTION = 0.85;
+const ANIMAL_FRICTION_AIR = 0.03;
 const ANIMAL_DENSITY = 0.0014;
 const SPAWN_ANGULAR_VELOCITY_RANGE = 0.08;
 const GROUND_RESTITUTION = 0.06;
@@ -247,7 +247,7 @@ export default function AnimalTowerGame() {
       STAGE_HEIGHT,
       {
         isStatic: true,
-        friction: 0.92,
+        friction: 1.0,
         restitution: GROUND_RESTITUTION,
         label: 'ground',
       },
