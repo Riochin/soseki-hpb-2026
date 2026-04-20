@@ -44,6 +44,16 @@ function getTextSizeClass(text: string): string {
   return 'text-[3px] leading-relaxed';
 }
 
+function getExpandedTextSizeClass(text: string): string {
+  const len = text.length;
+  if (len <= 15)  return 'text-2xl leading-snug';
+  if (len <= 30)  return 'text-xl leading-snug';
+  if (len <= 50)  return 'text-lg leading-relaxed';
+  if (len <= 80)  return 'text-base leading-relaxed';
+  if (len <= 120) return 'text-sm leading-relaxed';
+  return 'text-xs leading-relaxed';
+}
+
 function seededRotation(id: number): number {
   const x = Math.sin(id * 127.1 + 311.7) * 43758.5453;
   const frac = x - Math.floor(x);
@@ -94,6 +104,7 @@ const WB_INSET = { top: '7%', bottom: '7%', left: '4.5%', right: '4.5%' };
 
 export default function YosegakiBoard({ messages, onClose }: Props) {
   const [isPortraitMobile, setIsPortraitMobile] = useState(false);
+  const [selectedMsg, setSelectedMsg] = useState<Message | null>(null);
 
   useEffect(() => {
     const mq = window.matchMedia('(orientation: portrait) and (max-width: 767px)');
@@ -156,6 +167,37 @@ export default function YosegakiBoard({ messages, onClose }: Props) {
             draggable={false}
           />
 
+          {/* 拡大ビュー */}
+          {selectedMsg && (
+            <div
+              className="absolute inset-0 z-20 flex items-center justify-center bg-black/50"
+              onClick={() => setSelectedMsg(null)}
+            >
+              <div
+                className="relative rounded-sm border border-stone-300/30 shadow-[4px_8px_24px_rgba(0,0,0,0.5)] overflow-hidden"
+                style={{
+                  width: '35%',
+                  aspectRatio: '1 / 1',
+                  backgroundImage: `url(${bgImagePath(selectedMsg.bgColor, selectedMsg.bgStyle)})`,
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                  fontFamily: FONT_FAMILY[selectedMsg.font],
+                }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className={`absolute inset-0 p-4 flex items-center justify-center whitespace-pre-wrap break-words text-center ${getExpandedTextSizeClass(selectedMsg.text)} ${TEXT_COLOR[selectedMsg.bgColor]}`}>
+                  {selectedMsg.text}
+                </div>
+                <p className={`absolute bottom-3 left-4 text-xs ${AUTHOR_COLOR[selectedMsg.bgColor]}`}>— {selectedMsg.author}</p>
+                {selectedMsg.stamp && (
+                  <div className="absolute bottom-2 right-2 flex h-10 w-10 items-center justify-center rounded-full bg-white/70 text-[8px] text-stone-700 shadow-sm backdrop-blur-sm leading-tight text-center">
+                    {STAMP_LABEL[selectedMsg.stamp] ?? selectedMsg.stamp}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* 額縁内側のカードエリア（縦横中央揃え） */}
           <div
             className="absolute flex items-center justify-center overflow-auto"
@@ -169,7 +211,12 @@ export default function YosegakiBoard({ messages, onClose }: Props) {
                 style={{ gridTemplateColumns: 'repeat(5, 72px)' }}
               >
                 {messages.map((msg) => (
-                  <div key={msg.id} style={{ width: '72px' }}>
+                  <div
+                    key={msg.id}
+                    style={{ width: '72px' }}
+                    className="cursor-pointer"
+                    onClick={() => setSelectedMsg(msg)}
+                  >
                     <BoardCard msg={msg} />
                   </div>
                 ))}
