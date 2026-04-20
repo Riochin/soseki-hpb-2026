@@ -360,10 +360,10 @@ export default function AnimalTowerGame() {
     };
 
     const scoreToRank = (score: number): 'S' | 'A' | 'B' | 'C' | 'D' => {
-      if (score >= 40) return 'S';
-      if (score >= 28) return 'A';
-      if (score >= 18) return 'B';
-      if (score >= 10) return 'C';
+      if (score >= 30) return 'S';
+      if (score >= 20) return 'A';
+      if (score >= 10) return 'B';
+      if (score >= 5) return 'C';
       return 'D';
     };
 
