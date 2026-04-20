@@ -101,6 +101,8 @@ func calcCoinReward(input gameRewardInput) int {
 		return calcShootingReward(input.Rank)
 	case "face_memory":
 		return calcFaceMemoryReward(input.Rank, input.TimeLimit)
+	case "quiz":
+		return calcQuizReward(input.Rank)
 	default:
 		return 5 // 未知のゲームは最低報酬
 	}
@@ -144,6 +146,17 @@ func calcTypingReward(rank string, timeLimit int) int {
 		return reward
 	}
 	return 1
+}
+
+// calcQuizReward は効果測定（〇×クイズ）のコイン報酬を算出する。
+//
+// S=1000(10Cr), A=600(6Cr), B=300(3Cr), C=150(1.5Cr), D=100(1Cr)
+func calcQuizReward(rank string) int {
+	rewards := map[string]int{"S": 1000, "A": 600, "B": 300, "C": 150, "D": 100}
+	if r, ok := rewards[rank]; ok {
+		return r
+	}
+	return 100
 }
 
 // calcFaceMemoryReward は名場面神経衰弱のコイン報酬を算出する。

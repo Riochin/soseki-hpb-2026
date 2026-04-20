@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Keyboard, Crosshair, LayoutGrid, Trophy } from 'lucide-react';
+import { Keyboard, Crosshair, LayoutGrid, Trophy, HelpCircle } from 'lucide-react';
 import GameModal from './GameModal';
 import {
   useGameResults,
@@ -192,6 +192,7 @@ export default function MiniGameSection({ playerName }: Props) {
   const [typingOpen, setTypingOpen] = useState(false);
   const [shootingOpen, setShootingOpen] = useState(false);
   const [faceMemoryOpen, setFaceMemoryOpen] = useState(false);
+  const [quizOpen, setQuizOpen] = useState(false);
   const [rankTab, setRankTab] = useState<MiniGameType>('typing');
   const [typingTimeSec, setTypingTimeSec] = useState<TypingTimeSeconds>(30);
   const [faceMemoryMode, setFaceMemoryMode] = useState<1 | 2>(1);
@@ -296,6 +297,31 @@ export default function MiniGameSection({ playerName }: Props) {
               PLAY NOW
             </button>
           </div>
+
+          {/* 効果測定カード */}
+          <div className="rounded-panel border-2 border-edge bg-surface p-6 transition-colors hover:border-edge-strong">
+            <div className="mb-3 flex items-start justify-between">
+              <HelpCircle className="h-8 w-8 text-accent" aria-hidden />
+              <span className="rounded-full border border-accent/30 bg-accent/10 px-3 py-1 text-xs font-bold text-accent">
+                +1 ~ 10 Credit
+              </span>
+            </div>
+
+            <h3 className="mb-1 text-lg font-bold text-white">
+              効果測定
+            </h3>
+            <p className="mb-5 text-sm text-stone-400">
+              俺言ってない‼️
+            </p>
+
+            <button
+              type="button"
+              onClick={() => setQuizOpen(true)}
+              className="w-full rounded-control bg-accent py-2 text-center font-bold text-black transition-opacity hover:opacity-90"
+            >
+              PLAY NOW
+            </button>
+          </div>
         </div>
 
         <div
@@ -354,6 +380,18 @@ export default function MiniGameSection({ playerName }: Props) {
                 aria-pressed={rankTab === 'face_memory'}
               >
                 名場面神経衰弱
+              </button>
+              <button
+                type="button"
+                onClick={() => setRankTab('quiz')}
+                className={`rounded-control px-3 py-1.5 text-xs font-bold transition-colors ${
+                  rankTab === 'quiz'
+                    ? 'bg-accent text-black'
+                    : 'text-accent/80 hover:bg-accent/10'
+                }`}
+                aria-pressed={rankTab === 'quiz'}
+              >
+                効果測定
               </button>
             </div>
           </div>
@@ -446,6 +484,13 @@ export default function MiniGameSection({ playerName }: Props) {
                     PLAY NOW から挑戦するとここに載ります。
                   </span>
                 </>
+              ) : rankTab === 'quiz' ? (
+                <>
+                  効果測定のハイスコアはまだありません。
+                  <span className="mt-1 block text-xs text-stone-600">
+                    PLAY NOW から挑戦して俺力を証明しよう。
+                  </span>
+                </>
               ) : (
                 <>
                   まだハイスコアがありません。
@@ -485,6 +530,14 @@ export default function MiniGameSection({ playerName }: Props) {
         onClose={() => setFaceMemoryOpen(false)}
         title="名場面神経衰弱"
         gameUrl="/games/face-memory-game.html"
+        playerName={playerName}
+        mobileSupported
+      />
+      <GameModal
+        isOpen={quizOpen}
+        onClose={() => setQuizOpen(false)}
+        title="効果測定"
+        gameUrl="/games/quiz-game.html"
         playerName={playerName}
         mobileSupported
       />

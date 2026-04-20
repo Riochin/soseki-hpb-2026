@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>効果測定 〇×クイズ</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@700&display=swap');
+
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            background-color: #fef08a;
+            background-image: radial-gradient(#fde047 1px, transparent 1px);
+            background-size: 20px 20px;
+            overflow: hidden;
+            height: 100svh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .dr-pepper-bg {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .floating-can {
+            position: absolute;
+            opacity: 0.15;
+            animation: float 15s linear infinite;
+        }
+
+        @keyframes float {
+            0%   { transform: translateY(110vh) rotate(0deg); }
+            100% { transform: translateY(-10vh) rotate(360deg); }
+        }
+
+        .font-mincho { font-family: 'Shippori Mincho', serif; }
+
+        .progress-bar { transition: width 0.5s ease-in-out; }
+
+        .fade-in { animation: fadeIn 0.4s ease-out; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="dr-pepper-bg" id="dp-background"></div>
+
+    <!-- クレジットスタート画面 -->
+    <div id="screen-start" class="w-full max-w-md mx-auto px-3">
+        <div class="bg-white rounded-2xl shadow-2xl overflow-hidden border-8 border-[#710210] fade-in">
+            <div class="bg-[#710210] px-4 py-3 text-center">
+                <h1 class="text-lg sm:text-2xl font-black text-white font-mincho italic tracking-tight">知識確認・効果測定</h1>
+                <p class="text-yellow-300 text-xs font-bold mt-0.5 tracking-widest">〜 アクメ漱石の「俺言ってない！！」 〜</p>
+            </div>
+
+            <div class="bg-yellow-50 px-6 py-6 text-center">
+                <div class="text-5xl mb-3">🥤</div>
+                <p class="text-gray-700 text-sm font-bold leading-relaxed mb-1">
+                    全10問の〇×クイズで<br>漱石の「本物の言葉」を見極めよ！
+                </p>
+            </div>
+
+            <div class="bg-yellow-100 px-6 py-4 border-t-4 border-[#710210] text-center">
+                <p class="text-[10px] text-stone-500 mb-3 tracking-wider">原案・開発: トッテン</p>
+                <button
+                    onclick="startGame()"
+                    class="w-full bg-[#710210] text-yellow-300 text-xl font-black py-3 rounded-xl shadow-[0_5px_0_0_#4c0505] active:shadow-none active:translate-y-[5px] transition-transform font-mincho italic"
+                >
+                    挑戦する！
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ゲーム画面 -->
+    <div id="screen-game" class="hidden w-full max-w-md mx-auto px-3">
+        <div class="bg-white rounded-2xl shadow-2xl overflow-hidden border-8 border-[#710210]">
+
+            <!-- ヘッダー -->
+            <div class="px-4 py-3 bg-[#710210] text-white relative overflow-hidden">
+                <div class="absolute -right-3 -top-3 w-12 h-12 bg-red-600 rounded-full opacity-40"></div>
+                <h1 class="text-base sm:text-xl font-black text-center font-mincho tracking-tight italic relative z-10">知識確認・効果測定</h1>
+                <div class="mt-2 bg-[#4c0505] rounded-full h-3 border-2 border-yellow-400 overflow-hidden relative z-10">
+                    <div id="progress" class="progress-bar bg-yellow-400 h-full" style="width: 0%"></div>
+                </div>
+                <div class="flex justify-between mt-1.5 text-xs font-bold relative z-10">
+                    <span id="question-number">第 1 問</span>
+                    <span id="score-display">正解数: 0</span>
+                </div>
+            </div>
+
+            <!-- 問題エリア -->
+            <div class="px-5 py-4 sm:py-6 flex flex-col items-center justify-center text-center bg-yellow-50 relative min-h-[110px] sm:min-h-[160px]">
+                <div class="absolute inset-0 flex items-center justify-center opacity-[0.03] pointer-events-none select-none">
+                    <span class="text-8xl font-black text-[#710210]">俺！</span>
+                </div>
+                <p class="text-[#710210] font-black text-xs mb-2 bg-yellow-200 px-3 py-0.5 rounded-full border border-red-300 relative z-10">
+                    🥤 漱石、これ本当に言ったか？ 🥤
+                </p>
+                <div id="question-text" class="text-base sm:text-xl font-bold text-gray-900 leading-snug font-mincho relative z-10 px-1">
+                    読み込み中...
+                </div>
+            </div>
+
+            <!-- ボタン -->
+            <div class="grid grid-cols-2 gap-2 sm:gap-4 px-3 sm:px-5 py-3 sm:py-5 border-t-4 border-[#710210] bg-yellow-100">
+                <button
+                    onclick="handleAnswer(true)"
+                    class="bg-red-600 hover:bg-red-700 text-yellow-300 rounded-xl py-5 sm:py-7 flex flex-col items-center justify-center shadow-[0_5px_0_0_#991b1b] active:shadow-none active:translate-y-[5px] transition-transform"
+                >
+                    <span class="text-4xl sm:text-6xl font-black leading-none mb-1">〇</span>
+                    <span class="font-black text-sm sm:text-lg italic font-mincho">言った</span>
+                </button>
+                <button
+                    onclick="handleAnswer(false)"
+                    class="bg-[#710210] hover:bg-[#5a020d] text-yellow-300 rounded-xl py-5 sm:py-7 flex flex-col items-center justify-center shadow-[0_5px_0_0_#4c0505] active:shadow-none active:translate-y-[5px] transition-transform"
+                >
+                    <span class="text-4xl sm:text-6xl font-black leading-none mb-1">×</span>
+                    <span class="font-black text-sm sm:text-lg italic font-mincho">言ってない！！</span>
+                </button>
+            </div>
+
+            <!-- フッター -->
+            <div class="py-1.5 bg-[#710210] text-center">
+                <span class="text-[9px] text-yellow-400 font-bold tracking-[0.3em]">SOSEKI REJECTS 23 FLAVORS</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 結果モーダル -->
+    <div id="result-modal" class="fixed inset-0 flex items-center justify-center hidden z-50 p-4" style="background:rgba(113,2,16,0.92)">
+        <div class="bg-yellow-50 rounded-2xl px-5 py-5 sm:p-8 max-w-sm w-full text-center shadow-[0_0_50px_rgba(255,255,255,0.2)] border-8 border-yellow-400 fade-in">
+            <div id="result-icon" class="text-5xl sm:text-7xl mb-2 animate-bounce">📢</div>
+            <h2 class="text-lg sm:text-3xl font-black mb-1 text-[#710210] font-mincho italic">測定結果（俺理論）</h2>
+            <p id="result-score-text" class="text-4xl sm:text-6xl font-black text-white my-3 sm:my-5 bg-[#710210] py-2 rounded-xl border-4 border-yellow-400 shadow-xl">0/10</p>
+            <p id="result-comment" class="text-sm sm:text-lg font-bold text-gray-800 mb-4 sm:mb-6 leading-snug">お疲れ様でした！</p>
+            <button
+                onclick="restartGame()"
+                class="w-full bg-red-600 text-yellow-300 text-lg sm:text-2xl font-black py-3 sm:py-5 rounded-xl hover:bg-red-700 shadow-[0_5px_0_0_#991b1b]"
+            >
+                もう一度言わせてみる
+            </button>
+        </div>
+    </div>
+
+    <!-- フィードバックトースト -->
+    <div id="feedback" class="fixed top-4 left-1/2 -translate-x-1/2 px-5 py-2.5 rounded-full text-white text-base sm:text-xl font-black shadow-2xl opacity-0 transition-all duration-300 pointer-events-none z-[100] border-4 border-white whitespace-nowrap">
+        正解！
+    </div>
+
+    <script>
+        // 背景絵文字
+        const bgContainer = document.getElementById('dp-background');
+        const emojis = ['🥤', '🍒', '🖋️', '🐈'];
+        for (let i = 0; i < 15; i++) {
+            const span = document.createElement('span');
+            span.className = 'floating-can';
+            span.innerText = emojis[Math.floor(Math.random() * emojis.length)];
+            span.style.left = Math.random() * 100 + 'vw';
+            span.style.fontSize = (Math.random() * 1.2 + 1.2) + 'rem';
+            span.style.animationDelay = Math.random() * 15 + 's';
+            bgContainer.appendChild(span);
+        }
+
+        const questions = [
+            { text: "ごちそうさまでした！！不味かったっっす！！", answer: false },
+            { text: "我輩は猫である。名前はまだ無い。", answer: true },
+            { text: "智に働けば角が立つ。情に棹させば流される。", answer: true },
+            { text: "あきらめたらそこで試合終了ですよ", answer: false },
+            { text: "精神的に向上心のないものは馬鹿だ", answer: true },
+            { text: "人間万事塞翁が馬", answer: false },
+            { text: "呑気と見える人々も、心の底を叩いてみると、どこか悲しい音がする", answer: true },
+            { text: "天は人の上に人を造らず、人の下に人を造らず", answer: false },
+            { text: "自分を向上させたいのなら、まず鏡を見ることだ", answer: false },
+            { text: "本当の自由は、自分自身を支配することにある", answer: false }
+        ];
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let answered = false;
+
+        const screenStart  = document.getElementById('screen-start');
+        const screenGame   = document.getElementById('screen-game');
+        const questionTextEl = document.getElementById('question-text');
+        const questionNumEl  = document.getElementById('question-number');
+        const scoreDisplayEl = document.getElementById('score-display');
+        const progressEl     = document.getElementById('progress');
+        const resultModal    = document.getElementById('result-modal');
+        const feedbackEl     = document.getElementById('feedback');
+
+        function startGame() {
+            screenStart.classList.add('hidden');
+            screenGame.classList.remove('hidden');
+            initGame();
+        }
+
+        function initGame() {
+            currentQuestionIndex = 0;
+            score = 0;
+            answered = false;
+            showQuestion();
+            updateUI();
+        }
+
+        function showQuestion() {
+            const q = questions[currentQuestionIndex];
+            questionTextEl.classList.remove('fade-in');
+            void questionTextEl.offsetWidth;
+            questionTextEl.classList.add('fade-in');
+            questionTextEl.innerText = q.text;
+        }
+
+        function updateUI() {
+            questionNumEl.innerText = `第 ${currentQuestionIndex + 1} 問 / ${questions.length}`;
+            scoreDisplayEl.innerText = `正解数: ${score}`;
+            progressEl.style.width = `${(currentQuestionIndex / questions.length) * 100}%`;
+        }
+
+        function handleAnswer(userAnswer) {
+            if (answered) return;
+            answered = true;
+            const isCorrect = userAnswer === questions[currentQuestionIndex].answer;
+            if (isCorrect) {
+                score++;
+                showFeedback('正解！ 正真正銘の俺', '#16a34a');
+            } else {
+                showFeedback('不正解！ 俺言ってない！！', '#710210');
+            }
+            setTimeout(() => { answered = false; nextQuestion(); }, 600);
+        }
+
+        function showFeedback(text, bg) {
+            feedbackEl.innerText = text;
+            feedbackEl.style.background = bg;
+            feedbackEl.style.opacity = '1';
+            feedbackEl.style.transform = 'translateX(-50%) scale(1.08)';
+            setTimeout(() => {
+                feedbackEl.style.opacity = '0';
+                feedbackEl.style.transform = 'translateX(-50%) scale(1)';
+            }, 500);
+        }
+
+        function nextQuestion() {
+            currentQuestionIndex++;
+            if (currentQuestionIndex < questions.length) {
+                showQuestion();
+                updateUI();
+            } else {
+                showResults();
+            }
+        }
+
+        function calcRank(n, total) {
+            if (n === total)        return 'S';
+            if (n >= total * 0.8)   return 'A';
+            if (n >= total * 0.5)   return 'B';
+            if (n >= total * 0.3)   return 'C';
+            return 'D';
+        }
+
+        function showResults() {
+            progressEl.style.width = '100%';
+            const resultScoreText = document.getElementById('result-score-text');
+            const resultComment   = document.getElementById('result-comment');
+            const resultIcon      = document.getElementById('result-icon');
+
+            resultScoreText.innerText = `${score} / ${questions.length}`;
+
+            const rate = score / questions.length;
+            if (rate === 1) {
+                resultComment.innerText = '俺の言葉を全て理解している。お前が俺だ。';
+                resultIcon.innerText = '👑';
+            } else if (rate >= 0.8) {
+                resultComment.innerText = 'ほぼ俺。あと少しで俺。';
+                resultIcon.innerText = '🔥';
+            } else if (rate >= 0.5) {
+                resultComment.innerText = '俺に似た誰かの言葉に騙されている。';
+                resultIcon.innerText = '😵';
+            } else {
+                resultComment.innerText = '全く俺じゃない。やり直しだ！';
+                resultIcon.innerText = '🚫';
+            }
+
+            resultModal.classList.remove('hidden');
+
+            window.parent.postMessage({
+                type: 'MINI_GAME_RESULT',
+                payload: { gameType: 'quiz', rank: calcRank(score, questions.length), score: score * 100 }
+            }, '*');
+        }
+
+        function restartGame() {
+            resultModal.classList.add('hidden');
+            initGame();
+        }
+    </script>
+</body>
+</html>

@@ -5,11 +5,12 @@ import { dedupeLeaderboardBestPerPlayer } from '@/lib/leaderboardDedupe';
 import {
   IS_UI_MOCK,
   MOCK_GAME_RESULTS_FACE_MEMORY,
+  MOCK_GAME_RESULTS_QUIZ,
   MOCK_GAME_RESULTS_SHOOTING,
   MOCK_GAME_RESULTS_TYPING,
 } from '@/lib/mock';
 
-export type MiniGameType = 'typing' | 'shooting' | 'face_memory';
+export type MiniGameType = 'typing' | 'shooting' | 'face_memory' | 'quiz';
 
 export interface GameResultLeaderboardEntry {
   rank: number;
@@ -63,6 +64,7 @@ export function useGameResults(
     if (IS_UI_MOCK) {
       if (gameType === 'typing') return MOCK_GAME_RESULTS_TYPING;
       if (gameType === 'face_memory') return MOCK_GAME_RESULTS_FACE_MEMORY;
+      if (gameType === 'quiz') return MOCK_GAME_RESULTS_QUIZ;
       return MOCK_GAME_RESULTS_SHOOTING;
     }
     return data?.entries ?? [];
