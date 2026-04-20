@@ -82,10 +82,10 @@ const ANGLES = [-10, -7, -5, -3, 0, 3, 5, 8, -12, 10]
 
 // 出現ゾーン：中央コンテンツエリアを避けた4ゾーン
 const ZONES = [
-  { topMin: 4,  topMax: 26, leftMin: 4,  leftMax: 90 },  // 上部ストリップ（全幅）
-  { topMin: 68, topMax: 90, leftMin: 4,  leftMax: 90 },  // 下部ストリップ（全幅）
-  { topMin: 22, topMax: 72, leftMin: 2,  leftMax: 20 },  // 左カラム
-  { topMin: 22, topMax: 72, leftMin: 78, leftMax: 96 },  // 右カラム
+  { topMin: 4,  topMax: 26, leftMin: 6,  leftMax: 84 },  // 上部ストリップ（全幅）
+  { topMin: 68, topMax: 90, leftMin: 6,  leftMax: 84 },  // 下部ストリップ（全幅）
+  { topMin: 22, topMax: 72, leftMin: 4,  leftMax: 22 },  // 左カラム
+  { topMin: 22, topMax: 72, leftMin: 74, leftMax: 88 },  // 右カラム
 ]
 
 // 文字数に応じたフォントサイズ（短いほど大きく）
@@ -161,13 +161,13 @@ export default function QuoteOverlay() {
 
   return (
     <div
-      className="pointer-events-none absolute inset-0"
+      className="pointer-events-none absolute inset-0 overflow-hidden"
       aria-hidden="true"
     >
       {items.map(item => {
         const q = quotes[item.quoteIndex]
 
-        const scale = item.phase === 'in' ? 0.6 : item.phase === 'out' ? 2.2 : 1
+        const scale = item.phase === 'in' ? 0.6 : item.phase === 'out' ? 1.8 : 1
         const opacity = item.phase === 'show' ? 1 : 0
         const transition = item.phase === 'out'
           ? `opacity ${FADE_OUT_MS}ms ease, transform ${FADE_OUT_MS}ms ease`

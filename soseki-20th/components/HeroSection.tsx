@@ -7,11 +7,11 @@ import { useSosekiName } from '@/hooks/useU18Mode'
 export default function HeroSection() {
   const sosekiName = useSosekiName()
   return (
-    <section className="section-reveal relative flex min-h-screen flex-col items-center justify-center px-4 pb-24 md:px-8 lg:px-16">
+    <section className="section-reveal relative flex min-h-[100svh] flex-col items-center justify-center overflow-hidden px-4 pb-20 sm:min-h-screen sm:pb-24 md:px-8 lg:px-16">
       <QuoteOverlay />
 
       {/* 日付 */}
-      <p className="mb-3 text-center font-mono text-sm tracking-widest text-accent/70">
+      <p className="mb-3 mt-4 text-center font-mono text-sm tracking-widest text-accent/70 sm:mt-0">
         2026年4月23日（木）— BIRTHDAY
       </p>
 
@@ -32,8 +32,7 @@ export default function HeroSection() {
           alt="Happy Birthday"
           width={320}
           height={320}
-          className="object-contain"
-          style={{ width: 320, height: 320 }}
+          className="h-[252px] w-[252px] object-contain sm:h-[320px] sm:w-[320px]"
           priority
         />
       </div>
