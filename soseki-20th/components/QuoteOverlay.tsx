@@ -75,6 +75,11 @@ const quotes = [
     author: "アクメ漱石",
     source: "X",
   },
+  {
+    text: "月でかくね❓",
+    author: "アクメ漱石",
+    source: "Twitter",
+  },
 ];
 
 // 見切れにくい小さめの角度バリエーション
