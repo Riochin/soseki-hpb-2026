@@ -66,11 +66,11 @@ func (h *GameResults) List(w http.ResponseWriter, r *http.Request) {
 	out := make([]map[string]interface{}, 0, len(entries))
 	for i, e := range entries {
 		out = append(out, map[string]interface{}{
-			"rank":        i + 1,
-			"playerName":  e.PlayerName,
-			"score":       e.Score,
-			"gradeRank":   e.GradeRank,
-			"createdAt":   e.CreatedAt.UTC().Format(time.RFC3339Nano),
+			"rank":       i + 1,
+			"playerName": e.PlayerName,
+			"score":      e.Score,
+			"gradeRank":  e.GradeRank,
+			"createdAt":  e.CreatedAt.UTC().Format(time.RFC3339Nano),
 		})
 	}
 

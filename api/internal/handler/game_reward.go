@@ -116,7 +116,7 @@ func calcAnimalTowerReward(score int) int {
 	if score < 1 {
 		return 100
 	}
-	return (score/2) * 100
+	return (score / 2) * 100
 }
 
 // calcShootingReward はランクからシューティングゲームのコイン報酬を算出する。
