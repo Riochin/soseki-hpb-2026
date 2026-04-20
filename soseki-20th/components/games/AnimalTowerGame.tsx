@@ -1,9 +1,11 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
+import animalCollisionData from '@/data/games/animal-tower-collision.json';
 import {
   Bodies,
   Body,
+  Common,
   Composite,
   Engine,
   Runner,
@@ -12,6 +14,34 @@ import {
   type Engine as MatterEngine,
   type Runner as MatterRunner,
 } from 'matter-js';
+import decomp from 'poly-decomp';
+
+type AnimalCollisionEntry = {
+  vertices: { x: number; y: number }[];
+  halfExtent: number;
+};
+
+const collisionByFilename = animalCollisionData as Record<string, AnimalCollisionEntry>;
+
+let matterDecompRegistered = false;
+
+function ensureMatterDecomp() {
+  if (matterDecompRegistered) return;
+  Common.setDecomp(decomp);
+  matterDecompRegistered = true;
+}
+
+function collisionKeyFromSrc(src: string): string {
+  const i = src.lastIndexOf('/');
+  return i >= 0 ? src.slice(i + 1) : src;
+}
+
+function getCollisionEntry(src: string): AnimalCollisionEntry | null {
+  const key = collisionKeyFromSrc(src);
+  const entry = collisionByFilename[key];
+  if (!entry?.vertices?.length || entry.vertices.length < 3) return null;
+  return entry;
+}
 
 const DESKTOP_CANVAS_WIDTH = 960;
 const DESKTOP_CANVAS_HEIGHT = 600;
@@ -42,6 +72,8 @@ type AnimalBody = {
 type DropCandidate = {
   sprite: AnimalSprite;
   radius: number;
+  /** JSON の halfExtent（画像正規化空間）。ステージクランプは radius * halfExtent */
+  halfExtent: number;
   x: number;
 };
 
@@ -124,6 +156,8 @@ export default function AnimalTowerGame() {
 
     let disposed = false;
 
+    ensureMatterDecomp();
+
     const engine = Engine.create({
       gravity: { x: 0, y: 1, scale: 0.0018 },
     });
@@ -157,9 +191,12 @@ export default function AnimalTowerGame() {
       if (loadedSprites.length === 0) return null;
       const radius = 42 + Math.random() * 9;
       const sprite = loadedSprites[Math.floor(Math.random() * loadedSprites.length)];
+      const entry = getCollisionEntry(sprite.src);
+      const halfExtent = entry?.halfExtent ?? 1;
       return {
         sprite,
         radius,
+        halfExtent,
         x: canvasWidth / 2,
       };
     };
@@ -191,17 +228,34 @@ export default function AnimalTowerGame() {
       if (!current) return;
 
       const radius = current.radius;
+      const edge = radius * current.halfExtent;
       const clampedX = Math.max(
-        stageLeft + radius + 6,
-        Math.min(stageRight - radius - 6, current.x),
+        stageLeft + edge + 6,
+        Math.min(stageRight - edge - 6, current.x),
       );
-      const body = Bodies.circle(clampedX, dropY, radius, {
+      const entry = getCollisionEntry(current.sprite.src);
+      const bodyOptions = {
         restitution: 0.16,
         friction: 0.55,
         frictionAir: 0.01,
         density: 0.0014,
         label: 'animal',
-      });
+        minimumArea: 0,
+      } as const;
+      const body =
+        entry != null
+          ? Bodies.fromVertices(
+              clampedX,
+              dropY,
+              [
+                entry.vertices.map((v) => ({
+                  x: clampedX + v.x * radius,
+                  y: dropY + v.y * radius,
+                })),
+              ],
+              { ...bodyOptions },
+            )
+          : Bodies.circle(clampedX, dropY, radius, { ...bodyOptions });
 
       Body.setAngularVelocity(body, (Math.random() - 0.5) * 0.12);
       animalsRef.current.push({
@@ -258,9 +312,10 @@ export default function AnimalTowerGame() {
       const x = ((event.clientX - rect.left) / rect.width) * canvasWidth;
       const current = currentDropRef.current;
       if (!current || gameOverRef.current) return;
+      const edge = current.radius * current.halfExtent;
       current.x = Math.max(
-        stageLeft + current.radius + 6,
-        Math.min(stageRight - current.radius - 6, x),
+        stageLeft + edge + 6,
+        Math.min(stageRight - edge - 6, x),
       );
     };
 
@@ -317,9 +372,9 @@ export default function AnimalTowerGame() {
 
       let escaped = false;
       animalsRef.current.forEach(({ body, radius, sprite, createdAtMs }) => {
-        if (body.position.y - radius > canvasHeight + 120) return;
+        if (body.bounds.min.y > canvasHeight + 120) return;
         if (!gameOverRef.current && performance.now() - createdAtMs > 300) {
-          if (body.position.y + radius >= dangerZoneTop) escaped = true;
+          if (body.bounds.max.y >= dangerZoneTop) escaped = true;
         }
         ctx.save();
         ctx.translate(body.position.x, body.position.y);
@@ -340,9 +395,10 @@ export default function AnimalTowerGame() {
       const current = currentDropRef.current;
       if (current && !gameOverRef.current) {
         const moveSpeed = 5;
+        const edge = current.radius * current.halfExtent;
         current.x = Math.max(
-          stageLeft + current.radius + 6,
-          Math.min(stageRight - current.radius - 6, current.x + moveDirRef.current * moveSpeed),
+          stageLeft + edge + 6,
+          Math.min(stageRight - edge - 6, current.x + moveDirRef.current * moveSpeed),
         );
 
         ctx.save();
