@@ -361,14 +361,14 @@ export default function MiniGameSection({ playerName }: Props) {
               </h3>
             </div>
             <div
-              className="flex flex-wrap gap-1 rounded-control border border-accent/30 p-0.5 sm:ml-auto"
+              className="grid grid-cols-3 gap-1 rounded-control border border-accent/30 p-0.5 sm:ml-auto sm:flex sm:flex-nowrap"
               role="group"
               aria-label="ミニゲームの種類"
             >
               <button
                 type="button"
                 onClick={() => setRankTab('typing')}
-                className={`rounded-control px-3 py-1.5 text-xs font-bold transition-colors ${
+                className={`shrink-0 rounded-control px-3 py-1.5 text-xs font-bold transition-colors ${
                   rankTab === 'typing'
                     ? 'bg-accent text-black'
                     : 'text-accent/80 hover:bg-accent/10'
@@ -380,7 +380,7 @@ export default function MiniGameSection({ playerName }: Props) {
               <button
                 type="button"
                 onClick={() => setRankTab('shooting')}
-                className={`rounded-control px-3 py-1.5 text-xs font-bold transition-colors ${
+                className={`shrink-0 rounded-control px-3 py-1.5 text-xs font-bold transition-colors ${
                   rankTab === 'shooting'
                     ? 'bg-accent text-black'
                     : 'text-accent/80 hover:bg-accent/10'
@@ -392,7 +392,7 @@ export default function MiniGameSection({ playerName }: Props) {
               <button
                 type="button"
                 onClick={() => setRankTab('face_memory')}
-                className={`rounded-control px-3 py-1.5 text-xs font-bold transition-colors ${
+                className={`shrink-0 rounded-control px-3 py-1.5 text-xs font-bold transition-colors ${
                   rankTab === 'face_memory'
                     ? 'bg-accent text-black'
                     : 'text-accent/80 hover:bg-accent/10'
@@ -404,7 +404,7 @@ export default function MiniGameSection({ playerName }: Props) {
               <button
                 type="button"
                 onClick={() => setRankTab('quiz')}
-                className={`rounded-control px-3 py-1.5 text-xs font-bold transition-colors ${
+                className={`shrink-0 rounded-control px-3 py-1.5 text-xs font-bold transition-colors ${
                   rankTab === 'quiz'
                     ? 'bg-accent text-black'
                     : 'text-accent/80 hover:bg-accent/10'
@@ -416,7 +416,7 @@ export default function MiniGameSection({ playerName }: Props) {
               <button
                 type="button"
                 onClick={() => setRankTab('animal_tower')}
-                className={`rounded-control px-3 py-1.5 text-xs font-bold transition-colors ${
+                className={`shrink-0 rounded-control px-3 py-1.5 text-xs font-bold transition-colors ${
                   rankTab === 'animal_tower'
                     ? 'bg-accent text-black'
                     : 'text-accent/80 hover:bg-accent/10'
