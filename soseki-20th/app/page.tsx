@@ -77,7 +77,7 @@ export default function Home() {
               </div>
               <VideoSection />
               <OverviewSection />
-              <MessageSection />
+              <MessageSection playerName={playerName} />
               <MiniGameSection playerName={playerName} />
               <GachaSection playerName={playerName} />
               <CreditsSection />

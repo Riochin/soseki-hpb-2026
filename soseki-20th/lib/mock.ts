@@ -144,6 +144,7 @@ export const MOCK_MESSAGES: Message[] = [
   {
     id: 1,
     author: '夏目鏡子',
+    username: 'UIモックユーザー',
     text: '漱石さん、20歳のお誕生日おめでとうございます！',
     bgColor: 'beige',
     bgStyle: 'normal',

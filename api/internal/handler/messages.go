@@ -5,7 +5,9 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"strconv"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/soseki-hpb-2026/api/internal/model"
 )
 
@@ -22,6 +24,8 @@ var validStamps = map[string]bool{
 type MessageStore interface {
 	ListMessages(ctx context.Context) ([]model.Message, error)
 	CreateMessage(ctx context.Context, author string, username *string, text string, bgColor string, bgStyle string, font string, stamp *string) (model.Message, error)
+	DeleteMessage(ctx context.Context, id int, username string) (bool, error)
+	UpdateMessage(ctx context.Context, id int, username string, newAuthor *string, newText *string) (model.Message, bool, error)
 }
 
 // Messages はメッセージ CRUD エンドポイントのハンドラー群を保持する。
@@ -116,6 +120,88 @@ func (h *Messages) Create(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
+	_ = json.NewEncoder(w).Encode(msg)
+}
+
+// Delete は DELETE /api/messages/{id} を処理し、自分の投稿を削除する。
+func (h *Messages) Delete(w http.ResponseWriter, r *http.Request) {
+	idStr := chi.URLParam(r, "id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "invalid id")
+		return
+	}
+
+	var input struct {
+		Username string `json:"username"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil || input.Username == "" {
+		writeError(w, http.StatusBadRequest, "username is required")
+		return
+	}
+
+	deleted, err := h.store.DeleteMessage(r.Context(), id, input.Username)
+	if err != nil {
+		log.Printf("messages.Delete: %v", err)
+		writeError(w, http.StatusInternalServerError, "internal server error")
+		return
+	}
+	if !deleted {
+		writeError(w, http.StatusNotFound, "message not found or unauthorized")
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
+// UpdateAuthor は PATCH /api/messages/{id} を処理し、author・text を更新して返す。
+func (h *Messages) UpdateAuthor(w http.ResponseWriter, r *http.Request) {
+	idStr := chi.URLParam(r, "id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "invalid id")
+		return
+	}
+
+	var input struct {
+		Username string  `json:"username"`
+		Author   *string `json:"author"`
+		Text     *string `json:"text"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid JSON")
+		return
+	}
+	if input.Username == "" {
+		writeError(w, http.StatusBadRequest, "username is required")
+		return
+	}
+	if input.Author == nil && input.Text == nil {
+		writeError(w, http.StatusBadRequest, "author or text is required")
+		return
+	}
+	if input.Author != nil && *input.Author == "" {
+		writeError(w, http.StatusBadRequest, "author must not be empty")
+		return
+	}
+	if input.Text != nil && *input.Text == "" {
+		writeError(w, http.StatusBadRequest, "text must not be empty")
+		return
+	}
+
+	msg, found, err := h.store.UpdateMessage(r.Context(), id, input.Username, input.Author, input.Text)
+	if err != nil {
+		log.Printf("messages.UpdateAuthor: %v", err)
+		writeError(w, http.StatusInternalServerError, "internal server error")
+		return
+	}
+	if !found {
+		writeError(w, http.StatusNotFound, "message not found or unauthorized")
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
 	_ = json.NewEncoder(w).Encode(msg)
 }
 

@@ -14,6 +14,7 @@ import type {
 interface Props {
   onClose: () => void;
   onSubmit: (input: PostMessageInput) => Promise<void>;
+  username?: string;
 }
 
 const BG_COLORS: { value: BgColor; bg: string; ring: string }[] = [
@@ -86,7 +87,7 @@ function bgImagePath(color: BgColor, style: BgStyle): string {
 }
 
 
-export default function YosegakiModal({ onClose, onSubmit }: Props) {
+export default function YosegakiModal({ onClose, onSubmit, username }: Props) {
   const [author, setAuthor] = useState("");
   const [text, setText] = useState("");
   const [bgColor, setBgColor] = useState<BgColor>("white");
@@ -107,6 +108,7 @@ export default function YosegakiModal({ onClose, onSubmit }: Props) {
     try {
       await onSubmit({
         author: author.trim() || "匿名",
+        username,
         text: text.trim(),
         bgColor,
         bgStyle,

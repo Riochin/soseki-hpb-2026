@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import useSWR from 'swr';
 import { fetcher, apiFetch } from '@/lib/api';
 import { IS_UI_MOCK, MOCK_MESSAGES } from '@/lib/mock';
@@ -32,14 +33,23 @@ export interface PostMessageInput {
   stamp?: Stamp;
 }
 
+export interface UpdateMessageInput {
+  author?: string;
+  text?: string;
+}
+
 export interface UseMessagesResult {
   messages: Message[];
   isLoading: boolean;
   error: Error | null;
   postMessage(input: PostMessageInput): Promise<void>;
+  deleteMessage(id: number): Promise<void>;
+  updateMessage(id: number, input: UpdateMessageInput): Promise<void>;
 }
 
-export function useMessages(): UseMessagesResult {
+export function useMessages(playerName?: string | null): UseMessagesResult {
+  const [mockMessages, setMockMessages] = useState<Message[]>(MOCK_MESSAGES);
+
   const { data, error, isLoading, mutate } = useSWR<Message[]>(
     IS_UI_MOCK ? null : '/api/messages',
     fetcher,
@@ -47,7 +57,15 @@ export function useMessages(): UseMessagesResult {
   );
 
   async function postMessage(input: PostMessageInput): Promise<void> {
-    if (IS_UI_MOCK) return;
+    if (IS_UI_MOCK) {
+      const newMsg: Message = {
+        id: Date.now(),
+        ...input,
+        createdAt: new Date().toISOString(),
+      };
+      setMockMessages((prev) => [newMsg, ...prev]);
+      return;
+    }
 
     const newMessage = await apiFetch<Message>('/api/messages', {
       method: 'POST',
@@ -60,10 +78,52 @@ export function useMessages(): UseMessagesResult {
     );
   }
 
+  async function deleteMessage(id: number): Promise<void> {
+    if (!playerName) return;
+
+    if (IS_UI_MOCK) {
+      setMockMessages((prev) => prev.filter((m) => m.id !== id));
+      return;
+    }
+
+    await apiFetch(`/api/messages/${id}`, {
+      method: 'DELETE',
+      body: JSON.stringify({ username: playerName }),
+    });
+
+    await mutate(
+      (current) => (current ? current.filter((m) => m.id !== id) : []),
+      { revalidate: false },
+    );
+  }
+
+  async function updateMessage(id: number, input: UpdateMessageInput): Promise<void> {
+    if (!playerName) return;
+
+    if (IS_UI_MOCK) {
+      setMockMessages((prev) =>
+        prev.map((m) => (m.id === id ? { ...m, ...input } : m)),
+      );
+      return;
+    }
+
+    const updated = await apiFetch<Message>(`/api/messages/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ username: playerName, ...input }),
+    });
+
+    await mutate(
+      (current) => (current ? current.map((m) => (m.id === updated.id ? updated : m)) : []),
+      { revalidate: false },
+    );
+  }
+
   return {
-    messages: IS_UI_MOCK ? MOCK_MESSAGES : (data ?? []),
+    messages: IS_UI_MOCK ? mockMessages : (data ?? []),
     isLoading: IS_UI_MOCK ? false : isLoading,
     error: IS_UI_MOCK ? null : (error ?? null),
     postMessage,
+    deleteMessage,
+    updateMessage,
   };
 }

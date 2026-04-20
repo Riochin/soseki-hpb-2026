@@ -141,7 +141,7 @@ func mountRoutes(
 	r.Use(middleware.Recoverer)
 	r.Use(cors.Handler(cors.Options{
 		AllowedOrigins:   []string{allowedOrigin},
-		AllowedMethods:   []string{"GET", "POST", "OPTIONS"},
+		AllowedMethods:   []string{"GET", "POST", "PATCH", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Accept", "Content-Type"},
 		AllowCredentials: false,
 		MaxAge:           300,
@@ -151,6 +151,8 @@ func mountRoutes(
 
 	r.Get("/api/messages", msg.List)
 	r.Post("/api/messages", msg.Create)
+	r.Delete("/api/messages/{id}", msg.Delete)
+	r.Patch("/api/messages/{id}", msg.UpdateAuthor)
 
 	r.Post("/api/players", players.Create)
 	r.Get("/api/players/{name}", players.Get)

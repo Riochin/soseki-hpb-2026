@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, Trash2, Pencil, Check, X, MoreHorizontal } from 'lucide-react';
 import { useMessages } from '@/hooks/useMessages';
 import type { BgColor, BgStyle, CardFont, Message } from '@/hooks/useMessages';
 import YosegakiModal from '@/components/YosegakiModal';
@@ -48,10 +48,55 @@ function getTextSizeClass(text: string): string {
   return 'text-[10px] leading-relaxed';
 }
 
-function MessageCard({ msg }: { msg: Message }) {
+interface MessageCardProps {
+  msg: Message;
+  isOwn: boolean;
+  onDelete: () => void;
+  onUpdate: (input: { author?: string; text?: string }) => void;
+}
+
+function MessageCard({ msg, isOwn, onDelete, onUpdate }: MessageCardProps) {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [authorInput, setAuthorInput] = useState(msg.author);
+  const [textInput, setTextInput] = useState(msg.text);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    function handleClick(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [menuOpen]);
+
+  function handleEditOpen() {
+    setAuthorInput(msg.author);
+    setTextInput(msg.text);
+    setMenuOpen(false);
+    setEditing(true);
+  }
+
+  function handleEditSubmit() {
+    const author = authorInput.trim() || msg.author;
+    const text = textInput.trim() || msg.text;
+    const changed: { author?: string; text?: string } = {};
+    if (author !== msg.author) changed.author = author;
+    if (text !== msg.text) changed.text = text;
+    if (Object.keys(changed).length > 0) onUpdate(changed);
+    setEditing(false);
+  }
+
+  function handleEditCancel() {
+    setEditing(false);
+  }
+
   return (
     <div
-      className="relative aspect-square w-full rounded-sm border border-stone-300/30 p-4 shadow-[2px_4px_12px_rgba(0,0,0,0.35)] overflow-hidden"
+      className="relative aspect-square w-full rounded-sm border border-stone-300/30 shadow-[2px_4px_12px_rgba(0,0,0,0.35)] overflow-hidden"
       style={{
         backgroundImage: `url(${bgImagePath(msg.bgColor, msg.bgStyle)})`,
         backgroundSize: 'cover',
@@ -59,19 +104,96 @@ function MessageCard({ msg }: { msg: Message }) {
         fontFamily: FONT_FAMILY[msg.font],
       }}
     >
-      <p className={`whitespace-pre-wrap break-words ${getTextSizeClass(msg.text)} ${TEXT_COLOR[msg.bgColor]}`}>{msg.text}</p>
-      <p className={`absolute bottom-3 left-4 text-[10px] ${AUTHOR_COLOR[msg.bgColor]}`}>— {msg.author}</p>
-      {msg.stamp && (
-        <div className="absolute bottom-2 right-2 flex h-10 w-10 items-center justify-center rounded-full bg-white/70 text-[8px] text-stone-700 shadow-sm backdrop-blur-sm leading-tight text-center">
-          {STAMP_LABEL[msg.stamp] ?? msg.stamp}
+      {/* 通常表示 */}
+      {!editing && (
+        <>
+          <p className={`absolute inset-0 p-4 whitespace-pre-wrap break-words ${getTextSizeClass(msg.text)} ${TEXT_COLOR[msg.bgColor]}`}>{msg.text}</p>
+          <p className={`absolute bottom-3 left-4 text-[10px] ${AUTHOR_COLOR[msg.bgColor]}`}>— {msg.author}</p>
+          {msg.stamp && (
+            <div className="absolute bottom-2 right-2 flex h-10 w-10 items-center justify-center rounded-full bg-white/70 text-[8px] text-stone-700 shadow-sm backdrop-blur-sm leading-tight text-center">
+              {STAMP_LABEL[msg.stamp] ?? msg.stamp}
+            </div>
+          )}
+        </>
+      )}
+
+      {/* 編集オーバーレイ */}
+      {editing && (
+        <div className="absolute inset-0 flex flex-col gap-2 bg-black/60 p-3 backdrop-blur-sm">
+          <textarea
+            autoFocus
+            value={textInput}
+            onChange={(e) => setTextInput(e.target.value)}
+            maxLength={140}
+            rows={4}
+            className="flex-1 resize-none rounded bg-white/90 px-2 py-1 text-xs text-stone-800 outline-none"
+          />
+          <input
+            value={authorInput}
+            onChange={(e) => setAuthorInput(e.target.value)}
+            maxLength={50}
+            placeholder="お名前"
+            className="rounded bg-white/90 px-2 py-1 text-xs text-stone-800 outline-none"
+          />
+          <div className="flex gap-2">
+            <button
+              onClick={handleEditSubmit}
+              className="flex flex-1 items-center justify-center gap-1 rounded bg-green-600/80 py-1 text-xs text-white hover:bg-green-600"
+            >
+              <Check className="h-3 w-3" />
+              保存
+            </button>
+            <button
+              onClick={handleEditCancel}
+              className="flex flex-1 items-center justify-center gap-1 rounded bg-stone-600/80 py-1 text-xs text-white hover:bg-stone-600"
+            >
+              <X className="h-3 w-3" />
+              キャンセル
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* 自分の投稿のみ三点メニュー */}
+      {isOwn && !editing && (
+        <div ref={menuRef} className="absolute top-2 right-2">
+          <button
+            onClick={() => setMenuOpen((o) => !o)}
+            className="rounded bg-black/40 p-1 text-white backdrop-blur-sm hover:bg-black/60"
+            aria-label="メニュー"
+          >
+            <MoreHorizontal className="h-3.5 w-3.5" />
+          </button>
+          {menuOpen && (
+            <div className="absolute right-0 top-6 z-10 min-w-[7rem] rounded border border-stone-600 bg-stone-900/95 py-1 shadow-lg backdrop-blur-sm">
+              <button
+                onClick={handleEditOpen}
+                className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-xs text-stone-200 hover:bg-stone-700"
+              >
+                <Pencil className="h-3 w-3 shrink-0" />
+                編集
+              </button>
+              <button
+                onClick={() => { setMenuOpen(false); onDelete(); }}
+                className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-xs text-red-400 hover:bg-stone-700"
+              >
+                <Trash2 className="h-3 w-3 shrink-0" />
+                削除
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>
   );
 }
 
-export default function MessageSection() {
-  const { messages, isLoading, error, postMessage } = useMessages();
+interface Props {
+  playerName: string | null;
+}
+
+export default function MessageSection({ playerName }: Props) {
+  const { messages, isLoading, error, postMessage, deleteMessage, updateMessage } = useMessages(playerName);
   const [showModal, setShowModal] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [paused, setPaused] = useState(false);
@@ -141,7 +263,12 @@ export default function MessageSection() {
             >
               {messages.map((msg) => (
                 <div key={msg.id} className="min-w-full sm:min-w-[33.333%] px-2">
-                  <MessageCard msg={msg} />
+                  <MessageCard
+                    msg={msg}
+                    isOwn={!!(playerName && msg.username === playerName)}
+                    onDelete={() => deleteMessage(msg.id)}
+                    onUpdate={(input) => updateMessage(msg.id, input)}
+                  />
                 </div>
               ))}
 
@@ -197,6 +324,7 @@ export default function MessageSection() {
         <YosegakiModal
           onClose={() => setShowModal(false)}
           onSubmit={postMessage}
+          username={playerName ?? undefined}
         />
       )}
     </section>

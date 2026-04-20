@@ -2,7 +2,9 @@ package handler
 
 import (
 	"context"
+	"errors"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/soseki-hpb-2026/api/internal/db"
 	"github.com/soseki-hpb-2026/api/internal/model"
 )
@@ -48,6 +50,44 @@ func (s *DBMessageStore) ListMessages(ctx context.Context) ([]model.Message, err
 		msgs = []model.Message{}
 	}
 	return msgs, nil
+}
+
+// DeleteMessage は messages テーブルから id と username が一致する行を削除する。
+// 削除できた場合は true を返す。
+func (s *DBMessageStore) DeleteMessage(ctx context.Context, id int, username string) (bool, error) {
+	tag, err := s.db.Pool.Exec(ctx,
+		`DELETE FROM messages WHERE id=$1 AND username=$2`,
+		id, username,
+	)
+	if err != nil {
+		return false, err
+	}
+	return tag.RowsAffected() > 0, nil
+}
+
+// UpdateMessage は author・text を更新して更新後の Message を返す。
+// nil を渡したフィールドは既存値を保持する。
+// 対象行が存在しない or username 不一致の場合は (zero, false, nil) を返す。
+func (s *DBMessageStore) UpdateMessage(ctx context.Context, id int, username string, newAuthor *string, newText *string) (model.Message, bool, error) {
+	var m model.Message
+	err := s.db.Pool.QueryRow(ctx,
+		`UPDATE messages
+		 SET author = COALESCE($3, author), text = COALESCE($4, text)
+		 WHERE id=$1 AND username=$2
+		 RETURNING id, author, username, text, bg_color, bg_style, font, stamp, created_at`,
+		id, username, newAuthor, newText,
+	).Scan(
+		&m.ID, &m.Author, &m.Username, &m.Text,
+		&m.BgColor, &m.BgStyle, &m.Font, &m.Stamp,
+		&m.CreatedAt,
+	)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return model.Message{}, false, nil
+		}
+		return model.Message{}, false, err
+	}
+	return m, true, nil
 }
 
 // CreateMessage は messages テーブルに1件挿入して返す。
