@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import Image from 'next/image';
 import { X } from 'lucide-react';
 import { usePlayer, CollectionItem, GachaResult, MultiGachaResult } from '@/hooks/usePlayer';
@@ -40,36 +41,119 @@ function rarityClass(rarity: string): string {
   return `${text} ${border}`;
 }
 
+const UR_GIF_DURATION = 3000;
+
+function URConfirmedOverlay({ visible }: { visible: boolean }) {
+  if (!visible || typeof document === 'undefined') return null;
+  return createPortal(
+    <div className="fixed inset-0 z-[9999] bg-black">
+      <Image
+        src="/games/ur-confirmed.gif"
+        alt=""
+        fill
+        unoptimized
+        className="object-cover"
+      />
+    </div>,
+    document.body,
+  );
+}
+
 function GachaResultModal({ result, onClose }: { result: GachaResult; onClose: () => void }) {
   const { item, isNew, newCoins } = result;
+  const hasUR = item.rarity === 'UR';
   const colorClass = rarityClass(item.rarity);
+  const [revealVisible, setRevealVisible] = useState(true);
+  const [phase, setPhase] = useState<'reveal' | 'full'>('reveal');
+  const [urPhase, setUrPhase] = useState<'waiting' | 'gif' | 'revealed'>('waiting');
+
+  useEffect(() => {
+    if (hasUR) {
+      const tGif  = setTimeout(() => setUrPhase('gif'),       500);
+      const tReveal = setTimeout(() => setUrPhase('revealed'), 500 + UR_GIF_DURATION);
+      const tFade = setTimeout(() => setRevealVisible(false), 500 + UR_GIF_DURATION + 1000);
+      const tFull = setTimeout(() => setPhase('full'),        500 + UR_GIF_DURATION + 1500);
+      return () => { clearTimeout(tGif); clearTimeout(tReveal); clearTimeout(tFade); clearTimeout(tFull); };
+    }
+    const t1 = setTimeout(() => setRevealVisible(false), 500);
+    const t2 = setTimeout(() => setPhase('full'), 1000);
+    return () => { clearTimeout(t1); clearTimeout(t2); };
+  }, [hasUR]);
 
   return (
-    <ModalFrame onBackdropClick={onClose} maxWidthClass="max-w-xs" panelClassName="p-8 text-center">
-      {isNew && (
-        <p className="mb-4 animate-pulse font-mono text-xs tracking-widest text-accent">
-          ✦ NEW ITEM ✦
-        </p>
-      )}
+    <>
+      <URConfirmedOverlay visible={urPhase === 'gif'} />
+      <ModalFrame onBackdropClick={onClose} maxWidthClass="max-w-xs" panelClassName="p-8 text-center">
+        <div className="relative">
+          <div style={{ visibility: phase === 'full' ? 'visible' : 'hidden' }}>
+            {isNew && (
+              <p className="mb-4 animate-pulse font-mono text-xs tracking-widest text-accent">
+                ✦ NEW ITEM ✦
+              </p>
+            )}
+            <div className="mb-4 text-7xl">{item.icon}</div>
+            <span className={`rounded-control border px-3 py-1 text-xs font-bold tracking-widest ${colorClass}`}>
+              {item.rarity} — {RARITY_LABEL[item.rarity]}
+            </span>
+            <p className="mt-4 text-lg font-bold text-white">{item.name}</p>
+            <p className="mt-2 font-mono text-xs text-stone-500">残Credit: {toCredit(newCoins)}</p>
+          </div>
 
-      <div className="mb-4 text-7xl">{item.icon}</div>
+          <div
+            className="absolute inset-0 flex flex-col items-center justify-center transition-opacity duration-500"
+            style={{ opacity: revealVisible ? 1 : 0 }}
+          >
+            {hasUR ? (
+              <>
+                <div className="relative flex h-14 items-center justify-center">
+                  <span
+                    className={`absolute text-4xl font-black transition-opacity duration-1000 ${RARITY_TEXT['SSR']}`}
+                    style={{ opacity: urPhase !== 'revealed' ? 1 : 0 }}
+                  >
+                    SSR
+                  </span>
+                  <span
+                    className={`text-4xl font-black transition-opacity duration-1000 ${RARITY_TEXT['UR']}`}
+                    style={{ opacity: urPhase === 'revealed' ? 1 : 0 }}
+                  >
+                    UR
+                  </span>
+                </div>
+                <div className="relative flex h-4 items-center justify-center">
+                  <p
+                    className="absolute font-mono text-xs text-stone-500 transition-opacity duration-1000"
+                    style={{ opacity: urPhase !== 'revealed' ? 1 : 0 }}
+                  >
+                    {RARITY_LABEL['SSR']}
+                  </p>
+                  <p
+                    className="font-mono text-xs text-stone-500 transition-opacity duration-1000"
+                    style={{ opacity: urPhase === 'revealed' ? 1 : 0 }}
+                  >
+                    {RARITY_LABEL['UR']}
+                  </p>
+                </div>
+              </>
+            ) : (
+              <>
+                <span className={`text-4xl font-black ${RARITY_TEXT[item.rarity] ?? 'text-stone-400'}`}>
+                  {item.rarity}
+                </span>
+                <p className="mt-2 font-mono text-xs text-stone-500">{RARITY_LABEL[item.rarity]}</p>
+              </>
+            )}
+          </div>
+        </div>
 
-      <span className={`rounded-control border px-3 py-1 text-xs font-bold tracking-widest ${colorClass}`}>
-        {item.rarity} — {RARITY_LABEL[item.rarity]}
-      </span>
-
-      <p className="mt-4 text-lg font-bold text-white">{item.name}</p>
-
-      <p className="mt-2 font-mono text-xs text-stone-500">残Credit: {toCredit(newCoins)}</p>
-
-      <button
-        type="button"
-        onClick={onClose}
-        className="mt-6 w-full rounded-control border-2 border-edge py-2 font-bold text-accent transition-colors hover:border-edge-strong hover:bg-accent/5"
-      >
-        閉じる
-      </button>
-    </ModalFrame>
+        <button
+          type="button"
+          onClick={onClose}
+          className="mt-6 w-full rounded-control border-2 border-edge py-2 font-bold text-accent transition-colors hover:border-edge-strong hover:bg-accent/5"
+        >
+          閉じる
+        </button>
+      </ModalFrame>
+    </>
   );
 }
 
@@ -80,49 +164,99 @@ function MultiGachaResultModal({
   result: MultiGachaResult;
   onClose: () => void;
 }) {
+  const hasUR = result.results.some((r) => r.item.rarity === 'UR');
+  const [revealVisible, setRevealVisible] = useState(true);
+  const [phase, setPhase] = useState<'reveal' | 'full'>('reveal');
+  const [urPhase, setUrPhase] = useState<'waiting' | 'gif' | 'revealed'>('waiting');
+
+  useEffect(() => {
+    if (hasUR) {
+      const tGif    = setTimeout(() => setUrPhase('gif'),       500);
+      const tReveal = setTimeout(() => setUrPhase('revealed'),  500 + UR_GIF_DURATION);
+      const tFade   = setTimeout(() => setRevealVisible(false), 500 + UR_GIF_DURATION + 1000);
+      const tFull   = setTimeout(() => setPhase('full'),        500 + UR_GIF_DURATION + 1500);
+      return () => { clearTimeout(tGif); clearTimeout(tReveal); clearTimeout(tFade); clearTimeout(tFull); };
+    }
+    const t1 = setTimeout(() => setRevealVisible(false), 500);
+    const t2 = setTimeout(() => setPhase('full'), 1000);
+    return () => { clearTimeout(t1); clearTimeout(t2); };
+  }, [hasUR]);
+
   return (
-    <ModalFrame
-      onBackdropClick={onClose}
-      maxWidthClass="max-w-2xl"
-      panelClassName="max-h-[90vh] overflow-y-auto p-6 text-center"
-    >
-      <p className="mb-4 text-center font-mono text-xs tracking-widest text-accent/60">— 10連ガチャ結果</p>
-
-      <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-5">
-        {result.results.map((r, idx) => {
-          const colorClass = rarityClass(r.item.rarity);
-          return (
-            <div key={idx} className="relative rounded-control border border-edge bg-panel-raised p-3 text-center">
-              {r.isNew && (
-                <span className="absolute -right-2 -top-2 bg-accent px-1.5 py-0.5 text-[10px] font-bold leading-none text-black">
-                  NEW
-                </span>
-              )}
-              <div className="mb-1.5 text-3xl">{r.item.icon}</div>
-              <p
-                className="mb-1 truncate text-xs font-medium leading-tight text-white"
-                title={r.item.name}
-              >
-                {r.item.name}
-              </p>
-              <span className={`rounded-control border px-1.5 py-0.5 text-xs font-bold ${colorClass}`}>
-                {r.item.rarity}
-              </span>
-            </div>
-          );
-        })}
-      </div>
-
-      <p className="mb-4 text-center font-mono text-xs text-stone-500">残Credit: {toCredit(result.newCoins)}</p>
-
-      <button
-        type="button"
-        onClick={onClose}
-        className="w-full rounded-control border-2 border-edge py-2 font-bold text-accent transition-colors hover:border-edge-strong hover:bg-accent/5"
+    <>
+      <URConfirmedOverlay visible={urPhase === 'gif'} />
+      <ModalFrame
+        onBackdropClick={onClose}
+        maxWidthClass="max-w-2xl"
+        panelClassName="p-4 text-center sm:p-6"
       >
-        閉じる
-      </button>
-    </ModalFrame>
+        <p className="mb-3 text-center font-mono text-xs tracking-widest text-accent/60">— 10連ガチャ結果</p>
+
+        <div className="mb-3 grid grid-cols-2 gap-2 sm:grid-cols-5 sm:gap-3">
+          {result.results.map((r, idx) => {
+            const colorClass = rarityClass(r.item.rarity);
+            return (
+              <div key={idx} className="relative rounded-control border border-edge bg-panel-raised p-2 text-center sm:p-3">
+                <div style={{ visibility: phase === 'full' ? 'visible' : 'hidden' }}>
+                  <div className="mb-1 text-2xl sm:text-3xl">{r.item.icon}</div>
+                  <p
+                    className="mb-0.5 truncate text-[10px] font-medium leading-tight text-white sm:mb-1 sm:text-xs"
+                    title={r.item.name}
+                  >
+                    {r.item.name}
+                  </p>
+                  <span className={`rounded-control border px-1 py-0.5 text-[9px] font-bold sm:px-1.5 sm:text-xs ${colorClass}`}>
+                    {r.item.rarity}
+                  </span>
+                </div>
+
+                <div
+                  className="absolute inset-0 flex items-center justify-center transition-opacity duration-500"
+                  style={{ opacity: revealVisible ? 1 : 0 }}
+                >
+                  {r.item.rarity === 'UR' ? (
+                    <div className="relative flex items-center justify-center">
+                      <span
+                        className={`absolute text-xl font-black transition-opacity duration-1000 ${RARITY_TEXT['SSR']}`}
+                        style={{ opacity: urPhase !== 'revealed' ? 1 : 0 }}
+                      >
+                        SSR
+                      </span>
+                      <span
+                        className={`text-xl font-black transition-opacity duration-1000 ${RARITY_TEXT['UR']}`}
+                        style={{ opacity: urPhase === 'revealed' ? 1 : 0 }}
+                      >
+                        UR
+                      </span>
+                    </div>
+                  ) : (
+                    <span className={`text-xl font-black ${RARITY_TEXT[r.item.rarity] ?? 'text-stone-400'}`}>
+                      {r.item.rarity}
+                    </span>
+                  )}
+                </div>
+
+                {phase === 'full' && r.isNew && (
+                  <span className="absolute -right-2 -top-2 bg-accent px-1.5 py-0.5 text-[10px] font-bold leading-none text-black">
+                    NEW
+                  </span>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        <p className="mb-3 text-center font-mono text-xs text-stone-500">残Credit: {toCredit(result.newCoins)}</p>
+
+        <button
+          type="button"
+          onClick={onClose}
+          className="w-full rounded-control border-2 border-edge py-1.5 font-bold text-accent transition-colors hover:border-edge-strong hover:bg-accent/5 sm:py-2"
+        >
+          閉じる
+        </button>
+      </ModalFrame>
+    </>
   );
 }
 
