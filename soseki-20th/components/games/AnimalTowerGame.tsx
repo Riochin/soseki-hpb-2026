@@ -404,12 +404,20 @@ export default function AnimalTowerGame() {
       );
     };
 
-    const handlePointerDown = () => {
+    const handlePointerAction = () => {
+      if (gameOverRef.current) {
+        setPlayMode(null);
+        return;
+      }
       spawnAnimal();
     };
 
     canvas.addEventListener('pointermove', handlePointerMove);
-    canvas.addEventListener('pointerdown', handlePointerDown);
+    if (isMobile) {
+      canvas.addEventListener('pointerup', handlePointerAction);
+    } else {
+      canvas.addEventListener('pointerdown', handlePointerAction);
+    }
 
     const draw = () => {
       ctx.clearRect(0, 0, canvasWidth, canvasHeight);
@@ -574,7 +582,7 @@ export default function AnimalTowerGame() {
         ctx.fillStyle = '#ffffff';
         ctx.font = isMobile ? 'bold 16px sans-serif' : 'bold 23px sans-serif';
         ctx.fillText(
-          '画面をクリックしてリスタート',
+          'タイトルに戻る',
           canvasWidth / 2,
           canvasHeight / 2 + (isMobile ? 64 : 86),
         );
@@ -613,7 +621,11 @@ export default function AnimalTowerGame() {
     return () => {
       disposed = true;
       canvas.removeEventListener('pointermove', handlePointerMove);
-      canvas.removeEventListener('pointerdown', handlePointerDown);
+      if (isMobile) {
+        canvas.removeEventListener('pointerup', handlePointerAction);
+      } else {
+        canvas.removeEventListener('pointerdown', handlePointerAction);
+      }
       if (rafRef.current != null) {
         cancelAnimationFrame(rafRef.current);
       }
