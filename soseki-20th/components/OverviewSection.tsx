@@ -1,4 +1,7 @@
+'use client';
+
 import Image from 'next/image';
+import { useSosekiName } from '@/hooks/useU18Mode';
 
 const ALL_IMAGES = Array.from({ length: 26 }, (_, i) =>
   `/games/face-memory/easy/${String(i + 1).padStart(2, '0')}.png`
@@ -52,6 +55,7 @@ function ImageRow({ images, reverse = false, duration, offset = 0 }: RowProps) {
 }
 
 export default function OverviewSection() {
+  const sosekiName = useSosekiName()
   return (
     <section className="relative overflow-hidden" style={{ height: "80vh" }}>
       {/* 背景: 3行スライドショー */}
@@ -93,7 +97,7 @@ export default function OverviewSection() {
           <span className="md:whitespace-nowrap">
             2006年4月23日、
             <br className="md:hidden" />
-            この世に生を受けたアクメ漱石は、
+            この世に生を受けた{sosekiName}は、
           </span>
           <br />
           巣鴨を根城にその存在感を放ち続けてきた。

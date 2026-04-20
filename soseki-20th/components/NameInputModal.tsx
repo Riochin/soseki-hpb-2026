@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, FormEvent } from 'react';
+import { useSosekiName } from '@/hooks/useU18Mode';
 import { apiFetch } from '@/lib/api';
 import { IS_UI_MOCK, MOCK_PLAYER } from '@/lib/mock';
 import ModalFrame from '@/components/ModalFrame';
@@ -25,6 +26,7 @@ interface Props {
 }
 
 export default function NameInputModal({ onInit }: Props) {
+  const sosekiName = useSosekiName()
   const [show, setShow] = useState(false);
   const [name, setName] = useState('');
   const [error, setError] = useState('');
@@ -118,7 +120,7 @@ export default function NameInputModal({ onInit }: Props) {
           value={name}
           onChange={(e) => setName(e.target.value)}
           maxLength={50}
-          placeholder="例: アクメ漱石ッズ"
+          placeholder={`例: ${sosekiName}ッズ`}
           className="mb-3 w-full rounded-control border-b-2 border-stone-600 bg-transparent px-2 py-2 text-white placeholder-stone-500 focus:border-accent focus:outline-none"
         />
         {error && <p className="mb-3 text-sm text-red-400">{error}</p>}
