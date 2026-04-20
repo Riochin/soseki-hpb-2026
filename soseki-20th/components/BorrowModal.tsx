@@ -60,25 +60,21 @@ export default function BorrowModal({ onBorrow, onClose, debt = 0 }: Props) {
     return (
       <ModalFrame
         onBackdropClick={onClose}
-        maxWidthClass="max-w-sm"
-        panelClassName="!border-red-500/60 !p-0 overflow-hidden text-center"
+        maxWidthClass="w-fit max-w-[90vw]"
+        panelClassName="!border-red-500/60 !p-0 !w-fit overflow-hidden text-center"
       >
         <div className="relative">
           <Image
             src="/lender5.png"
             alt="金貸し"
-            width={400}
-            height={400}
-            className="w-full object-cover"
+            width={654}
+            height={1477}
+            className="w-auto max-h-[93vh] max-w-[95vw] block"
           />
           <div className="absolute inset-0 flex flex-col items-center justify-end bg-gradient-to-t from-black/80 via-black/20 to-transparent p-6">
             <p
-              className="absolute top-4 left-4 text-base font-black text-red-300 drop-shadow-[0_2px_8px_rgba(0,0,0,1)]"
-              style={{
-                fontFamily: 'var(--font-noto-serif-jp), serif',
-                writingMode: 'vertical-rl',
-                letterSpacing: '0.15em',
-              }}
+              className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 text-sm font-black text-red-600 drop-shadow-[0_2px_8px_rgba(0,0,0,1)] whitespace-nowrap"
+              style={{ fontFamily: 'var(--font-noto-serif-jp), serif' }}
             >
               「{lenderLine(debt)}」
             </p>
