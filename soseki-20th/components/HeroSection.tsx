@@ -33,7 +33,6 @@ export default function HeroSection() {
           width={320}
           height={320}
           className="object-contain"
-          style={{ width: 320, height: 320 }}
           priority
         />
       </div>
