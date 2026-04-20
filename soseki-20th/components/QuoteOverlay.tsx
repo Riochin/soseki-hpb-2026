@@ -50,9 +50,31 @@ const quotes = [
   { text: "namco巣鴨が実家", author: "アクメ漱石", source: "Twitter" },
   { text: "鉄は熱いうちに打とう", author: "アクメ漱石", source: "LINE" },
   { text: "宵越しの銭は持たない", author: "アクメ漱石", source: "パチンコ屋" },
-  { text: "ﾊｱﾞｱﾞｱﾞｱﾞｱﾞﾏｯｽﾞ‼️‼️‼️", author: "アクメ漱石", source: "namco松戸店" },
-  { text: "俺たちの別れに涙は似合わない。\nだってまた会ったときに恥ずかしいからね", author: "アクメ漱石", source: "namco巣鴨店" },
-  { text: "ごちそうさまでした！\n美味かったっす！！", author: "アクメ漱石", source: "巣鴨家" },
+  {
+    text: "ﾊｱﾞｱﾞｱﾞｱﾞｱﾞﾏｯｽﾞ‼️‼️‼️",
+    author: "アクメ漱石",
+    source: "namco松戸店",
+  },
+  {
+    text: "俺たちの別れに涙は似合わない。\nだってまた会ったときに恥ずかしいからね",
+    author: "アクメ漱石",
+    source: "namco巣鴨店",
+  },
+  {
+    text: "ごちそうさまでした！\n美味かったっす！！",
+    author: "アクメ漱石",
+    source: "巣鴨家",
+  },
+  {
+    text: "普通にサンライズ立ちだろ",
+    author: "アクメ漱石",
+    source: "北区立東田端公園",
+  },
+  {
+    text: "これからも熱くドライな関係で行こう",
+    author: "アクメ漱石",
+    source: "X",
+  },
 ];
 
 // 見切れにくい小さめの角度バリエーション
