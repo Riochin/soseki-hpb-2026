@@ -38,11 +38,15 @@
 
 ## 開発環境コマンド
 
+パッケージマネージャは **npm**（`soseki-20th/package-lock.yaml` を使用）。`pnpm-lock.yaml` は置かない。
+
 ```bash
 # フロントエンド（soseki-20th/ で実行）
+npm install
 npm run dev    # 開発サーバー
 npm run build  # ビルド
 npm run lint   # Lint
+npm run generate:animal-collisions  # アニマルタワー当たり JSON 再生成（PNG 差し替え時）
 
 # バックエンド（Go APIディレクトリで実行）
 go run .       # 開発サーバー
