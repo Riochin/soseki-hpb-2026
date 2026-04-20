@@ -78,12 +78,20 @@ const ENGINE_GRAVITY_SCALE = 0.00112;
 const ENGINE_TIME_SCALE = 0.9;
 const ANIMAL_RESTITUTION = 0.12;
 const ANIMAL_FRICTION = 0.85;
-const ANIMAL_FRICTION_AIR = 0.03;
+const ANIMAL_FRICTION_AIR = 0.05;
 const ANIMAL_DENSITY = 0.0014;
 const SPAWN_ANGULAR_VELOCITY_RANGE = 0.08;
 const GROUND_RESTITUTION = 0.06;
+const GROUND_FRICTION = 1.2;
 /** 1 個置いた直後はこの時間（ms）再配置できない（連打抑制） */
 const DROP_COOLDOWN_MS = 1000;
+const BASE_DROP_Y = 46;
+/** タワートップより何px上でスポーンするか（調整用） */
+const SPAWN_ABOVE_TOWER_N = 150;
+/** カメラ補間係数 */
+const CAMERA_LERP = 0.08;
+/** 生成直後の落下中オブジェクトをタワートップ計算から除外する時間（ms） */
+const TOWER_TOP_STABLE_AGE_MS = 700;
 
 const PAIR_PLAYER_NAME: Record<1 | 2, string> = {
   1: 'しゆう',
@@ -167,6 +175,9 @@ export default function AnimalTowerGame() {
   const resultSentRef = useRef(false);
   const placeCooldownUntilRef = useRef(0);
   const playerNameRef = useRef<string | null>(null);
+  const cameraOffsetYRef = useRef(0);
+  const maxCameraOffsetYRef = useRef(0);
+  const dynamicDropYRef = useRef(BASE_DROP_Y);
 
   const searchParams = useSearchParams();
   useEffect(() => {
@@ -249,7 +260,7 @@ export default function AnimalTowerGame() {
       STAGE_HEIGHT,
       {
         isStatic: true,
-        friction: 1.0,
+        friction: GROUND_FRICTION,
         restitution: GROUND_RESTITUTION,
         label: 'ground',
       },
@@ -259,12 +270,11 @@ export default function AnimalTowerGame() {
 
     const stageLeft = (canvasWidth - stageWidth) / 2;
     const stageRight = stageLeft + stageWidth;
-    const dropY = 46;
 
     const createCandidate = (): DropCandidate | null => {
       const loadedSprites = spritesRef.current;
       if (loadedSprites.length === 0) return null;
-      const radius = 42 + Math.random() * 9;
+      const radius = 62 + Math.random() * 14;
       const sprite = loadedSprites[Math.floor(Math.random() * loadedSprites.length)];
       const entry = getCollisionEntry(sprite.src);
       const halfExtent = entry?.halfExtent ?? 1;
@@ -286,6 +296,9 @@ export default function AnimalTowerGame() {
         gameOverRef.current = false;
         resultSentRef.current = false;
         placeCooldownUntilRef.current = 0;
+        cameraOffsetYRef.current = 0;
+        maxCameraOffsetYRef.current = 0;
+        dynamicDropYRef.current = BASE_DROP_Y;
         pairLoserRef.current = null;
         setPairLoser(null);
         setTurnPlayer(1);
@@ -325,16 +338,16 @@ export default function AnimalTowerGame() {
         entry != null
           ? Bodies.fromVertices(
               clampedX,
-              dropY,
+              dynamicDropYRef.current,
               [
                 entry.vertices.map((v) => ({
                   x: clampedX + v.x * radius,
-                  y: dropY + v.y * radius,
+                  y: dynamicDropYRef.current + v.y * radius,
                 })),
               ],
               { ...bodyOptions },
             )
-          : Bodies.circle(clampedX, dropY, radius, { ...bodyOptions });
+          : Bodies.circle(clampedX, dynamicDropYRef.current, radius, { ...bodyOptions });
 
       Body.setAngle(body, current.angle);
       Body.setAngularVelocity(body, (Math.random() - 0.5) * SPAWN_ANGULAR_VELOCITY_RANGE);
@@ -430,6 +443,32 @@ export default function AnimalTowerGame() {
     }
 
     const draw = () => {
+      // タワートップ（世界座標）とスポーン位置（世界座標）を先に更新
+      // 生成直後の落下中オブジェクトに引っ張られてカメラが戻るのを防ぐため、
+      // 一定時間経過した個体を優先してタワートップを算出する。
+      const now = performance.now();
+      let stableTopWorldY = stageTopY;
+      let stableCount = 0;
+      let anyTopWorldY = stageTopY;
+      animalsRef.current.forEach(({ body, createdAtMs }) => {
+        anyTopWorldY = Math.min(anyTopWorldY, body.bounds.min.y);
+        if (now - createdAtMs >= TOWER_TOP_STABLE_AGE_MS) {
+          stableTopWorldY = Math.min(stableTopWorldY, body.bounds.min.y);
+          stableCount += 1;
+        }
+      });
+      const towerTopWorldY = stableCount > 0 ? stableTopWorldY : anyTopWorldY;
+
+      if (animalsRef.current.length === 0) {
+        dynamicDropYRef.current = BASE_DROP_Y;
+      } else {
+        dynamicDropYRef.current = towerTopWorldY - SPAWN_ABOVE_TOWER_N;
+      }
+      const rawTargetCameraOffset = Math.max(0, BASE_DROP_Y - dynamicDropYRef.current);
+      maxCameraOffsetYRef.current = Math.max(maxCameraOffsetYRef.current, rawTargetCameraOffset);
+      const targetCameraOffset = maxCameraOffsetYRef.current;
+      cameraOffsetYRef.current += (targetCameraOffset - cameraOffsetYRef.current) * CAMERA_LERP;
+
       ctx.clearRect(0, 0, canvasWidth, canvasHeight);
 
       const backgroundGradient = ctx.createLinearGradient(0, 0, 0, canvasHeight);
@@ -465,6 +504,11 @@ export default function AnimalTowerGame() {
         ctx.fill();
       }
 
+      let escaped = false;
+      // ワールド空間
+      ctx.save();
+      ctx.translate(0, cameraOffsetYRef.current);
+
       // 炎はsummitより下の位置に先に描く（summitが手前になるよう summit は後で描く）
       const fireImg = fireImageRef.current;
       if (fireImg?.complete && fireImg.naturalWidth > 0) {
@@ -482,11 +526,10 @@ export default function AnimalTowerGame() {
         ctx.fillRect(stageLeft, stageTopY, stageWidth, STAGE_HEIGHT + 12);
       }
 
-      let escaped = false;
       animalsRef.current.forEach(({ body, radius, sprite, createdAtMs }) => {
         if (body.bounds.min.y > canvasHeight + 120) return;
-        if (!gameOverRef.current && performance.now() - createdAtMs > 300) {
-          if (body.bounds.max.y >= dangerZoneTop) escaped = true;
+        if (!gameOverRef.current && performance.now() - createdAtMs > 300 && body.bounds.max.y >= dangerZoneTop) {
+          escaped = true;
         }
         ctx.save();
         ctx.translate(body.position.x, body.position.y);
@@ -495,6 +538,43 @@ export default function AnimalTowerGame() {
         ctx.restore();
       });
 
+      const current = currentDropRef.current;
+      if (current && !gameOverRef.current) {
+        const moveSpeed = 5;
+        const rotateSpeed = 0.04;
+        const edge = current.radius * current.halfExtent;
+        current.x = Math.max(
+          stageLeft + edge + 6,
+          Math.min(stageRight - edge - 6, current.x + moveDirRef.current * moveSpeed),
+        );
+        current.angle += rotateDirRef.current * rotateSpeed;
+
+        ctx.save();
+        ctx.globalAlpha = 0.9;
+        ctx.translate(current.x, dynamicDropYRef.current);
+        ctx.rotate(current.angle);
+        ctx.drawImage(
+          current.sprite.image,
+          -current.radius,
+          -current.radius,
+          current.radius * 2,
+          current.radius * 2,
+        );
+        ctx.restore();
+      }
+
+      ctx.restore();
+
+      if (escaped && !gameOverRef.current) {
+        gameOverRef.current = true;
+        if (playMode === 'solo') {
+          sendResult(scoreRef.current);
+        } else {
+          setPairLoser(lastDropPlayerRef.current);
+        }
+      }
+
+      // スクリーン空間UI
       ctx.textAlign = 'left';
       if (playMode === 'solo') {
         ctx.fillStyle = '#11283a';
@@ -511,31 +591,6 @@ export default function AnimalTowerGame() {
         ctx.strokeText(turnLabel, 14, turnY);
         ctx.fillStyle = PAIR_TURN_TEXT_COLOR[p];
         ctx.fillText(turnLabel, 14, turnY);
-      }
-
-      const current = currentDropRef.current;
-      if (current && !gameOverRef.current) {
-        const moveSpeed = 5;
-        const rotateSpeed = 0.04;
-        const edge = current.radius * current.halfExtent;
-        current.x = Math.max(
-          stageLeft + edge + 6,
-          Math.min(stageRight - edge - 6, current.x + moveDirRef.current * moveSpeed),
-        );
-        current.angle += rotateDirRef.current * rotateSpeed;
-
-        ctx.save();
-        ctx.globalAlpha = 0.9;
-        ctx.translate(current.x, dropY);
-        ctx.rotate(current.angle);
-        ctx.drawImage(
-          current.sprite.image,
-          -current.radius,
-          -current.radius,
-          current.radius * 2,
-          current.radius * 2,
-        );
-        ctx.restore();
       }
 
       const next = nextDropRef.current;
@@ -560,15 +615,6 @@ export default function AnimalTowerGame() {
           previewRadius * 2,
           previewRadius * 2,
         );
-      }
-
-      if (escaped && !gameOverRef.current) {
-        gameOverRef.current = true;
-        if (playMode === 'solo') {
-          sendResult(scoreRef.current);
-        } else {
-          setPairLoser(lastDropPlayerRef.current);
-        }
       }
 
       if (gameOverRef.current) {
@@ -656,6 +702,9 @@ export default function AnimalTowerGame() {
       fireImageRef.current = null;
       currentDropRef.current = null;
       nextDropRef.current = null;
+      cameraOffsetYRef.current = 0;
+      maxCameraOffsetYRef.current = 0;
+      dynamicDropYRef.current = BASE_DROP_Y;
       moveDirRef.current = 0;
       scoreRef.current = 0;
       gameOverRef.current = false;
