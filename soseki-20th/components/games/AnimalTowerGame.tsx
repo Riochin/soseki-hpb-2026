@@ -665,18 +665,19 @@ export default function AnimalTowerGame() {
           aria-modal="true"
           aria-labelledby="fork-summit-start-title"
         >
-          <div className="w-full max-w-[520px] rounded-lg border border-white/15 bg-black/35 px-6 py-8 text-center shadow-[0_12px_40px_rgba(0,0,0,0.45)]">
+          <div className="w-full max-w-xs rounded-xl border border-white/15 bg-black/45 px-8 py-9 text-center shadow-[0_16px_48px_rgba(0,0,0,0.55)]">
+            <p className="mb-2 text-[10px] font-bold tracking-[0.2em] text-[#facc15]/60 uppercase">Mini Game</p>
             <h1
               id="fork-summit-start-title"
-              className="text-2xl font-black tracking-tight text-[#facc15] md:text-3xl"
+              className="text-2xl font-black tracking-tight text-[#facc15]"
             >
               FORK サミットバトル
             </h1>
-            <p className="mt-4 text-sm leading-relaxed text-stone-200">{instruction}</p>
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
+            <p className="mt-3 text-sm leading-relaxed text-stone-300">{instruction}</p>
+            <div className="mt-6 flex flex-col gap-2">
               <button
                 type="button"
-                className="rounded-md bg-[#1e3a55] px-6 py-3 text-lg font-black text-white transition hover:brightness-110"
+                className="w-full rounded-lg bg-[#facc15] py-3 text-base font-black text-[#1a1a1a] transition hover:brightness-105 active:scale-95"
                 onClick={() => {
                   setPlayMode('solo');
                   setTurnPlayer(1);
@@ -687,16 +688,19 @@ export default function AnimalTowerGame() {
               </button>
               <button
                 type="button"
-                className="rounded-md bg-[#ca2132] px-6 py-3 text-lg font-black text-white transition hover:brightness-110"
+                className="w-full rounded-lg bg-[#facc15] py-3 text-base font-black text-[#1a1a1a] transition hover:brightness-105 active:scale-95"
                 onClick={() => {
                   setPlayMode('pair');
                   setTurnPlayer(1);
                   setPairLoser(null);
                 }}
               >
-                ペアプレイ
+                対戦プレイ
               </button>
             </div>
+            <p className="mt-7 border-t border-white/10 pt-4 text-[10px] tracking-widest text-stone-400">
+              原案: しゆう　／　開発: マルハット
+            </p>
           </div>
         </div>
       ) : (
