@@ -1,7 +1,9 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
+import { useSearchParams } from 'next/navigation';
 import animalCollisionData from '@/data/games/animal-tower-collision.json';
+import { apiFetch } from '@/lib/api';
 import {
   Bodies,
   Body,
@@ -161,6 +163,12 @@ export default function AnimalTowerGame() {
   const gameOverRef = useRef(false);
   const resultSentRef = useRef(false);
   const placeCooldownUntilRef = useRef(0);
+  const playerNameRef = useRef<string | null>(null);
+
+  const searchParams = useSearchParams();
+  useEffect(() => {
+    playerNameRef.current = searchParams.get('player');
+  }, [searchParams]);
 
   const instruction = useMemo(
     () =>
@@ -368,6 +376,19 @@ export default function AnimalTowerGame() {
           },
           '*',
         );
+      } else {
+        const name = playerNameRef.current;
+        if (name) {
+          apiFetch(`/api/players/${encodeURIComponent(name)}/game-reward`, {
+            method: 'POST',
+            body: JSON.stringify({
+              gameType: 'animal_tower',
+              rank: scoreToRank(score),
+              score,
+              sessionId: crypto.randomUUID(),
+            }),
+          }).catch(console.error);
+        }
       }
     };
 

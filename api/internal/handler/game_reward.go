@@ -103,9 +103,20 @@ func calcCoinReward(input gameRewardInput) int {
 		return calcFaceMemoryReward(input.Rank, input.TimeLimit)
 	case "quiz":
 		return calcQuizReward(input.Rank)
+	case "animal_tower":
+		return calcAnimalTowerReward(input.Score)
 	default:
 		return 5 // 未知のゲームは最低報酬
 	}
+}
+
+// calcAnimalTowerReward は積み上げ数をそのまま Credit に換算する。
+// 100 coins = 1 Credit なので score * 100。最低 1 Credit 保証。
+func calcAnimalTowerReward(score int) int {
+	if score < 1 {
+		return 100
+	}
+	return score * 100
 }
 
 // calcShootingReward はランクからシューティングゲームのコイン報酬を算出する。
