@@ -471,7 +471,7 @@ export default function GachaSection({ playerName }: Props) {
           </div>
         </div>
 
-        {!showBorrowModal && (IS_UI_MOCK || (player && player.coins < 100)) && (
+        {!showBorrowModal && (IS_UI_MOCK || (player && player.coins < 10000)) && (
           <div className="mb-3">
             <button
               type="button"
