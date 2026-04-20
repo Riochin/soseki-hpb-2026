@@ -7,6 +7,12 @@ import ModalFrame from '@/components/ModalFrame';
 const MIN_AMOUNT = 1;
 const MAX_AMOUNT = 10;
 
+const SUGAMO_TRIGGER_THRESHOLD = 10000;
+const SUGAMO_TRIGGER_CHANCE = 0.15;
+const SUGAMO_MIN = 10;
+const SUGAMO_MAX = 100;
+const SUGAMO_STEP = 10;
+
 interface Props {
   onBorrow: (amount: number) => Promise<void>;
   onClose: () => void;
@@ -35,6 +41,11 @@ export default function BorrowModal({ onBorrow, onClose, debt = 0 }: Props) {
   const [error, setError] = useState('');
   const isExtreme = debt >= 50000;
 
+  const [sugarmoActive] = useState(
+    () => debt >= SUGAMO_TRIGGER_THRESHOLD && Math.random() < SUGAMO_TRIGGER_CHANCE,
+  );
+  const [sugarmoAmount, setSugarmoAmount] = useState(SUGAMO_MIN);
+
   function decrement() {
     setAmount((prev) => Math.max(MIN_AMOUNT, prev - 1));
   }
@@ -54,6 +65,79 @@ export default function BorrowModal({ onBorrow, onClose, debt = 0 }: Props) {
     } finally {
       setBorrowing(false);
     }
+  }
+
+  if (sugarmoActive) {
+    return (
+      <ModalFrame
+        onBackdropClick={onClose}
+        maxWidthClass="max-w-xs"
+        panelClassName="!border-yellow-500/40 p-8 text-center"
+      >
+        <div className="mb-6 overflow-hidden rounded-control border border-yellow-500/20 bg-stone-800 flex items-center justify-center" style={{ height: 180 }}>
+          <span className="text-stone-500 text-sm">placeholder</span>
+        </div>
+
+        <p
+          className="mb-6 text-lg font-black tracking-wider text-yellow-300"
+          style={{ fontFamily: 'var(--font-noto-serif-jp), serif' }}
+        >
+          ？？？「また巣鴨？」
+        </p>
+
+        <div className="mb-6 flex items-center justify-center gap-6">
+          <button
+            type="button"
+            onClick={() => setSugarmoAmount((prev) => Math.max(SUGAMO_MIN, prev - SUGAMO_STEP))}
+            disabled={sugarmoAmount <= SUGAMO_MIN || borrowing}
+            className="h-10 w-10 rounded-control border border-yellow-500/60 text-xl font-bold text-yellow-400 transition-colors hover:bg-yellow-500/10 disabled:cursor-not-allowed disabled:opacity-30"
+          >
+            −
+          </button>
+          <div className="min-w-[6rem] text-center">
+            <span className="font-mono text-2xl font-bold text-white">{sugarmoAmount}</span>
+            <span className="ml-1 text-sm text-yellow-400/70">クレ</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setSugarmoAmount((prev) => Math.min(SUGAMO_MAX, prev + SUGAMO_STEP))}
+            disabled={sugarmoAmount >= SUGAMO_MAX || borrowing}
+            className="h-10 w-10 rounded-control border border-yellow-500/60 text-xl font-bold text-yellow-400 transition-colors hover:bg-yellow-500/10 disabled:cursor-not-allowed disabled:opacity-30"
+          >
+            ＋
+          </button>
+        </div>
+
+        {error && <p className="mb-3 text-xs text-red-400">{error}</p>}
+
+        <button
+          type="button"
+          onClick={async () => {
+            setBorrowing(true);
+            try {
+              await onBorrow(sugarmoAmount);
+              onClose();
+            } catch (err) {
+              setError(err instanceof Error ? err.message : '失敗しました');
+              setBorrowing(false);
+            }
+          }}
+          disabled={borrowing}
+          className="mb-3 w-full rounded-control border-2 border-yellow-500 py-3 font-bold text-yellow-300 transition-colors hover:bg-yellow-500/10 disabled:opacity-50"
+        >
+          {borrowing ? '処理中...' : `${sugarmoAmount}クレ 借りる`}
+        </button>
+
+        <button
+          type="button"
+          onClick={onClose}
+          disabled={borrowing}
+          className="w-full rounded-control border border-stone-600 py-2 text-sm text-stone-500 transition-colors hover:border-stone-500 hover:text-stone-400 disabled:opacity-50"
+        >
+          帰る
+        </button>
+      </ModalFrame>
+    );
   }
 
   if (isExtreme) {
