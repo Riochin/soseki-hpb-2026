@@ -1,10 +1,12 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { ChevronLeft, ChevronRight, Plus, Trash2, Pencil, Check, X, MoreHorizontal } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, Trash2, Pencil, Check, X, MoreHorizontal, LayoutGrid } from 'lucide-react';
 import { useMessages } from '@/hooks/useMessages';
 import type { BgColor, BgStyle, CardFont, Message } from '@/hooks/useMessages';
 import YosegakiModal from '@/components/YosegakiModal';
+import YosegakiBoard from '@/components/YosegakiBoard';
+import { YOSEGAKI_BOARD_ENABLED } from '@/lib/mock';
 
 const AUTO_PLAY_INTERVAL = 4000;
 
@@ -195,6 +197,7 @@ interface Props {
 export default function MessageSection({ playerName }: Props) {
   const { messages, isLoading, error, postMessage, deleteMessage, updateMessage } = useMessages(playerName);
   const [showModal, setShowModal] = useState(false);
+  const [showBoard, setShowBoard] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [paused, setPaused] = useState(false);
   const [visibleCount, setVisibleCount] = useState(1);
@@ -320,12 +323,28 @@ export default function MessageSection({ playerName }: Props) {
         </div>
       )}
 
+      {YOSEGAKI_BOARD_ENABLED && (
+        <div className="mt-6 flex justify-center">
+          <button
+            onClick={() => setShowBoard(true)}
+            className="flex items-center gap-2 rounded-control border border-accent/50 px-4 py-2 text-xs text-accent hover:border-accent hover:bg-accent/10 transition-colors"
+          >
+            <LayoutGrid className="h-4 w-4" />
+            ボードで見る
+          </button>
+        </div>
+      )}
+
       {showModal && (
         <YosegakiModal
           onClose={() => setShowModal(false)}
           onSubmit={postMessage}
           username={playerName ?? undefined}
         />
+      )}
+
+      {showBoard && (
+        <YosegakiBoard messages={messages} onClose={() => setShowBoard(false)} />
       )}
     </section>
   );
