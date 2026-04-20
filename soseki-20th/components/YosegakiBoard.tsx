@@ -55,9 +55,11 @@ function getExpandedTextSizeClass(text: string): string {
 }
 
 function seededRotation(id: number): number {
-  const x = Math.sin(id * 127.1 + 311.7) * 43758.5453;
-  const frac = x - Math.floor(x);
-  return frac * 45 - 25;
+  // Math.imul による 32bit 整数ハッシュ（連番IDで均一分布）
+  let h = Math.imul(id ^ (id >>> 4), 0x45d9f3b);
+  h = Math.imul(h ^ (h >>> 16), 0x45d9f3b);
+  h = (h ^ (h >>> 16)) >>> 0;
+  return (h / 0xffffffff) * 45 - 25;
 }
 
 interface BoardCardProps {
