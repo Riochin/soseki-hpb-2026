@@ -24,9 +24,9 @@ describe('MiniGameSection', () => {
     expect(badges.length).toBeGreaterThanOrEqual(3);
   });
 
-  it('PLAY NOW ボタンが4つ表示される', () => {
+  it('ゲーム開始ボタン（カード全体）が4つ表示される', () => {
     render(<MiniGameSection playerName={null} />);
-    const buttons = screen.getAllByRole('button', { name: /^PLAY NOW$/i });
+    const buttons = screen.getAllByRole('button', { name: /をプレイ$/ });
     expect(buttons).toHaveLength(4);
     buttons.forEach((b) => expect(b).toBeEnabled());
   });

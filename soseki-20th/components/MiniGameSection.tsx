@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { Keyboard, Crosshair, LayoutGrid, Trophy, HelpCircle } from 'lucide-react';
+import Image from 'next/image';
+import { Trophy } from 'lucide-react';
 import GameModal from './GameModal';
 import {
   useGameResults,
@@ -11,6 +12,19 @@ import {
 
 interface Props {
   playerName: string | null;
+}
+
+interface MiniGameCardProps {
+  thumbnailSrc: string;
+  thumbnailAlt: string;
+  creditLabel: string;
+  title: string;
+  description: string;
+  onPlay: () => void;
+}
+
+interface MiniGameCardConfig extends Omit<MiniGameCardProps, 'onPlay'> {
+  key: 'typing' | 'shooting' | 'face_memory' | 'quiz';
 }
 
 /** タイピングゲームの制限時間（秒）— `games/typing-game.html` の diff-btn と一致 */
@@ -188,6 +202,48 @@ function LeaderboardCards({ entries, playerName }: LeaderboardRowsProps) {
   );
 }
 
+function MiniGameCard({
+  thumbnailSrc,
+  thumbnailAlt,
+  creditLabel,
+  title,
+  description,
+  onPlay,
+}: MiniGameCardProps) {
+  return (
+    <button
+      type="button"
+      onClick={onPlay}
+      className="group block w-full overflow-hidden rounded-panel border-2 border-edge bg-surface text-left transition-colors hover:border-edge-strong"
+      aria-label={`${title}をプレイ`}
+    >
+      <div className="relative w-full overflow-hidden border-b border-edge before:block before:pt-[56.25%]">
+        <Image
+          src={thumbnailSrc}
+          alt={thumbnailAlt}
+          fill
+          sizes="(min-width: 1280px) 33vw, (min-width: 640px) 50vw, 100vw"
+          className="object-cover object-center transition-transform duration-300 group-hover:scale-105"
+        />
+        <div className="absolute right-3 top-3 z-10">
+          <span className="rounded-full border border-accent/40 bg-black/55 px-2.5 py-1 text-[11px] font-bold text-accent backdrop-blur-[1px]">
+            {creditLabel}
+          </span>
+        </div>
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-black/15" />
+        <div className="absolute inset-x-0 bottom-0 p-3">
+          <h3 className="text-base font-bold text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">
+            {title}
+          </h3>
+          <p className="mt-0.5 line-clamp-1 text-xs text-stone-200/95 drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">
+            {description}
+          </p>
+        </div>
+      </div>
+    </button>
+  );
+}
+
 export default function MiniGameSection({ playerName }: Props) {
   const [typingOpen, setTypingOpen] = useState(false);
   const [shootingOpen, setShootingOpen] = useState(false);
@@ -210,6 +266,47 @@ export default function MiniGameSection({ playerName }: Props) {
   );
 
   const rankingRegionId = 'minigame-leaderboard-panel';
+  const miniGameCards: MiniGameCardConfig[] = [
+    {
+      key: 'typing',
+      thumbnailSrc: '/games/thumbnails/typing-game.png',
+      thumbnailAlt: '名言タイピングのサムネイル',
+      creditLabel: '+1 ~ 30 Credit',
+      title: '名言タイピング',
+      description: 'まぁ、余裕ッスね。',
+    },
+    {
+      key: 'shooting',
+      thumbnailSrc: '/games/thumbnails/shooting-game.png',
+      thumbnailAlt: 'インファイト花京院のサムネイル',
+      creditLabel: '+1 ~ 15 Credit',
+      title: 'インファイト花京院',
+      description: 'いける‼️いける‼️いける‼️ロー‼️ロー‼️ロー‼️ロー‼️',
+    },
+    {
+      key: 'face_memory',
+      thumbnailSrc: '/games/thumbnails/memory-game.png',
+      thumbnailAlt: '名場面神経衰弱のサムネイル',
+      creditLabel: '+1 ~ 36 Credit',
+      title: '名場面神経衰弱',
+      description: '俺⁉️俺⁉️俺⁉️俺⁉️俺⁉️俺⁉️俺⁉️俺⁉️',
+    },
+    {
+      key: 'quiz',
+      thumbnailSrc: '/games/thumbnails/quiz-game.png',
+      thumbnailAlt: '効果測定のサムネイル',
+      creditLabel: '+1 ~ 10 Credit',
+      title: '効果測定',
+      description: '俺言ってない‼️',
+    },
+  ];
+
+  const openByGame: Record<MiniGameCardConfig['key'], () => void> = {
+    typing: () => setTypingOpen(true),
+    shooting: () => setShootingOpen(true),
+    face_memory: () => setFaceMemoryOpen(true),
+    quiz: () => setQuizOpen(true),
+  };
 
   return (
     <>
@@ -223,105 +320,18 @@ export default function MiniGameSection({ playerName }: Props) {
           ミニゲーム
         </h2>
 
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {/* 漱石タイピングカード */}
-          <div className="rounded-panel border-2 border-edge bg-surface p-6 transition-colors hover:border-edge-strong">
-            <div className="mb-3 flex items-start justify-between">
-              <Keyboard className="h-8 w-8 text-accent" aria-hidden />
-              <span className="rounded-full border border-accent/30 bg-accent/10 px-3 py-1 text-xs font-bold text-accent">
-                +1 ~ 30 Credit
-              </span>
-            </div>
-
-            <h3 className="mb-1 text-lg font-bold text-white">
-              名言タイピング
-            </h3>
-            <p className="mb-5 text-sm text-stone-400">
-              まぁ、余裕ッスね。
-            </p>
-
-            <button
-              type="button"
-              onClick={() => setTypingOpen(true)}
-              className="w-full rounded-control bg-accent py-2 text-center font-bold text-black transition-opacity hover:opacity-90"
-            >
-              PLAY NOW
-            </button>
-          </div>
-
-          {/* 漱石シューターカード */}
-          <div className="rounded-panel border-2 border-edge bg-surface p-6 transition-colors hover:border-edge-strong">
-            <div className="mb-3 flex items-start justify-between">
-              <Crosshair className="h-8 w-8 text-accent" aria-hidden />
-              <span className="rounded-full border border-accent/30 bg-accent/10 px-3 py-1 text-xs font-bold text-accent">
-                +1 ~ 15 Credit
-              </span>
-            </div>
-
-            <h3 className="mb-1 text-lg font-bold text-white">
-              インファイト花京院
-            </h3>
-            <p className="mb-5 text-sm text-stone-400">
-              いける‼️いける‼️いける‼️ロー‼️ロー‼️ロー‼️ロー‼️
-            </p>
-
-            <button
-              type="button"
-              onClick={() => setShootingOpen(true)}
-              className="w-full rounded-control bg-accent py-2 text-center font-bold text-black transition-opacity hover:opacity-90"
-            >
-              PLAY NOW
-            </button>
-          </div>
-
-          <div className="rounded-panel border-2 border-edge bg-surface p-6 transition-colors hover:border-edge-strong">
-            <div className="mb-3 flex items-start justify-between">
-              <LayoutGrid className="h-8 w-8 text-accent" aria-hidden />
-              <span className="rounded-full border border-accent/30 bg-accent/10 px-3 py-1 text-xs font-bold text-accent">
-                +1 ~ 36 Credit
-              </span>
-            </div>
-
-            <h3 className="mb-1 text-lg font-bold text-white">
-              名場面神経衰弱
-            </h3>
-            <p className="mb-5 text-sm text-stone-400">
-              俺⁉️俺⁉️俺⁉️俺⁉️俺⁉️俺⁉️俺⁉️俺⁉️
-            </p>
-
-            <button
-              type="button"
-              onClick={() => setFaceMemoryOpen(true)}
-              className="w-full rounded-control bg-accent py-2 text-center font-bold text-black transition-opacity hover:opacity-90"
-            >
-              PLAY NOW
-            </button>
-          </div>
-
-          {/* 効果測定カード */}
-          <div className="rounded-panel border-2 border-edge bg-surface p-6 transition-colors hover:border-edge-strong">
-            <div className="mb-3 flex items-start justify-between">
-              <HelpCircle className="h-8 w-8 text-accent" aria-hidden />
-              <span className="rounded-full border border-accent/30 bg-accent/10 px-3 py-1 text-xs font-bold text-accent">
-                +1 ~ 10 Credit
-              </span>
-            </div>
-
-            <h3 className="mb-1 text-lg font-bold text-white">
-              効果測定
-            </h3>
-            <p className="mb-5 text-sm text-stone-400">
-              俺言ってない‼️
-            </p>
-
-            <button
-              type="button"
-              onClick={() => setQuizOpen(true)}
-              className="w-full rounded-control bg-accent py-2 text-center font-bold text-black transition-opacity hover:opacity-90"
-            >
-              PLAY NOW
-            </button>
-          </div>
+        <div className="mx-2 grid gap-4 sm:mx-0 sm:grid-cols-2 lg:grid-cols-3">
+          {miniGameCards.map((card) => (
+            <MiniGameCard
+              key={card.key}
+              thumbnailSrc={card.thumbnailSrc}
+              thumbnailAlt={card.thumbnailAlt}
+              creditLabel={card.creditLabel}
+              title={card.title}
+              description={card.description}
+              onPlay={openByGame[card.key]}
+            />
+          ))}
         </div>
 
         <div
