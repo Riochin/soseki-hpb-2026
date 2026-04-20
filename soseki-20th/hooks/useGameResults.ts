@@ -10,7 +10,7 @@ import {
   MOCK_GAME_RESULTS_TYPING,
 } from '@/lib/mock';
 
-export type MiniGameType = 'typing' | 'shooting' | 'face_memory' | 'quiz';
+export type MiniGameType = 'typing' | 'shooting' | 'face_memory' | 'quiz' | 'animal_tower';
 
 export interface GameResultLeaderboardEntry {
   rank: number;

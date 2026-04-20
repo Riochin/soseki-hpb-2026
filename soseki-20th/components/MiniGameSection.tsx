@@ -304,7 +304,7 @@ export default function MiniGameSection({ playerName }: Props) {
       key: 'animal_tower',
       thumbnailSrc: '/games/thumbnails/animal-tower-game.png',
       thumbnailAlt: 'FORK サミットバトルのサムネイル',
-      creditLabel: '+1 ~ 5 Credit',
+      creditLabel: '+1 ~ ∞ Credit',
       title: 'FORK サミットバトル',
       description: 'サミットの上に漱石を限界まで積み上げろ。',
     },
@@ -413,6 +413,18 @@ export default function MiniGameSection({ playerName }: Props) {
               >
                 効果測定
               </button>
+              <button
+                type="button"
+                onClick={() => setRankTab('animal_tower')}
+                className={`rounded-control px-3 py-1.5 text-xs font-bold transition-colors ${
+                  rankTab === 'animal_tower'
+                    ? 'bg-accent text-black'
+                    : 'text-accent/80 hover:bg-accent/10'
+                }`}
+                aria-pressed={rankTab === 'animal_tower'}
+              >
+                サミットバトル
+              </button>
             </div>
           </div>
 
@@ -509,6 +521,13 @@ export default function MiniGameSection({ playerName }: Props) {
                   効果測定のハイスコアはまだありません。
                   <span className="mt-1 block text-xs text-stone-600">
                     PLAY NOW から挑戦して俺力を証明しよう。
+                  </span>
+                </>
+              ) : rankTab === 'animal_tower' ? (
+                <>
+                  サミットバトルのハイスコアはまだありません。
+                  <span className="mt-1 block text-xs text-stone-600">
+                    限界まで積み上げてランキングを狙おう。
                   </span>
                 </>
               ) : (
