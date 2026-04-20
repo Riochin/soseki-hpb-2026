@@ -159,6 +159,7 @@ export default function AnimalTowerGame() {
   const moveDirRef = useRef<-1 | 0 | 1>(0);
   const turnPlayerRef = useRef<1 | 2>(1);
   const lastDropPlayerRef = useRef<1 | 2>(1);
+  const pairLoserRef = useRef<1 | 2 | null>(null);
   const scoreRef = useRef(0);
   const gameOverRef = useRef(false);
   const resultSentRef = useRef(false);
@@ -214,6 +215,10 @@ export default function AnimalTowerGame() {
   useEffect(() => {
     turnPlayerRef.current = turnPlayer;
   }, [turnPlayer]);
+
+  useEffect(() => {
+    pairLoserRef.current = pairLoser;
+  }, [pairLoser]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -278,6 +283,7 @@ export default function AnimalTowerGame() {
         gameOverRef.current = false;
         resultSentRef.current = false;
         placeCooldownUntilRef.current = 0;
+        pairLoserRef.current = null;
         setPairLoser(null);
         setTurnPlayer(1);
         turnPlayerRef.current = 1;
@@ -573,9 +579,9 @@ export default function AnimalTowerGame() {
             canvasHeight / 2 + 36,
           );
         } else {
-          const loserText = pairLoser ? `${PAIR_PLAYER_NAME[pairLoser]} の負け` : '判定中...';
-          if (pairLoser) {
-            ctx.fillStyle = PAIR_TURN_TEXT_COLOR[pairLoser];
+          const loserText = pairLoserRef.current ? `${PAIR_PLAYER_NAME[pairLoserRef.current]} の負け` : '判定中...';
+          if (pairLoserRef.current) {
+            ctx.fillStyle = PAIR_TURN_TEXT_COLOR[pairLoserRef.current];
           }
           ctx.fillText(loserText, canvasWidth / 2, canvasHeight / 2 + 36);
         }
@@ -656,7 +662,6 @@ export default function AnimalTowerGame() {
     fireBottomRowHeight,
     isEmbedded,
     isMobile,
-    pairLoser,
     playMode,
     stageTopY,
     stageWidth,
