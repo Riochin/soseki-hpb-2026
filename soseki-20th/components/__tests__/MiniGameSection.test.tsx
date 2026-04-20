@@ -24,10 +24,10 @@ describe('MiniGameSection', () => {
     expect(badges.length).toBeGreaterThanOrEqual(3);
   });
 
-  it('PLAY NOW ボタンが3つ表示される', () => {
+  it('PLAY NOW ボタンが4つ表示される', () => {
     render(<MiniGameSection playerName={null} />);
     const buttons = screen.getAllByRole('button', { name: /^PLAY NOW$/i });
-    expect(buttons).toHaveLength(3);
+    expect(buttons).toHaveLength(4);
     buttons.forEach((b) => expect(b).toBeEnabled());
   });
 

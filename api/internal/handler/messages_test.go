@@ -56,6 +56,44 @@ func (m *mockMessageStore) CreateMessage(
 	return msg, nil
 }
 
+func (m *mockMessageStore) DeleteMessage(_ context.Context, id int, _ string) (bool, error) {
+	if m.err != nil {
+		return false, m.err
+	}
+	for i, msg := range m.messages {
+		if msg.ID == id {
+			m.messages = append(m.messages[:i], m.messages[i+1:]...)
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
+func (m *mockMessageStore) UpdateMessage(
+	_ context.Context,
+	id int,
+	_ string,
+	newAuthor *string,
+	newText *string,
+) (model.Message, bool, error) {
+	if m.err != nil {
+		return model.Message{}, false, m.err
+	}
+	for i := range m.messages {
+		if m.messages[i].ID != id {
+			continue
+		}
+		if newAuthor != nil {
+			m.messages[i].Author = *newAuthor
+		}
+		if newText != nil {
+			m.messages[i].Text = *newText
+		}
+		return m.messages[i], true, nil
+	}
+	return model.Message{}, false, nil
+}
+
 // --- GET /api/messages ---
 
 func TestList_ReturnsEmptyArray(t *testing.T) {
