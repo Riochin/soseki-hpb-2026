@@ -91,6 +91,16 @@ export default function Home() {
     return () => observer.disconnect();
   }, [playerName]);
 
+  const handleToggleMute = useCallback(() => {
+    setIsMuted((prev) => {
+      // ミュート解除時に urAudio をunlockしてAutoplay制限を回避
+      if (prev && urAudioRef.current) {
+        urAudioRef.current.play().then(() => urAudioRef.current?.pause()).catch(() => {});
+      }
+      return !prev;
+    });
+  }, []);
+
   const handleInit = useCallback((p: Player) => {
     setPlayerName(p.name);
     setShowIntro(true);
@@ -113,7 +123,7 @@ export default function Home() {
             <ScrollToTopButton visible={pastHero} />
             <main>
               <div ref={heroRef}>
-                <HeroSection isMuted={isMuted} onToggleMute={() => setIsMuted((v) => !v)} />
+                <HeroSection isMuted={isMuted} onToggleMute={handleToggleMute} />
               </div>
               <VideoSection />
               <OverviewSection />
