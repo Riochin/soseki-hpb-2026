@@ -53,6 +53,9 @@ function rarityClass(rarity: string): string {
 type AnimPhase = 'rarity' | 'gif' | 'upgrading' | 'flip-out' | 'flip-in' | 'done';
 
 const UR_GIF_DURATION = 3000;
+const UPGRADE_PHASE_DURATION = 2800;
+const FLASH_DELAY = 1500;  // upgrading 開始 → 白フラッシュ＆虹切替
+const WHITE_FLASH_DURATION = 600;
 
 function URConfirmedOverlay({ visible }: { visible: boolean }) {
   if (!visible || typeof document === 'undefined') return null;
@@ -70,10 +73,10 @@ function URConfirmedOverlay({ visible }: { visible: boolean }) {
   );
 }
 
-// カード裏面の背景色を計算（昇格演出時は rarity フェーズ中は SSR 金色を使う）
-function getCardBackBg(rarity: string, isUpgradeAnim: boolean, animPhase: AnimPhase): string {
+// カード裏面の背景色を計算
+function getCardBackBg(rarity: string, isUpgradeAnim: boolean, animPhase: AnimPhase, showURBack: boolean): string {
   if (isUpgradeAnim && rarity === 'UR') {
-    if (animPhase === 'upgrading' || animPhase === 'flip-out') {
+    if (animPhase === 'flip-out' || showURBack) {
       return RARITY_CARD_BG['UR'];
     }
     return RARITY_CARD_BG['SSR'];
@@ -89,15 +92,14 @@ interface GachaCardProps {
   animPhase: AnimPhase;
   isUpgradeAnim: boolean;
   showWhiteFlash: boolean;
+  showURBack: boolean;
   size?: 'sm' | 'lg';
 }
 
-function GachaCard({ item, isNew, animPhase, isUpgradeAnim, showWhiteFlash, size = 'lg' }: GachaCardProps) {
+function GachaCard({ item, isNew, animPhase, isUpgradeAnim, showWhiteFlash, showURBack, size = 'lg' }: GachaCardProps) {
   const colorClass = rarityClass(item.rarity);
-  // 表面のグラデーションボーダーは常にアイテムの実レアリティ
   const cardFrontBorderBg = RARITY_CARD_BG[item.rarity] ?? 'bg-stone-700';
-  // 裏面の色：昇格演出中は upgrading/flip-out になるまで SSR 金色
-  const cardBackBg = getCardBackBg(item.rarity, isUpgradeAnim, animPhase);
+  const cardBackBg = getCardBackBg(item.rarity, isUpgradeAnim, animPhase, showURBack);
   const isSmall = size === 'sm';
   const showFront = animPhase === 'flip-in' || animPhase === 'done';
 
@@ -172,7 +174,7 @@ function GachaCard({ item, isNew, animPhase, isUpgradeAnim, showWhiteFlash, size
           {showWhiteFlash && animPhase === 'upgrading' && (
             <div
               className="pointer-events-none absolute inset-0 rounded-control bg-white"
-              style={{ animation: 'white-flash 1400ms ease-in-out forwards' }}
+              style={{ animation: `white-flash ${WHITE_FLASH_DURATION}ms ease-in-out forwards` }}
             />
           )}
         </div>
@@ -197,9 +199,13 @@ function useGachaAnim(
   animPhase: AnimPhase;
   isUpgradeAnim: boolean;
   showWhiteFlash: boolean;
+  showURBack: boolean;
+  showWhiteGlow: boolean;
 } {
   const [animPhase, setAnimPhase] = useState<AnimPhase>('rarity');
   const [showWhiteFlash, setShowWhiteFlash] = useState(false);
+  const [showURBack, setShowURBack] = useState(false);
+  const [showWhiteGlow, setShowWhiteGlow] = useState(false);
   const [isUpgradeAnim] = useState(() => hasUR && Math.random() < 1 / 3);
 
   useEffect(() => {
@@ -209,10 +215,11 @@ function useGachaAnim(
     if (hasUR && isUpgradeAnim) {
       const gifStart = 2000;
       const upgradeStart = gifStart + UR_GIF_DURATION;
-      const flipStart = upgradeStart + 1400;
+      const flipStart = upgradeStart + UPGRADE_PHASE_DURATION;
       at(gifStart, () => { setAnimPhase('gif'); onUrStart?.(); });
-      at(upgradeStart, () => { setAnimPhase('upgrading'); onUrEnd?.(); setShowWhiteFlash(true); });
-      at(flipStart, () => setAnimPhase('flip-out'));
+      at(upgradeStart, () => { setAnimPhase('upgrading'); onUrEnd?.(); });
+      at(upgradeStart + FLASH_DELAY, () => { setShowWhiteFlash(true); setShowURBack(true); setShowWhiteGlow(true); });
+      at(flipStart, () => { setAnimPhase('flip-out'); setShowWhiteGlow(false); });
       at(flipStart + FLIP_DURATION, () => setAnimPhase('flip-in'));
       at(flipStart + FLIP_DURATION * 2, () => setAnimPhase('done'));
     } else if (hasUR) {
@@ -228,26 +235,41 @@ function useGachaAnim(
     return () => timers.forEach(clearTimeout);
   }, [hasUR, isUpgradeAnim, onUrStart, onUrEnd]);
 
-  return { animPhase, isUpgradeAnim, showWhiteFlash };
+  return { animPhase, isUpgradeAnim, showWhiteFlash, showURBack, showWhiteGlow };
 }
 
 function GachaResultModal({ result, onClose, onUrStart, onUrEnd }: { result: GachaResult; onClose: () => void; onUrStart?: () => void; onUrEnd?: () => void }) {
   const { item, isNew, newCoins } = result;
   const hasUR = item.rarity === 'UR';
-  const { animPhase, isUpgradeAnim, showWhiteFlash } = useGachaAnim(hasUR, onUrStart, onUrEnd);
+  const { animPhase, isUpgradeAnim, showWhiteFlash, showURBack, showWhiteGlow } = useGachaAnim(hasUR, onUrStart, onUrEnd);
+
+  const showSpotlight = isUpgradeAnim && animPhase === 'upgrading';
 
   return (
     <>
       <URConfirmedOverlay visible={animPhase === 'gif'} />
       <ModalFrame onBackdropClick={onClose} maxWidthClass="max-w-xs" panelClassName="p-6 text-center">
-        <GachaCard
-          item={item}
-          isNew={isNew}
-          animPhase={animPhase}
-          isUpgradeAnim={isUpgradeAnim}
-          showWhiteFlash={showWhiteFlash}
-          size="lg"
-        />
+        {/* 周囲暗転オーバーレイ（modal-panel が relative なので absolute で被せられる） */}
+        {showSpotlight && (
+          <div
+            className="pointer-events-none absolute inset-0 rounded-panel"
+            style={{ backgroundColor: 'rgba(0,0,0,0.88)', animation: `ur-spotlight-dim ${UPGRADE_PHASE_DURATION}ms ease-out forwards`, zIndex: 10 }}
+          />
+        )}
+        <div
+          className={showSpotlight ? 'relative z-20' : ''}
+          style={showWhiteGlow ? { filter: 'drop-shadow(0 0 20px rgba(255,255,255,0.9)) drop-shadow(0 0 50px rgba(255,255,255,0.5))' } : undefined}
+        >
+          <GachaCard
+            item={item}
+            isNew={isNew}
+            animPhase={animPhase}
+            isUpgradeAnim={isUpgradeAnim}
+            showWhiteFlash={showWhiteFlash}
+            showURBack={showURBack}
+            size="lg"
+          />
+        </div>
         {animPhase === 'done' && (
           <p className="mt-3 font-mono text-xs text-stone-500">残Credit: {toCredit(newCoins)}</p>
         )}
@@ -276,7 +298,9 @@ function MultiGachaResultModal({
   onUrEnd?: () => void;
 }) {
   const hasUR = result.results.some((r) => r.item.rarity === 'UR');
-  const { animPhase, isUpgradeAnim, showWhiteFlash } = useGachaAnim(hasUR, onUrStart, onUrEnd);
+  const { animPhase, isUpgradeAnim, showWhiteFlash, showURBack, showWhiteGlow } = useGachaAnim(hasUR, onUrStart, onUrEnd);
+
+  const showSpotlight = isUpgradeAnim && animPhase === 'upgrading';
 
   return (
     <>
@@ -286,21 +310,36 @@ function MultiGachaResultModal({
         maxWidthClass="max-w-2xl"
         panelClassName="p-4 text-center sm:p-6"
       >
+        {/* 周囲暗転オーバーレイ */}
+        {showSpotlight && (
+          <div
+            className="pointer-events-none absolute inset-0 rounded-panel"
+            style={{ backgroundColor: 'rgba(0,0,0,0.88)', animation: `ur-spotlight-dim ${UPGRADE_PHASE_DURATION}ms ease-out forwards`, zIndex: 10 }}
+          />
+        )}
         <p className="mb-3 text-center font-mono text-xs tracking-widest text-accent/60">— 10連ガチャ結果</p>
 
         <div className="mb-3 grid grid-cols-2 gap-2 sm:grid-cols-5 sm:gap-3">
-          {result.results.map((r, idx) => (
-            <div key={idx} className="relative">
-              <GachaCard
-                item={r.item}
-                isNew={r.isNew}
-                animPhase={animPhase}
-                isUpgradeAnim={isUpgradeAnim && r.item.rarity === 'UR'}
-                showWhiteFlash={showWhiteFlash && r.item.rarity === 'UR'}
-                size="sm"
-              />
-            </div>
-          ))}
+          {result.results.map((r, idx) => {
+            const isUrCard = r.item.rarity === 'UR';
+            return (
+              <div
+                key={idx}
+                className={showSpotlight && isUrCard ? 'relative z-20' : 'relative'}
+                style={showWhiteGlow && isUrCard ? { filter: 'drop-shadow(0 0 14px rgba(255,255,255,0.9)) drop-shadow(0 0 36px rgba(255,255,255,0.5))' } : undefined}
+              >
+                <GachaCard
+                  item={r.item}
+                  isNew={r.isNew}
+                  animPhase={animPhase}
+                  isUpgradeAnim={isUpgradeAnim && isUrCard}
+                  showWhiteFlash={showWhiteFlash && isUrCard}
+                  showURBack={showURBack && isUrCard}
+                  size="sm"
+                />
+              </div>
+            );
+          })}
         </div>
 
         {animPhase === 'done' && (
@@ -540,6 +579,7 @@ function CollectionModal({
                   animPhase="done"
                   isUpgradeAnim={false}
                   showWhiteFlash={false}
+                  showURBack={false}
                   size="sm"
                 />
               </button>

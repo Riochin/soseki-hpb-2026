@@ -188,6 +188,14 @@ body {
   100% { opacity: 0; }
 }
 
+/* UR昇格: 周囲を暗転させるスポットライト演出 */
+@keyframes ur-spotlight-dim {
+  0%   { opacity: 0; }
+  10%  { opacity: 1; }
+  82%  { opacity: 0.9; }
+  100% { opacity: 0; }
+}
+
 /* ティッカーアニメーション: 横スクロール */
 @keyframes ticker {
   0% {
