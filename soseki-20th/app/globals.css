@@ -159,6 +159,35 @@ body {
   animation: glitch 0.8s ease-in-out;
 }
 
+/* ガチャカードめくりアニメーション（前半: 裏面が90度まで回って消える） */
+@keyframes card-back-out {
+  0%   { transform: perspective(600px) rotateY(0deg); }
+  100% { transform: perspective(600px) rotateY(90deg); }
+}
+
+.animate-card-back-out {
+  animation: card-back-out 380ms cubic-bezier(0.4, 0, 1, 1) forwards;
+  transform-origin: center center;
+}
+
+/* ガチャカードめくりアニメーション（後半: 表面が-90度から0度に来る） */
+@keyframes card-front-in {
+  0%   { transform: perspective(600px) rotateY(-90deg); }
+  100% { transform: perspective(600px) rotateY(0deg); }
+}
+
+.animate-card-front-in {
+  animation: card-front-in 380ms cubic-bezier(0, 0, 0.6, 1) forwards;
+  transform-origin: center center;
+}
+
+/* UR昇格時の白フラッシュ（即全白 → フェードアウトで虹色を徐々に露出） */
+@keyframes white-flash {
+  0%   { opacity: 1; }
+  20%  { opacity: 1; }
+  100% { opacity: 0; }
+}
+
 /* ティッカーアニメーション: 横スクロール */
 @keyframes ticker {
   0% {

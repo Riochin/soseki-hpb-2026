@@ -24,12 +24,6 @@ const RARITY_BORDER: Record<string, string> = {
   N: 'border-amber-600',
 };
 
-interface Props {
-  playerName: string;
-  onUrStart?: () => void;
-  onUrEnd?: () => void;
-}
-
 const RARITY_LABEL: Record<string, string> = {
   UR: 'ULTRA RARE',
   SSR: 'SUPER RARE',
@@ -37,11 +31,26 @@ const RARITY_LABEL: Record<string, string> = {
   N: 'NORMAL',
 };
 
+const RARITY_CARD_BG: Record<string, string> = {
+  UR: 'bg-gradient-to-br from-rose-400 via-yellow-300 via-green-400 via-blue-400 to-purple-400',
+  SSR: 'bg-gradient-to-br from-amber-300 to-yellow-500',
+  R: 'bg-gradient-to-br from-slate-300 to-slate-500',
+  N: 'bg-gradient-to-br from-amber-600 to-amber-800',
+};
+
+interface Props {
+  playerName: string;
+  onUrStart?: () => void;
+  onUrEnd?: () => void;
+}
+
 function rarityClass(rarity: string): string {
   const text = RARITY_TEXT[rarity] ?? 'text-stone-400';
   const border = RARITY_BORDER[rarity] ?? 'border-stone-500';
   return `${text} ${border}`;
 }
+
+type AnimPhase = 'rarity' | 'gif' | 'upgrading' | 'flip-out' | 'flip-in' | 'done';
 
 const UR_GIF_DURATION = 3000;
 
@@ -61,91 +70,187 @@ function URConfirmedOverlay({ visible }: { visible: boolean }) {
   );
 }
 
+// カード裏面の背景色を計算（昇格演出時は rarity フェーズ中は SSR 金色を使う）
+function getCardBackBg(rarity: string, isUpgradeAnim: boolean, animPhase: AnimPhase): string {
+  if (isUpgradeAnim && rarity === 'UR') {
+    if (animPhase === 'upgrading' || animPhase === 'flip-out') {
+      return RARITY_CARD_BG['UR'];
+    }
+    return RARITY_CARD_BG['SSR'];
+  }
+  return RARITY_CARD_BG[rarity] ?? 'bg-stone-700';
+}
+
+const FLIP_DURATION = 380;
+
+interface GachaCardProps {
+  item: CollectionItem;
+  isNew: boolean;
+  animPhase: AnimPhase;
+  isUpgradeAnim: boolean;
+  showWhiteFlash: boolean;
+  size?: 'sm' | 'lg';
+}
+
+function GachaCard({ item, isNew, animPhase, isUpgradeAnim, showWhiteFlash, size = 'lg' }: GachaCardProps) {
+  const colorClass = rarityClass(item.rarity);
+  // 表面のグラデーションボーダーは常にアイテムの実レアリティ
+  const cardFrontBorderBg = RARITY_CARD_BG[item.rarity] ?? 'bg-stone-700';
+  // 裏面の色：昇格演出中は upgrading/flip-out になるまで SSR 金色
+  const cardBackBg = getCardBackBg(item.rarity, isUpgradeAnim, animPhase);
+  const isSmall = size === 'sm';
+  const showFront = animPhase === 'flip-in' || animPhase === 'done';
+
+  // カード内容（サイズキーパーと表面で共用）
+  const innerContent = (
+    <div className={`rounded-control bg-panel-raised text-center ${isSmall ? 'p-2 sm:p-3' : 'p-6'}`}>
+      {isSmall ? (
+        <>
+          <div className="mb-1 text-2xl sm:text-3xl">{item.icon}</div>
+          <p
+            className="mb-0.5 truncate text-[10px] font-medium leading-tight text-white sm:mb-1 sm:text-xs"
+            title={item.name}
+          >
+            {item.name}
+          </p>
+          <span className={`rounded-control border px-1 py-0.5 text-[9px] font-bold sm:px-1.5 sm:text-xs ${colorClass}`}>
+            {item.rarity}
+          </span>
+        </>
+      ) : (
+        <>
+          {isNew && (
+            <p className="mb-4 animate-pulse font-mono text-xs tracking-widest text-accent">
+              ✦ NEW ITEM ✦
+            </p>
+          )}
+          <div className="mb-4 text-7xl">{item.icon}</div>
+          <span className={`rounded-control border px-3 py-1 text-xs font-bold tracking-widest ${colorClass}`}>
+            {item.rarity} — {RARITY_LABEL[item.rarity]}
+          </span>
+          <p className="mt-4 text-lg font-bold text-white">{item.name}</p>
+        </>
+      )}
+    </div>
+  );
+
+  return (
+    <div className="relative w-full">
+      {/* サイズキーパー（常に DOM に存在、高さ確保用、不可視） */}
+      <div
+        className={`rounded-control ${cardFrontBorderBg} ${isSmall ? 'p-[3px]' : 'p-[5px]'}`}
+        style={{ visibility: 'hidden' }}
+        aria-hidden="true"
+      >
+        {innerContent}
+      </div>
+
+      {/* カード表面（flip-in 時にマウント、回転しながら登場） */}
+      {showFront && (
+        <div
+          className={`absolute inset-0 rounded-control ${cardFrontBorderBg} ${isSmall ? 'p-[3px]' : 'p-[5px]'}`}
+          style={animPhase === 'flip-in' ? {
+            animation: `card-front-in ${FLIP_DURATION}ms cubic-bezier(0, 0, 0.6, 1) forwards`,
+            transformOrigin: 'center center',
+          } : undefined}
+        >
+          {innerContent}
+        </div>
+      )}
+
+      {/* カード裏面（色のみ、flip-out 時に回転アニメーション） */}
+      {!showFront && (
+        <div
+          key={animPhase}
+          className={`absolute inset-0 rounded-control ${cardBackBg}`}
+          style={animPhase === 'flip-out' ? {
+            animation: `card-back-out ${FLIP_DURATION}ms cubic-bezier(0.4, 0, 1, 1) forwards`,
+            transformOrigin: 'center center',
+          } : undefined}
+        >
+          {/* 白フラッシュ: upgrading 開始と同時に全白 → フェードで虹色を露出 */}
+          {showWhiteFlash && animPhase === 'upgrading' && (
+            <div
+              className="pointer-events-none absolute inset-0 rounded-control bg-white"
+              style={{ animation: 'white-flash 1400ms ease-in-out forwards' }}
+            />
+          )}
+        </div>
+      )}
+
+      {/* NEW バッジ（sm、done 後） */}
+      {isSmall && animPhase === 'done' && isNew && (
+        <span className="absolute -right-2 -top-2 bg-accent px-1.5 py-0.5 text-[10px] font-bold leading-none text-black">
+          NEW
+        </span>
+      )}
+    </div>
+  );
+}
+
+// アニメーション状態を管理するカスタムフック（タイムアウトで完全制御）
+function useGachaAnim(
+  hasUR: boolean,
+  onUrStart?: () => void,
+  onUrEnd?: () => void,
+): {
+  animPhase: AnimPhase;
+  isUpgradeAnim: boolean;
+  showWhiteFlash: boolean;
+} {
+  const [animPhase, setAnimPhase] = useState<AnimPhase>('rarity');
+  const [showWhiteFlash, setShowWhiteFlash] = useState(false);
+  const [isUpgradeAnim] = useState(() => hasUR && Math.random() < 1 / 3);
+
+  useEffect(() => {
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    const at = (ms: number, fn: () => void) => timers.push(setTimeout(fn, ms));
+
+    if (hasUR && isUpgradeAnim) {
+      const gifStart = 2000;
+      const upgradeStart = gifStart + UR_GIF_DURATION;
+      const flipStart = upgradeStart + 1400;
+      at(gifStart, () => { setAnimPhase('gif'); onUrStart?.(); });
+      at(upgradeStart, () => { setAnimPhase('upgrading'); onUrEnd?.(); setShowWhiteFlash(true); });
+      at(flipStart, () => setAnimPhase('flip-out'));
+      at(flipStart + FLIP_DURATION, () => setAnimPhase('flip-in'));
+      at(flipStart + FLIP_DURATION * 2, () => setAnimPhase('done'));
+    } else if (hasUR) {
+      at(2000, () => setAnimPhase('flip-out'));
+      at(2000 + FLIP_DURATION, () => setAnimPhase('flip-in'));
+      at(2000 + FLIP_DURATION * 2, () => setAnimPhase('done'));
+    } else {
+      at(1800, () => setAnimPhase('flip-out'));
+      at(1800 + FLIP_DURATION, () => setAnimPhase('flip-in'));
+      at(1800 + FLIP_DURATION * 2, () => setAnimPhase('done'));
+    }
+
+    return () => timers.forEach(clearTimeout);
+  }, [hasUR, isUpgradeAnim, onUrStart, onUrEnd]);
+
+  return { animPhase, isUpgradeAnim, showWhiteFlash };
+}
+
 function GachaResultModal({ result, onClose, onUrStart, onUrEnd }: { result: GachaResult; onClose: () => void; onUrStart?: () => void; onUrEnd?: () => void }) {
   const { item, isNew, newCoins } = result;
   const hasUR = item.rarity === 'UR';
-  const colorClass = rarityClass(item.rarity);
-  const [revealVisible, setRevealVisible] = useState(true);
-  const [phase, setPhase] = useState<'reveal' | 'full'>('reveal');
-  const [urPhase, setUrPhase] = useState<'waiting' | 'gif' | 'revealed'>('waiting');
-
-  useEffect(() => {
-    if (hasUR) {
-      const tGif    = setTimeout(() => { setUrPhase('gif'); onUrStart?.(); },      500);
-      const tReveal = setTimeout(() => { setUrPhase('revealed'); onUrEnd?.(); },   500 + UR_GIF_DURATION);
-      const tFade   = setTimeout(() => setRevealVisible(false),                    500 + UR_GIF_DURATION + 1000);
-      const tFull   = setTimeout(() => setPhase('full'),                           500 + UR_GIF_DURATION + 1500);
-      return () => { clearTimeout(tGif); clearTimeout(tReveal); clearTimeout(tFade); clearTimeout(tFull); };
-    }
-    const t1 = setTimeout(() => setRevealVisible(false), 500);
-    const t2 = setTimeout(() => setPhase('full'), 1000);
-    return () => { clearTimeout(t1); clearTimeout(t2); };
-  }, [hasUR, onUrStart, onUrEnd]);
+  const { animPhase, isUpgradeAnim, showWhiteFlash } = useGachaAnim(hasUR, onUrStart, onUrEnd);
 
   return (
     <>
-      <URConfirmedOverlay visible={urPhase === 'gif'} />
-      <ModalFrame onBackdropClick={onClose} maxWidthClass="max-w-xs" panelClassName="p-8 text-center">
-        <div className="relative">
-          <div style={{ visibility: phase === 'full' ? 'visible' : 'hidden' }}>
-            {isNew && (
-              <p className="mb-4 animate-pulse font-mono text-xs tracking-widest text-accent">
-                ✦ NEW ITEM ✦
-              </p>
-            )}
-            <div className="mb-4 text-7xl">{item.icon}</div>
-            <span className={`rounded-control border px-3 py-1 text-xs font-bold tracking-widest ${colorClass}`}>
-              {item.rarity} — {RARITY_LABEL[item.rarity]}
-            </span>
-            <p className="mt-4 text-lg font-bold text-white">{item.name}</p>
-            <p className="mt-2 font-mono text-xs text-stone-500">残Credit: {toCredit(newCoins)}</p>
-          </div>
-
-          <div
-            className="absolute inset-0 flex flex-col items-center justify-center transition-opacity duration-500"
-            style={{ opacity: revealVisible ? 1 : 0 }}
-          >
-            {hasUR ? (
-              <>
-                <div className="relative flex h-14 items-center justify-center">
-                  <span
-                    className={`absolute text-4xl font-black transition-opacity duration-1000 ${RARITY_TEXT['SSR']}`}
-                    style={{ opacity: urPhase !== 'revealed' ? 1 : 0 }}
-                  >
-                    SSR
-                  </span>
-                  <span
-                    className={`text-4xl font-black transition-opacity duration-1000 ${RARITY_TEXT['UR']}`}
-                    style={{ opacity: urPhase === 'revealed' ? 1 : 0 }}
-                  >
-                    UR
-                  </span>
-                </div>
-                <div className="relative flex h-4 items-center justify-center">
-                  <p
-                    className="absolute font-mono text-xs text-stone-500 transition-opacity duration-1000"
-                    style={{ opacity: urPhase !== 'revealed' ? 1 : 0 }}
-                  >
-                    {RARITY_LABEL['SSR']}
-                  </p>
-                  <p
-                    className="font-mono text-xs text-stone-500 transition-opacity duration-1000"
-                    style={{ opacity: urPhase === 'revealed' ? 1 : 0 }}
-                  >
-                    {RARITY_LABEL['UR']}
-                  </p>
-                </div>
-              </>
-            ) : (
-              <>
-                <span className={`text-4xl font-black ${RARITY_TEXT[item.rarity] ?? 'text-stone-400'}`}>
-                  {item.rarity}
-                </span>
-                <p className="mt-2 font-mono text-xs text-stone-500">{RARITY_LABEL[item.rarity]}</p>
-              </>
-            )}
-          </div>
-        </div>
+      <URConfirmedOverlay visible={animPhase === 'gif'} />
+      <ModalFrame onBackdropClick={onClose} maxWidthClass="max-w-xs" panelClassName="p-6 text-center">
+        <GachaCard
+          item={item}
+          isNew={isNew}
+          animPhase={animPhase}
+          isUpgradeAnim={isUpgradeAnim}
+          showWhiteFlash={showWhiteFlash}
+          size="lg"
+        />
+        {animPhase === 'done' && (
+          <p className="mt-3 font-mono text-xs text-stone-500">残Credit: {toCredit(newCoins)}</p>
+        )}
 
         <button
           type="button"
@@ -171,26 +276,11 @@ function MultiGachaResultModal({
   onUrEnd?: () => void;
 }) {
   const hasUR = result.results.some((r) => r.item.rarity === 'UR');
-  const [revealVisible, setRevealVisible] = useState(true);
-  const [phase, setPhase] = useState<'reveal' | 'full'>('reveal');
-  const [urPhase, setUrPhase] = useState<'waiting' | 'gif' | 'revealed'>('waiting');
-
-  useEffect(() => {
-    if (hasUR) {
-      const tGif    = setTimeout(() => { setUrPhase('gif'); onUrStart?.(); },      500);
-      const tReveal = setTimeout(() => { setUrPhase('revealed'); onUrEnd?.(); },   500 + UR_GIF_DURATION);
-      const tFade   = setTimeout(() => setRevealVisible(false),                    500 + UR_GIF_DURATION + 1000);
-      const tFull   = setTimeout(() => setPhase('full'),                           500 + UR_GIF_DURATION + 1500);
-      return () => { clearTimeout(tGif); clearTimeout(tReveal); clearTimeout(tFade); clearTimeout(tFull); };
-    }
-    const t1 = setTimeout(() => setRevealVisible(false), 500);
-    const t2 = setTimeout(() => setPhase('full'), 1000);
-    return () => { clearTimeout(t1); clearTimeout(t2); };
-  }, [hasUR, onUrStart, onUrEnd]);
+  const { animPhase, isUpgradeAnim, showWhiteFlash } = useGachaAnim(hasUR, onUrStart, onUrEnd);
 
   return (
     <>
-      <URConfirmedOverlay visible={urPhase === 'gif'} />
+      <URConfirmedOverlay visible={animPhase === 'gif'} />
       <ModalFrame
         onBackdropClick={onClose}
         maxWidthClass="max-w-2xl"
@@ -199,60 +289,23 @@ function MultiGachaResultModal({
         <p className="mb-3 text-center font-mono text-xs tracking-widest text-accent/60">— 10連ガチャ結果</p>
 
         <div className="mb-3 grid grid-cols-2 gap-2 sm:grid-cols-5 sm:gap-3">
-          {result.results.map((r, idx) => {
-            const colorClass = rarityClass(r.item.rarity);
-            return (
-              <div key={idx} className="relative rounded-control border border-edge bg-panel-raised p-2 text-center sm:p-3">
-                <div style={{ visibility: phase === 'full' ? 'visible' : 'hidden' }}>
-                  <div className="mb-1 text-2xl sm:text-3xl">{r.item.icon}</div>
-                  <p
-                    className="mb-0.5 truncate text-[10px] font-medium leading-tight text-white sm:mb-1 sm:text-xs"
-                    title={r.item.name}
-                  >
-                    {r.item.name}
-                  </p>
-                  <span className={`rounded-control border px-1 py-0.5 text-[9px] font-bold sm:px-1.5 sm:text-xs ${colorClass}`}>
-                    {r.item.rarity}
-                  </span>
-                </div>
-
-                <div
-                  className="absolute inset-0 flex items-center justify-center transition-opacity duration-500"
-                  style={{ opacity: revealVisible ? 1 : 0 }}
-                >
-                  {r.item.rarity === 'UR' ? (
-                    <div className="relative flex items-center justify-center">
-                      <span
-                        className={`absolute text-xl font-black transition-opacity duration-1000 ${RARITY_TEXT['SSR']}`}
-                        style={{ opacity: urPhase !== 'revealed' ? 1 : 0 }}
-                      >
-                        SSR
-                      </span>
-                      <span
-                        className={`text-xl font-black transition-opacity duration-1000 ${RARITY_TEXT['UR']}`}
-                        style={{ opacity: urPhase === 'revealed' ? 1 : 0 }}
-                      >
-                        UR
-                      </span>
-                    </div>
-                  ) : (
-                    <span className={`text-xl font-black ${RARITY_TEXT[r.item.rarity] ?? 'text-stone-400'}`}>
-                      {r.item.rarity}
-                    </span>
-                  )}
-                </div>
-
-                {phase === 'full' && r.isNew && (
-                  <span className="absolute -right-2 -top-2 bg-accent px-1.5 py-0.5 text-[10px] font-bold leading-none text-black">
-                    NEW
-                  </span>
-                )}
-              </div>
-            );
-          })}
+          {result.results.map((r, idx) => (
+            <div key={idx} className="relative">
+              <GachaCard
+                item={r.item}
+                isNew={r.isNew}
+                animPhase={animPhase}
+                isUpgradeAnim={isUpgradeAnim && r.item.rarity === 'UR'}
+                showWhiteFlash={showWhiteFlash && r.item.rarity === 'UR'}
+                size="sm"
+              />
+            </div>
+          ))}
         </div>
 
-        <p className="mb-3 text-center font-mono text-xs text-stone-500">残Credit: {toCredit(result.newCoins)}</p>
+        {animPhase === 'done' && (
+          <p className="mb-3 text-center font-mono text-xs text-stone-500">残Credit: {toCredit(result.newCoins)}</p>
+        )}
 
         <button
           type="button"
@@ -469,34 +522,39 @@ function CollectionModal({
                 key={item.itemId}
                 type="button"
                 onClick={() => setSelectedItem(item)}
-                className="relative rounded-control border border-edge bg-panel-raised p-3 text-center transition-colors hover:border-edge-strong hover:bg-panel-hover active:scale-95"
+                className="relative transition-transform hover:scale-[1.03] active:scale-95"
               >
                 {item.is_giftable && !item.is_consumed && (
-                  <span className="absolute -right-1.5 -top-1.5 bg-green-400 px-1.5 py-0.5 text-[9px] font-bold leading-none text-black">
+                  <span className="absolute -right-1.5 -top-1.5 z-10 bg-green-400 px-1.5 py-0.5 text-[9px] font-bold leading-none text-black">
                     GIFT
                   </span>
                 )}
                 {item.is_consumed && (
-                  <span className="absolute -right-1.5 -top-1.5 bg-stone-600 px-1.5 py-0.5 text-[9px] font-bold leading-none text-stone-300">
+                  <span className="absolute -right-1.5 -top-1.5 z-10 bg-stone-600 px-1.5 py-0.5 text-[9px] font-bold leading-none text-stone-300">
                     済
                   </span>
                 )}
-                <div className="mb-1.5 text-3xl">{item.icon}</div>
-                <p className="mb-1 text-xs font-medium leading-tight text-white">{item.name}</p>
-                <span className={`rounded-control border px-1.5 py-0.5 text-xs font-bold ${rarityClass(item.rarity)}`}>
-                  {item.rarity}
-                </span>
+                <GachaCard
+                  item={item}
+                  isNew={false}
+                  animPhase="done"
+                  isUpgradeAnim={false}
+                  showWhiteFlash={false}
+                  size="sm"
+                />
               </button>
             ) : (
               <div
                 key={item.itemId}
-                className="rounded-control border border-edge-faint bg-panel-raised p-3 text-center opacity-40"
+                className={`rounded-control opacity-40 ${RARITY_CARD_BG[item.rarity] ?? 'bg-stone-700'} p-[3px]`}
               >
-                <div className="mb-1.5 text-3xl text-stone-600">？</div>
-                <p className="mb-1 text-xs font-medium text-stone-600">???</p>
-                <span className={`rounded-control border px-1.5 py-0.5 text-xs font-bold ${rarityClass(item.rarity)}`}>
-                  {item.rarity}
-                </span>
+                <div className="rounded-control bg-panel-raised p-2 text-center sm:p-3">
+                  <div className="mb-1 text-2xl text-stone-600 sm:text-3xl">？</div>
+                  <p className="mb-0.5 text-[10px] font-medium text-stone-600 sm:mb-1 sm:text-xs">???</p>
+                  <span className={`rounded-control border px-1 py-0.5 text-[9px] font-bold sm:px-1.5 sm:text-xs ${rarityClass(item.rarity)}`}>
+                    {item.rarity}
+                  </span>
+                </div>
               </div>
             )
           )}
