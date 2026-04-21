@@ -146,9 +146,15 @@
             <p id="result-comment" class="text-sm sm:text-lg font-bold text-gray-800 mb-4 sm:mb-6 leading-snug">お疲れ様でした！</p>
             <button
                 onclick="restartGame()"
-                class="w-full bg-red-600 text-yellow-300 text-lg sm:text-2xl font-black py-3 sm:py-5 rounded-xl hover:bg-red-700 shadow-[0_5px_0_0_#991b1b]"
+                class="w-full bg-red-600 text-yellow-300 text-lg sm:text-2xl font-black py-3 sm:py-5 rounded-xl shadow-[0_5px_0_0_#991b1b] active:shadow-none active:translate-y-[5px] transition-transform mb-2"
             >
                 もう一度言わせてみる
+            </button>
+            <button
+                onclick="backToStart()"
+                class="w-full bg-yellow-400 text-[#710210] text-sm font-black py-2 rounded-xl"
+            >
+                タイトルへ戻る
             </button>
         </div>
     </div>
@@ -172,22 +178,31 @@
             bgContainer.appendChild(span);
         }
 
-        const questions = [
-            { text: "ごちそうさまでした！！不味かったっっす！！", answer: false },
-            { text: "我輩は猫である。名前はまだ無い。", answer: true },
-            { text: "智に働けば角が立つ。情に棹させば流される。", answer: true },
-            { text: "あきらめたらそこで試合終了ですよ", answer: false },
-            { text: "精神的に向上心のないものは馬鹿だ", answer: true },
-            { text: "人間万事塞翁が馬", answer: false },
-            { text: "呑気と見える人々も、心の底を叩いてみると、どこか悲しい音がする", answer: true },
-            { text: "天は人の上に人を造らず、人の下に人を造らず", answer: false },
-            { text: "自分を向上させたいのなら、まず鏡を見ることだ", answer: false },
-            { text: "本当の自由は、自分自身を支配することにある", answer: false }
+        const masterQuestions = [
+            { text: "ごちそうさまです！！不味かったっっす！！", answer: false },
+            { text: "ぶっちゃけ俺の締まり悪くね？", answer: false },
+            { text: "まぁ、余裕っすね", answer: true },
+            { text: "何が嫌いかより何が好きかで自分を語れよ", answer: false },
+            { text: "本当に虹枠？の件リスペクト無くてキモイよ普通に", answer: true },
+            { text: "ラスサバが上手くなりたきゃキャラ絞るかドクペ飲むかだ", answer: true },
+            { text: "風邪ひいてるしドクペ飲も", answer: true },
+            { text: "なくすことが拾うためなら別れるのは出逢うため", answer: true },
+            { text: "俺はnamcoを許さない", answer: true },
+            { text: "迷彩柄のパンツありますか？", answer: false }
         ];
 
+        let questions = [];
         let currentQuestionIndex = 0;
         let score = 0;
         let answered = false;
+
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
 
         const screenStart  = document.getElementById('screen-start');
         const screenGame   = document.getElementById('screen-game');
@@ -205,6 +220,7 @@
         }
 
         function initGame() {
+            questions = shuffle([...masterQuestions]);
             currentQuestionIndex = 0;
             score = 0;
             answered = false;
@@ -278,17 +294,20 @@
 
             const rate = score / questions.length;
             if (rate === 1) {
-                resultComment.innerText = '俺の言葉を全て理解している。お前が俺だ。';
-                resultIcon.innerText = '👑';
-            } else if (rate >= 0.8) {
-                resultComment.innerText = 'ほぼ俺。あと少しで俺。';
+                resultComment.innerText = '俺！？！？！？！？';
+                resultIcon.innerText = '🥤';
+            } else if (rate >= 0.7) {
+                resultComment.innerText = 'アチャチャチャーー！！🔥';
                 resultIcon.innerText = '🔥';
-            } else if (rate >= 0.5) {
-                resultComment.innerText = '俺に似た誰かの言葉に騙されている。';
-                resultIcon.innerText = '😵';
+            } else if (rate >= 0.4) {
+                resultComment.innerText = 'まあ、余裕っすね';
+                resultIcon.innerText = '😎';
+            } else if (score >= 1) {
+                resultComment.innerText = 'ドクペ飲んで勉強しろ';
+                resultIcon.innerText = '🧪';
             } else {
-                resultComment.innerText = '全く俺じゃない。やり直しだ！';
-                resultIcon.innerText = '🚫';
+                resultComment.innerText = '大口叩いて０問マジ！？';
+                resultIcon.innerText = '❓';
             }
 
             resultModal.classList.remove('hidden');
@@ -302,6 +321,12 @@
         function restartGame() {
             resultModal.classList.add('hidden');
             initGame();
+        }
+
+        function backToStart() {
+            resultModal.classList.add('hidden');
+            screenGame.classList.add('hidden');
+            screenStart.classList.remove('hidden');
         }
     </script>
 </body>
