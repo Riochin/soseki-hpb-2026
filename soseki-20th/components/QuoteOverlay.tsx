@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useSosekiName } from '@/hooks/useU18Mode'
 
 const quotes = [
@@ -112,30 +112,83 @@ const quotes = [
   },
 ];
 
-// 見切れにくい小さめの角度バリエーション
-const ANGLES = [-10, -7, -5, -3, 0, 3, 5, 8, -12, 10]
-
 // 出現ゾーン：中央コンテンツエリアを避けた4ゾーン
 const ZONES = [
-  { topMin: 4,  topMax: 26, leftMin: 6,  leftMax: 84 },  // 上部ストリップ（全幅）
-  { topMin: 68, topMax: 90, leftMin: 6,  leftMax: 84 },  // 下部ストリップ（全幅）
-  { topMin: 22, topMax: 72, leftMin: 4,  leftMax: 22 },  // 左カラム
-  { topMin: 22, topMax: 72, leftMin: 74, leftMax: 88 },  // 右カラム
+  { topMin: 4,  topMax: 22, leftMin: 6,  leftMax: 84 },  // 上部ストリップ
+  { topMin: 70, topMax: 90, leftMin: 6,  leftMax: 84 },  // 下部ストリップ
+  { topMin: 22, topMax: 70, leftMin: 2,  leftMax: 18 },  // 左カラム
+  { topMin: 22, topMax: 70, leftMin: 76, leftMax: 92 },  // 右カラム
+]
+
+// 5文字以上：右2/5を除いた左3/5に制限
+const ZONES_MID = [
+  { topMin: 4,  topMax: 22, leftMin: 6,  leftMax: 60 },
+  { topMin: 70, topMax: 90, leftMin: 6,  leftMax: 60 },
+  { topMin: 22, topMax: 70, leftMin: 2,  leftMax: 18 },
+]
+
+// 長い文章はさらに左寄り（左42%まで）
+const ZONES_LEFT = [
+  { topMin: 4,  topMax: 22, leftMin: 6,  leftMax: 42 },
+  { topMin: 70, topMax: 90, leftMin: 6,  leftMax: 42 },
+  { topMin: 22, topMax: 70, leftMin: 2,  leftMax: 18 },
 ]
 
 // 文字数に応じたフォントサイズ（短いほど大きく）
 function getQuoteFontSize(text: string): string {
-  const len = [...text].length  // 絵文字も1文字としてカウント
-  if (len <= 8)  return 'clamp(1.5rem, 3.2vw, 3rem)'
-  if (len <= 20) return 'clamp(1rem, 2vw, 1.8rem)'
-  return 'clamp(0.7rem, 1.3vw, 1.1rem)'
+  const len = [...text].length
+  if (len <= 8)  return 'clamp(1.4rem, 2.8vw, 2.6rem)'
+  if (len <= 20) return 'clamp(0.95rem, 1.8vw, 1.6rem)'
+  return 'clamp(0.7rem, 1.2vw, 1rem)'
 }
 
-const VISIBLE_MS  = 5500  // 表示継続時間
-const FADE_IN_MS  = 1400  // フェードイン時間
-const FADE_OUT_MS = 1800  // フェードアウト時間
-const SPAWN_MS    = 1600  // 次の名言を出すまでの間隔
-const MAX_ITEMS   = 5     // 同時表示最大数
+// 文字数に応じたフェードアウト時間（ms）
+function getFadeOutMs(charCount: number): number {
+  if (charCount <= 8)  return 4000
+  if (charCount <= 20) return 5000
+  return 6500
+}
+
+// 既存 item との衝突を避け、ゾーンの中央寄りの位置を優先して返す
+function findSafePosition(existing: Item[], text: string): { top: number; left: number } {
+  const len = [...text].length
+  const minTopGap  = len <= 8 ? 18 : len <= 20 ? 14 : 11
+  const minLeftGap = len <= 8 ? 22 : len <= 20 ? 16 : 13
+
+  const zones = len > 20 ? ZONES_LEFT : len >= 5 ? ZONES_MID : ZONES
+
+  // ゾーン全体の中心を基準点とする
+  const allTop  = zones.map(z => (z.topMin  + z.topMax)  / 2)
+  const allLeft = zones.map(z => (z.leftMin + z.leftMax) / 2)
+  const centerTop  = allTop.reduce((a, b) => a + b, 0) / allTop.length
+  const centerLeft = allLeft.reduce((a, b) => a + b, 0) / allLeft.length
+
+  // 候補を大量生成して中央からの距離でソート
+  const candidates: { top: number; left: number; dist: number }[] = []
+  for (let i = 0; i < 4; i++) {
+    const zone = zones[Math.floor(Math.random() * zones.length)]
+    const top  = zone.topMin  + Math.random() * (zone.topMax  - zone.topMin)
+    const left = zone.leftMin + Math.random() * (zone.leftMax - zone.leftMin)
+    const dist = (top - centerTop) ** 2 + (left - centerLeft) ** 2
+    candidates.push({ top, left, dist })
+  }
+  candidates.sort((a, b) => a.dist - b.dist)
+
+  for (const c of candidates) {
+    const safe = existing.every(item => {
+      const dt = Math.abs(item.top  - c.top)
+      const dl = Math.abs(item.left - c.left)
+      return dt > minTopGap || dl > minLeftGap
+    })
+    if (safe) return { top: c.top, left: c.left }
+  }
+
+  // フォールバック：最も中央寄りの候補をそのまま使用
+  return { top: candidates[0].top, left: candidates[0].left }
+}
+
+const SPAWN_MS   = 800
+const MAX_ITEMS  = 18
 
 let uid = 0
 
@@ -144,49 +197,82 @@ type Phase = 'in' | 'show' | 'out'
 type Item = {
   id: number
   quoteIndex: number
-  angle: number
-  top: number   // % — 上端からの位置
-  left: number  // % — 左端からの位置
+  top: number
+  left: number
   phase: Phase
+  visibleLineCount: number
+  totalLines: number
+  totalDurationMs: number  // スケール縮小アニメーション全体の長さ
+  outDelay: number         // フェードアウト開始までの遅延
+  fadeOutMs: number
+  transformOrigin: string  // 縮小の基点方向
 }
 
 export default function QuoteOverlay() {
   const sosekiName = useSosekiName()
   const [items, setItems] = useState<Item[]>([])
+  const itemsRef = useRef<Item[]>([])
+
+  function updateItems(updater: (prev: Item[]) => Item[]) {
+    setItems(prev => {
+      const next = updater(prev)
+      itemsRef.current = next
+      return next
+    })
+  }
 
   useEffect(() => {
     function spawn() {
       const id = uid++
       const quoteIndex = Math.floor(Math.random() * quotes.length)
-      const angle = ANGLES[Math.floor(Math.random() * ANGLES.length)]
-      const zone = ZONES[Math.floor(Math.random() * ZONES.length)]
-      const top  = zone.topMin  + Math.random() * (zone.topMax  - zone.topMin)
-      const left = zone.leftMin + Math.random() * (zone.leftMax - zone.leftMin)
+      const q = quotes[quoteIndex]
+      const lines = q.text.split('\n')
+      const totalLines = lines.length
+      const charCount = [...q.text].length
+      const fadeOutMs = getFadeOutMs(charCount)
+      const lastLineDelay = 700 * (totalLines - 1)
+      // 単行の場合でもフェードインが完了してから out に入るよう最低時間を確保
+      const outDelay = Math.max(lastLineDelay, 100)
+      const totalDurationMs = outDelay + fadeOutMs
 
-      const item: Item = { id, quoteIndex, angle, top, left, phase: 'in' }
+      // 不可視（out フェーズ）のアイテムは衝突判定から除外
+      const visibleItems = itemsRef.current.filter(i => i.phase !== 'out')
+      const { top, left } = findSafePosition(visibleItems, q.text)
 
-      // まず scale(0.6) opacity:0 で追加し、次フレームで show へ遷移
-      setItems(prev => {
+      const origins = ['top left', 'top center', 'top right', 'center left', 'center center', 'center right']
+      const transformOrigin = origins[Math.floor(Math.random() * origins.length)]
+
+      const item: Item = { id, quoteIndex, top, left, phase: 'in', visibleLineCount: 0, totalLines, totalDurationMs, outDelay, fadeOutMs, transformOrigin }
+
+      updateItems(prev => {
         const next = prev.length >= MAX_ITEMS ? prev.slice(1) : prev
         return [...next, item]
       })
 
-      // フェードイン（scale up + opacity 1）
+      // 登場: スケール縮小を開始しつつ最初の行を表示
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
-          setItems(prev => prev.map(q => q.id === id ? { ...q, phase: 'show' } : q))
+          updateItems(prev => prev.map(q => q.id === id ? { ...q, phase: 'show', visibleLineCount: 1 } : q))
+
+          // 2行目以降を 0.7s ずつずらして表示
+          for (let i = 1; i < totalLines; i++) {
+            const lineIndex = i
+            setTimeout(() => {
+              updateItems(prev => prev.map(q => q.id === id ? { ...q, visibleLineCount: lineIndex + 1 } : q))
+            }, 700 * lineIndex)
+          }
+
+          // 全行出揃い＋最低表示時間経過後にフェードアウト開始
+          setTimeout(() => {
+            updateItems(prev => prev.map(q => q.id === id ? { ...q, phase: 'out' } : q))
+          }, outDelay)
+
+          // 削除
+          setTimeout(() => {
+            updateItems(prev => prev.filter(q => q.id !== id))
+          }, totalDurationMs)
         })
       })
-
-      // フェードアウト開始（scale up + opacity 0）
-      setTimeout(() => {
-        setItems(prev => prev.map(q => q.id === id ? { ...q, phase: 'out' } : q))
-      }, VISIBLE_MS)
-
-      // 削除
-      setTimeout(() => {
-        setItems(prev => prev.filter(q => q.id !== id))
-      }, VISIBLE_MS + FADE_OUT_MS)
     }
 
     spawn()
@@ -201,12 +287,20 @@ export default function QuoteOverlay() {
     >
       {items.map(item => {
         const q = quotes[item.quoteIndex]
+        const lines = q.text.split('\n')
+        const author = q.author === 'アクメ漱石' ? sosekiName : q.author
 
-        const scale = item.phase === 'in' ? 0.6 : item.phase === 'out' ? 1.8 : 1
-        const opacity = item.phase === 'show' ? 1 : 0
-        const transition = item.phase === 'out'
-          ? `opacity ${FADE_OUT_MS}ms ease, transform ${FADE_OUT_MS}ms ease`
-          : `opacity ${FADE_IN_MS}ms ease, transform ${FADE_IN_MS}ms ease`
+        // 外側: スケールのみ担当。登場からゴールスケールまで一定速度で縮小
+        const outerScale      = item.phase === 'in' ? 1.5 : 0.3
+        const outerTransition = item.phase === 'in'
+          ? 'none'
+          : `transform ${item.totalDurationMs}ms linear`
+
+        // 内側: opacityのみ担当。即座に表示、フェードアウトはゆっくり
+        const innerOpacity    = item.phase === 'out' ? 0 : 1
+        const innerTransition = item.phase === 'out'
+          ? `opacity ${item.fadeOutMs}ms ease`
+          : 'none'
 
         return (
           <div
@@ -215,30 +309,45 @@ export default function QuoteOverlay() {
               position: 'absolute',
               top: `${item.top}%`,
               left: `${item.left}%`,
-              transform: `rotate(${item.angle}deg) scale(${scale})`,
-              transformOrigin: 'center center',
-              writingMode: 'vertical-rl',
+              transform: `scale(${outerScale})`,
+              transformOrigin: item.transformOrigin,
+              transition: outerTransition,
               fontFamily: 'var(--font-noto-serif-jp), "Noto Serif JP", serif',
-              opacity,
-              transition,
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'flex-end',
-              gap: '0.5rem',
             }}
           >
-            <p
-              className="font-bold tracking-widest text-yellow-100/75 drop-shadow-lg"
-              style={{ fontSize: getQuoteFontSize(q.text), whiteSpace: 'pre-line', maxInlineSize: '60vh' }}
+            <div
+              style={{
+                opacity: innerOpacity,
+                transition: innerTransition,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'flex-start',
+              }}
             >
-              「{q.text}」
-            </p>
-            <cite
-              className="not-italic text-accent/55"
-              style={{ fontSize: 'clamp(0.6rem, 0.9vw, 0.75rem)' }}
-            >
-              — {q.author === 'アクメ漱石' ? sosekiName : q.author}{q.source ? `『${q.source}』` : ''}
-            </cite>
+              <cite
+                className="not-italic text-accent/50"
+                style={{ fontSize: 'clamp(0.55rem, 0.8vw, 0.7rem)', marginBottom: '0.2em', opacity: item.visibleLineCount >= 1 ? 1 : 0 }}
+              >
+                — {author}{q.source ? `『${q.source}』` : ''}
+              </cite>
+              <p
+                className="font-bold tracking-widest text-yellow-100/75 drop-shadow-lg"
+                style={{ fontSize: getQuoteFontSize(q.text) }}
+              >
+                {lines.map((line, i) => (
+                  <span
+                    key={i}
+                    style={{
+                      display: 'block',
+                      opacity: i < item.visibleLineCount ? 1 : 0,
+                      transition: 'opacity 300ms ease',
+                    }}
+                  >
+                    {i === 0 ? `「${line}` : line}{i === lines.length - 1 ? '」' : ''}
+                  </span>
+                ))}
+              </p>
+            </div>
           </div>
         )
       })}
