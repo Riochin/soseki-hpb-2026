@@ -80,6 +80,36 @@ const quotes = [
     author: "アクメ漱石",
     source: "Twitter",
   },
+  {
+    text: "次からは、気をつけような❓",
+    author: "アクメ漱石",
+    source: "中野駅",
+  },
+  {
+    text: "俺レベル2‼️‼️‼️‼️‼️",
+    author: "アクメ漱石",
+    source: "namco巣鴨",
+  },
+  {
+    text: "濡れた？",
+    author: "アクメ漱石",
+    source: "X",
+  },
+  {
+    text: "沈む沈む‼️",
+    author: "アクメ漱石",
+    source: "ビッグエコー錦糸町南口駅前店 ダーツエリア",
+  },
+  {
+    text: "OK、適応したわ",
+    author: "アクメ漱石",
+    source: "namco巣鴨",
+  },
+  {
+    text: "孤独を受け入れるってことが、\n大人になることだと思うよ",
+    author: "アクメ漱石",
+    source: "X",
+  },
 ];
 
 // 見切れにくい小さめの角度バリエーション
