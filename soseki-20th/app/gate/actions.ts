@@ -9,8 +9,9 @@ export async function verifyPassphrase(
   _prev: State,
   formData: FormData,
 ): Promise<{ error: boolean }> {
-  const input = formData.get('passphrase')?.toString().trim() ?? ''
-  if (input !== process.env.SECRET_WORD) {
+  const normalize = (s: string) => s.normalize('NFKC').trim()
+  const input = normalize(formData.get('passphrase')?.toString() ?? '')
+  if (input !== normalize(process.env.SECRET_WORD ?? '')) {
     return { error: true }
   }
   const token = createHash('sha256')
