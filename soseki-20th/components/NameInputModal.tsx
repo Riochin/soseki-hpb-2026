@@ -50,7 +50,6 @@ export default function NameInputModal({ onInit }: Props) {
 
     const saved = localStorage.getItem('playerName');
     if (saved) {
-      setConnecting(true);
       apiFetch<Player>('/api/players', {
         method: 'POST',
         body: JSON.stringify({ name: saved }),
@@ -61,6 +60,7 @@ export default function NameInputModal({ onInit }: Props) {
         })
         .finally(() => setConnecting(false));
     } else {
+      setConnecting(false);
       setShow(true);
     }
   }, [onInit]);
@@ -90,7 +90,7 @@ export default function NameInputModal({ onInit }: Props) {
     }
   }
 
-  if (connecting) {
+  if (connecting || loading) {
     return (
       <div className="fixed inset-0 z-30 flex flex-col items-center justify-center bg-black">
         <div className="mb-8 h-12 w-12 animate-spin rounded-full border-4 border-stone-700 border-t-accent" />
