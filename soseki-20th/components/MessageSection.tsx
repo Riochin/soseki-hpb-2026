@@ -215,7 +215,10 @@ export default function MessageSection({ playerName }: Props) {
   const maxIndex = Math.max(0, totalItems - visibleCount);
 
   const goTo = useCallback(
-    (index: number) => setCurrentIndex(Math.max(0, Math.min(index, maxIndex))),
+    (index: number) => {
+      if (maxIndex === 0) return;
+      setCurrentIndex(((index % (maxIndex + 1)) + (maxIndex + 1)) % (maxIndex + 1));
+    },
     [maxIndex],
   );
 
@@ -291,18 +294,16 @@ export default function MessageSection({ playerName }: Props) {
 
           <button
             onClick={() => goTo(currentIndex - 1)}
-            className="absolute left-0 top-1/2 -translate-y-1/2 rounded-control border-2 border-edge bg-surface/80 p-1.5 text-accent backdrop-blur transition-colors hover:border-accent hover:bg-video-back disabled:opacity-30"
+            className="absolute left-0 top-1/2 -translate-y-1/2 rounded-control border-2 border-edge bg-surface/80 p-1.5 text-accent backdrop-blur transition-colors hover:border-accent hover:bg-video-back"
             aria-label="前のメッセージ"
-            disabled={currentIndex === 0}
           >
             <ChevronLeft className="h-5 w-5" />
           </button>
 
           <button
             onClick={() => goTo(currentIndex + 1)}
-            className="absolute right-0 top-1/2 -translate-y-1/2 rounded-control border-2 border-edge bg-surface/80 p-1.5 text-accent backdrop-blur transition-colors hover:border-accent hover:bg-video-back disabled:opacity-30"
+            className="absolute right-0 top-1/2 -translate-y-1/2 rounded-control border-2 border-edge bg-surface/80 p-1.5 text-accent backdrop-blur transition-colors hover:border-accent hover:bg-video-back"
             aria-label="次のメッセージ"
-            disabled={currentIndex >= maxIndex}
           >
             <ChevronRight className="h-5 w-5" />
           </button>
