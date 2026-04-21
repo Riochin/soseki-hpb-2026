@@ -74,8 +74,15 @@ export default function BorrowModal({ onBorrow, onClose, debt = 0 }: Props) {
         maxWidthClass="max-w-xs"
         panelClassName="!border-yellow-500/40 p-8 text-center"
       >
-        <div className="mb-6 overflow-hidden rounded-control border border-yellow-500/20 bg-stone-800 flex items-center justify-center" style={{ height: 180 }}>
-          <span className="text-stone-500 text-sm">placeholder</span>
+        <div className="mb-6 overflow-hidden rounded-control border border-yellow-500/20">
+          <Image
+            src="/lender-sp.png"
+            alt="金貸し"
+            width={1108}
+            height={754}
+            unoptimized
+            className="w-full object-cover object-top"
+          />
         </div>
 
         <p
