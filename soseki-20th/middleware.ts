@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 
 const COOKIE_NAME = 'gate'
-const SKIP_PREFIXES = ['/gate', '/_next', '/favicon.ico', '/yosegaki', '/music']
+const SKIP_PREFIXES = ['/gate', '/_next', '/favicon.ico', '/yosegaki', '/music', '/games']
 
 async function expectedToken(): Promise<string> {
   const secret = process.env.SECRET_WORD ?? ''

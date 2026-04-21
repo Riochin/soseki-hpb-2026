@@ -10,6 +10,7 @@ import type {
   Stamp,
   PostMessageInput,
 } from "@/hooks/useMessages";
+import { getStampImagePath } from "@/lib/yosegakiStamp";
 
 interface Props {
   onClose: () => void;
@@ -205,8 +206,14 @@ export default function YosegakiModal({ onClose, onSubmit, username }: Props) {
                 — {author.trim() || "匿名"}
               </p>
               {stamp && (
-                <div className="absolute bottom-2 right-2 flex h-10 w-10 items-center justify-center rounded-full bg-white/70 text-[8px] text-stone-700 shadow-sm backdrop-blur-sm leading-tight text-center">
-                  {STAMPS.find((s) => s.value === stamp)?.label}
+                <div className="pointer-events-none absolute bottom-2 right-2 w-1/2" style={{ opacity: 0.4 }}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={getStampImagePath(stamp)}
+                    alt={STAMPS.find((s) => s.value === stamp)?.label ?? "スタンプ"}
+                    className="h-auto w-full object-contain"
+                    draggable={false}
+                  />
                 </div>
               )}
             </div>

@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { X } from 'lucide-react';
 import type { BgColor, BgStyle, CardFont, Message } from '@/hooks/useMessages';
+import { getStampImagePath } from '@/lib/yosegakiStamp';
 
 const FONT_FAMILY: Record<CardFont, string> = {
   'noto-sans': 'var(--font-noto-sans-jp), sans-serif',
@@ -21,12 +22,6 @@ const AUTHOR_COLOR: Record<BgColor, string> = {
   white:  'text-stone-500',
   beige:  'text-amber-700',
   purple: 'text-purple-700',
-};
-
-const STAMP_LABEL: Record<string, string> = {
-  dio: 'ディオ', joseph: 'ジョセフ', jotaro: '承太郎', kakyoin: '花京院', DIO: 'DIO',
-  josuke: '仗助', rohan: '露伴', bucciarati: 'ブチャラティ', giorno: 'ジョルノ',
-  diavolo: 'ディアボロ', jolyne: '徐倫', anasui: 'アナスイ',
 };
 
 function bgImagePath(color: BgColor, style: BgStyle): string {
@@ -85,8 +80,14 @@ function BoardCard({ msg }: BoardCardProps) {
       </div>
       <p className={`absolute bottom-0.5 left-0.5 text-[6px] ${AUTHOR_COLOR[msg.bgColor]}`}>— {msg.author}</p>
       {msg.stamp && (
-        <div className="absolute bottom-0.5 right-0.5 flex h-3 w-3 items-center justify-center rounded-full bg-white/70 text-[2px] text-stone-700 shadow-sm backdrop-blur-sm leading-tight text-center">
-          {STAMP_LABEL[msg.stamp] ?? msg.stamp}
+        <div className="pointer-events-none absolute bottom-0.5 right-0.5 w-1/2" style={{ opacity: 0.4 }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={getStampImagePath(msg.stamp)}
+            alt="スタンプ"
+            className="h-auto w-full object-contain"
+            draggable={false}
+          />
         </div>
       )}
     </div>
@@ -192,8 +193,14 @@ export default function YosegakiBoard({ messages, onClose }: Props) {
                 </div>
                 <p className={`absolute bottom-3 left-4 text-xs ${AUTHOR_COLOR[selectedMsg.bgColor]}`}>— {selectedMsg.author}</p>
                 {selectedMsg.stamp && (
-                  <div className="absolute bottom-2 right-2 flex h-10 w-10 items-center justify-center rounded-full bg-white/70 text-[8px] text-stone-700 shadow-sm backdrop-blur-sm leading-tight text-center">
-                    {STAMP_LABEL[selectedMsg.stamp] ?? selectedMsg.stamp}
+                  <div className="pointer-events-none absolute bottom-2 right-2 w-1/2" style={{ opacity: 0.4 }}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={getStampImagePath(selectedMsg.stamp)}
+                      alt="スタンプ"
+                      className="h-auto w-full object-contain"
+                      draggable={false}
+                    />
                   </div>
                 )}
               </div>

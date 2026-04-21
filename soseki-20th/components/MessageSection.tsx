@@ -7,6 +7,7 @@ import type { BgColor, BgStyle, CardFont, Message } from '@/hooks/useMessages';
 import YosegakiModal from '@/components/YosegakiModal';
 import YosegakiBoard from '@/components/YosegakiBoard';
 import { YOSEGAKI_BOARD_ENABLED } from '@/lib/mock';
+import { getStampImagePath } from '@/lib/yosegakiStamp';
 
 const AUTO_PLAY_INTERVAL = 4000;
 
@@ -27,12 +28,6 @@ const AUTHOR_COLOR: Record<BgColor, string> = {
   white:  'text-stone-500',
   beige:  'text-amber-700',
   purple: 'text-purple-700',
-};
-
-const STAMP_LABEL: Record<string, string> = {
-  dio: 'ディオ', joseph: 'ジョセフ', jotaro: '承太郎', kakyoin: '花京院', DIO: 'DIO',
-  josuke: '仗助', rohan: '露伴', bucciarati: 'ブチャラティ', giorno: 'ジョルノ',
-  diavolo: 'ディアボロ', jolyne: '徐倫', anasui: 'アナスイ',
 };
 
 function bgImagePath(color: BgColor, style: BgStyle): string {
@@ -112,8 +107,14 @@ function MessageCard({ msg, isOwn, onDelete, onUpdate }: MessageCardProps) {
           <p className={`absolute inset-0 p-4 whitespace-pre-wrap break-words ${getTextSizeClass(msg.text)} ${TEXT_COLOR[msg.bgColor]}`}>{msg.text}</p>
           <p className={`absolute bottom-3 left-4 text-[10px] ${AUTHOR_COLOR[msg.bgColor]}`}>— {msg.author}</p>
           {msg.stamp && (
-            <div className="absolute bottom-2 right-2 flex h-10 w-10 items-center justify-center rounded-full bg-white/70 text-[8px] text-stone-700 shadow-sm backdrop-blur-sm leading-tight text-center">
-              {STAMP_LABEL[msg.stamp] ?? msg.stamp}
+            <div className="pointer-events-none absolute bottom-2 right-2 w-1/2" style={{ opacity: 0.4 }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={getStampImagePath(msg.stamp)}
+                alt="スタンプ"
+                className="h-auto w-full object-contain"
+                draggable={false}
+              />
             </div>
           )}
         </>
