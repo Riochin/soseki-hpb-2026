@@ -110,6 +110,21 @@ const quotes = [
     author: "アクメ漱石",
     source: "X",
   },
+  {
+    text: "む”ぷ”ん”さ”ぁぁぁん”",
+    author: "アクメ漱石",
+    source: "namco巣鴨",
+  },
+  {
+    text: "今日の服いいね",
+    author: "アクメ漱石",
+    source: "namco巣鴨",
+  },
+  {
+    text: "名前を下ネタにすると相手にだけ言わせる事ができるカスのライフハック",
+    author: "アクメ漱石",
+    source: "Twitter",
+  }
 ];
 
 // 出現ゾーン：中央コンテンツエリアを避けた4ゾーン
