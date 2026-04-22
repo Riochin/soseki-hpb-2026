@@ -223,6 +223,43 @@ body {
   display: inline-block;
 }
 
+/* OverviewSection 専用: 2トラック並走で継ぎ目を不可視化 */
+@keyframes overview-marquee {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-100%); }
+}
+
+@keyframes overview-marquee-2 {
+  0%   { transform: translateX(100%); }
+  100% { transform: translateX(0); }
+}
+
+@keyframes overview-marquee-rev {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(0); }
+}
+
+@keyframes overview-marquee-rev-2 {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(100%); }
+}
+
+.animate-overview-marquee {
+  animation: overview-marquee 50s linear infinite;
+}
+
+.animate-overview-marquee-2 {
+  animation: overview-marquee-2 50s linear infinite;
+}
+
+.animate-overview-marquee-rev {
+  animation: overview-marquee-rev 50s linear infinite;
+}
+
+.animate-overview-marquee-rev-2 {
+  animation: overview-marquee-rev-2 50s linear infinite;
+}
+
 /* セクション内コンテンツの共通出現アニメーション */
 @keyframes section-content-reveal {
   from {
