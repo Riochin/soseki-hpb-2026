@@ -686,7 +686,7 @@ export default function GachaSection({ playerName, onUrStart, onUrEnd }: Props) 
             >
               {spinning ? 'ガチャ中...' : '1回まわす'}
               <span className="flex items-center justify-center gap-1 text-xs font-normal opacity-70">
-                <Image src="/1credit.png" alt="" width={12} height={12} className="h-3 w-3" />
+                <Image src="/1credit.png" alt="" width={12} height={12} unoptimized className="h-3 w-3" />
                 1クレ
               </span>
             </button>
@@ -702,7 +702,7 @@ export default function GachaSection({ playerName, onUrStart, onUrEnd }: Props) 
             >
               {spinning ? 'ガチャ中...' : '10回まわす'}
               <span className="flex items-center justify-center gap-1 text-xs font-normal opacity-70">
-                <Image src="/1credit.png" alt="" width={12} height={12} className="h-3 w-3" />
+                <Image src="/1credit.png" alt="" width={12} height={12} unoptimized className="h-3 w-3" />
                 10クレ
               </span>
             </button>

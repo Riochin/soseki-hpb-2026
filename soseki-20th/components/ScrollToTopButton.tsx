@@ -47,6 +47,7 @@ export default function ScrollToTopButton({ visible }: Props) {
           alt="上へ戻る"
           width={1600}
           height={1399}
+          unoptimized
           className="h-24 w-24 object-contain"
         />
       </button>

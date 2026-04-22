@@ -111,6 +111,7 @@ export default function IntroOverlay({ onDone }: Props) {
             alt="yoyu2024"
             width={400}
             height={400}
+            unoptimized
             className="h-auto w-full object-contain"
             priority
           />

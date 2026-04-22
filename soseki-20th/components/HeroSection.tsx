@@ -37,6 +37,7 @@ export default function HeroSection({ isMuted, onToggleMute }: Props) {
           alt="Happy Birthday"
           width={320}
           height={320}
+          unoptimized
           className="h-[252px] w-[252px] object-contain sm:h-[320px] sm:w-[320px]"
           priority
         />

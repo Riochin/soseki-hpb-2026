@@ -42,7 +42,7 @@ export default function GlobalHeader({ coins, debt, visible }: Props) {
 
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-1 rounded-control border border-edge-strong px-3 py-1 text-sm">
-            <Image src="/1credit.png" alt="Credit" width={16} height={16} className="h-4 w-4" />
+            <Image src="/1credit.png" alt="Credit" width={16} height={16} unoptimized className="h-4 w-4" />
             <span className="font-mono font-bold text-yellow-300">{toCredit(coins)}ｸﾚ</span>
           </div>
 
