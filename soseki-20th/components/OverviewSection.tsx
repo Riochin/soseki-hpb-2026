@@ -3,13 +3,13 @@
 import Image from 'next/image';
 import { useSosekiName } from '@/hooks/useU18Mode';
 
-const ALL_IMAGES = Array.from({ length: 26 }, (_, i) =>
+const ALL_IMAGES = Array.from({ length: 30 }, (_, i) =>
   `/games/face-memory/easy/${String(i + 1).padStart(2, '0')}.png`
 );
 const ROW_IMAGES = [
-  ALL_IMAGES.slice(0, 9),   // 01–09
-  ALL_IMAGES.slice(9, 18),  // 10–18
-  ALL_IMAGES.slice(18),     // 19–26
+  ALL_IMAGES.slice(0, 10),   // 01-10
+  ALL_IMAGES.slice(10, 20),  // 11-20
+  ALL_IMAGES.slice(20),      // 21-30
 ];
 
 type RowProps = {
@@ -20,35 +20,46 @@ type RowProps = {
 };
 
 function ImageRow({ images, reverse = false, duration, offset = 0 }: RowProps) {
-  const doubled = [...images, ...images];
-  return (
-    <div className="overflow-hidden flex-1">
+  const trackClass = reverse ? 'animate-overview-marquee-rev' : 'animate-overview-marquee';
+  const trackClassSecond = reverse ? 'animate-overview-marquee-rev-2' : 'animate-overview-marquee-2';
+  const adjustedDuration = duration * 4;
+  const renderTrack = (keyPrefix: string) =>
+    images.map((src, i) => (
       <div
-        className={reverse ? 'animate-ticker-reverse' : 'animate-ticker'}
+        key={`${keyPrefix}-${i}-${src}`}
+        className="relative flex-shrink-0"
+        style={{ aspectRatio: '16/9', height: '100%', paddingRight: '8px' }}
+      >
+        <Image
+          src={src}
+          alt=""
+          fill
+          sizes="auto"
+          className="object-cover"
+          draggable={false}
+        />
+      </div>
+    ));
+
+  return (
+    <div className="relative overflow-hidden flex-1">
+      <div
+        className={`absolute inset-y-0 left-0 flex w-max ${trackClass}`}
         style={{
-          animationDuration: `${duration}s`,
+          animationDuration: `${adjustedDuration}s`,
           animationDelay: `-${offset}s`,
-          display: 'flex',
-          gap: '8px',
-          height: '100%',
         }}
       >
-        {doubled.map((src, i) => (
-          <div
-            key={i}
-            className="relative flex-shrink-0"
-            style={{ aspectRatio: '16/9', height: '100%' }}
-          >
-            <Image
-              src={src}
-              alt=""
-              fill
-              sizes="auto"
-              className="object-cover"
-              draggable={false}
-            />
-          </div>
-        ))}
+        {renderTrack('track-a')}
+      </div>
+      <div
+        className={`absolute inset-y-0 left-0 flex w-max ${trackClassSecond}`}
+        style={{
+          animationDuration: `${adjustedDuration}s`,
+          animationDelay: `-${offset}s`,
+        }}
+      >
+        {renderTrack('track-b')}
       </div>
     </div>
   );
