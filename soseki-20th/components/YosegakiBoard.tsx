@@ -54,7 +54,7 @@ function seededRotation(id: number): number {
   let h = Math.imul(id ^ (id >>> 4), 0x45d9f3b);
   h = Math.imul(h ^ (h >>> 16), 0x45d9f3b);
   h = (h ^ (h >>> 16)) >>> 0;
-  return (h / 0xffffffff) * 45 - 25;
+  return (h / 0xffffffff) * 20 - 10;
 }
 
 interface BoardCardProps {
@@ -65,7 +65,7 @@ function BoardCard({ msg }: BoardCardProps) {
   const rotation = seededRotation(msg.id);
   return (
     <div
-      className="relative aspect-square w-full rounded-sm border border-stone-300/30 shadow-[2px_4px_12px_rgba(0,0,0,0.3)] overflow-hidden"
+      className="relative aspect-square w-full rounded-sm border border-stone-300/30 overflow-hidden"
       style={{
         backgroundImage: `url(${bgImagePath(msg.bgColor, msg.bgStyle)})`,
         backgroundSize: 'cover',
@@ -177,7 +177,7 @@ export default function YosegakiBoard({ messages, onClose }: Props) {
               onClick={() => setSelectedMsg(null)}
             >
               <div
-                className="relative rounded-sm border border-stone-300/30 shadow-[4px_8px_24px_rgba(0,0,0,0.5)] overflow-hidden"
+                className="relative rounded-sm border border-stone-300/30 overflow-hidden"
                 style={{
                   width: '35%',
                   aspectRatio: '1 / 1',
