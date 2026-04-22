@@ -217,7 +217,7 @@ export default function YosegakiBoard({ messages, onClose }: Props) {
             ) : (
               <div
                 className="grid gap-x-5 gap-y-3"
-                style={{ gridTemplateColumns: 'repeat(5, 72px)' }}
+                style={{ gridTemplateColumns: 'repeat(6, 72px)' }}
               >
                 {messages.map((msg) => (
                   <div
