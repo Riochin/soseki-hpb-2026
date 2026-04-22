@@ -1,7 +1,7 @@
 import type { Stamp } from '@/hooks/useMessages';
 
 const STAMP_IMAGE_FILE: Record<Stamp, string> = {
-  dio: 'dio',
+  dio: 'dio-brando',
   joseph: 'joseph',
   jotaro: 'jotaro',
   kakyoin: 'kakyoin',
