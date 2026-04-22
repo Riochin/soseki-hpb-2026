@@ -76,16 +76,21 @@ const STAGE_HEIGHT = 24;
 const ENGINE_GRAVITY_SCALE = 0.00112;
 /** 1 未満でシミュレーション全体がゆったりする */
 const ENGINE_TIME_SCALE = 0.9;
-const ANIMAL_RESTITUTION = 0.08;
-const ANIMAL_FRICTION = 2.0;
-const ANIMAL_FRICTION_AIR = 0.08;
+const ANIMAL_RESTITUTION = 0.01;
+const ANIMAL_FRICTION = 3.5;
+const ANIMAL_FRICTION_STATIC = 12.0;
+const ANIMAL_FRICTION_AIR = 0.14;
 const ANIMAL_DENSITY = 0.006;
 const SPAWN_ANGULAR_VELOCITY_RANGE = 0;
 const GROUND_RESTITUTION = 0.06;
-const GROUND_FRICTION = 1.2;
+const GROUND_FRICTION = 3.0;
 /** 1 個置いた直後はこの時間（ms）再配置できない（連打抑制） */
 const DROP_COOLDOWN_MS = 1000;
 const BASE_DROP_Y = 46;
+/** 床に接している個体の横ズレを抑えるための接地判定余白 */
+const GROUND_LOCK_BAND_PX = 6;
+/** 生成直後はロックせず、着地後にのみ横ズレ抑制を効かせる */
+const GROUND_LOCK_MIN_AGE_MS = 180;
 /** タワートップより何px上でスポーンするか（調整用） */
 const SPAWN_ABOVE_TOWER_N = 150;
 /** カメラ補間係数 */
@@ -178,6 +183,7 @@ export default function AnimalTowerGame() {
   const cameraOffsetYRef = useRef(0);
   const maxCameraOffsetYRef = useRef(0);
   const dynamicDropYRef = useRef(BASE_DROP_Y);
+  const stableTowerTopYRef = useRef(0);
 
   const searchParams = useSearchParams();
   useEffect(() => {
@@ -270,6 +276,7 @@ export default function AnimalTowerGame() {
 
     const stageLeft = (canvasWidth - stageWidth) / 2;
     const stageRight = stageLeft + stageWidth;
+    stableTowerTopYRef.current = stageTopY;
 
     const createCandidate = (): DropCandidate | null => {
       const loadedSprites = spritesRef.current;
@@ -298,7 +305,8 @@ export default function AnimalTowerGame() {
         placeCooldownUntilRef.current = 0;
         cameraOffsetYRef.current = 0;
         maxCameraOffsetYRef.current = 0;
-        dynamicDropYRef.current = BASE_DROP_Y;
+        stableTowerTopYRef.current = stageTopY;
+        dynamicDropYRef.current = stageTopY - SPAWN_ABOVE_TOWER_N;
         pairLoserRef.current = null;
         setPairLoser(null);
         setTurnPlayer(1);
@@ -329,6 +337,7 @@ export default function AnimalTowerGame() {
       const bodyOptions = {
         restitution: ANIMAL_RESTITUTION,
         friction: ANIMAL_FRICTION,
+        frictionStatic: ANIMAL_FRICTION_STATIC,
         frictionAir: ANIMAL_FRICTION_AIR,
         density: ANIMAL_DENSITY,
         label: 'animal',
@@ -449,18 +458,21 @@ export default function AnimalTowerGame() {
       const now = performance.now();
       let stableTopWorldY = stageTopY;
       let stableCount = 0;
-      let anyTopWorldY = stageTopY;
       animalsRef.current.forEach(({ body, createdAtMs }) => {
-        anyTopWorldY = Math.min(anyTopWorldY, body.bounds.min.y);
-        if (now - createdAtMs >= TOWER_TOP_STABLE_AGE_MS) {
+        const ageMs = now - createdAtMs;
+        const isSettled = ageMs >= TOWER_TOP_STABLE_AGE_MS && Math.abs(body.velocity.y) < 0.6;
+        if (isSettled) {
           stableTopWorldY = Math.min(stableTopWorldY, body.bounds.min.y);
           stableCount += 1;
         }
       });
-      const towerTopWorldY = stableCount > 0 ? stableTopWorldY : anyTopWorldY;
-
+      if (stableCount > 0) {
+        stableTowerTopYRef.current = stableTopWorldY;
+      }
+      const towerTopWorldY =
+        animalsRef.current.length === 0 ? stageTopY : stableTowerTopYRef.current;
       if (animalsRef.current.length === 0) {
-        dynamicDropYRef.current = BASE_DROP_Y;
+        dynamicDropYRef.current = stageTopY - SPAWN_ABOVE_TOWER_N;
       } else {
         dynamicDropYRef.current = towerTopWorldY - SPAWN_ABOVE_TOWER_N;
       }
@@ -528,6 +540,19 @@ export default function AnimalTowerGame() {
 
       animalsRef.current.forEach(({ body, radius, sprite, createdAtMs }) => {
         if (body.bounds.min.y > canvasHeight + 120) return;
+
+        // 床に接地している個体は、衝突で左右に押されないよう横速度と回転を抑える。
+        const ageMs = performance.now() - createdAtMs;
+        const isGrounded = body.bounds.max.y >= stageTopY - GROUND_LOCK_BAND_PX;
+        if (ageMs >= GROUND_LOCK_MIN_AGE_MS && isGrounded) {
+          if (Math.abs(body.velocity.x) > 0.001) {
+            Body.setVelocity(body, { x: 0, y: body.velocity.y });
+          }
+          if (Math.abs(body.angularVelocity) > 0.001) {
+            Body.setAngularVelocity(body, 0);
+          }
+        }
+
         if (!gameOverRef.current && performance.now() - createdAtMs > 300 && body.bounds.max.y >= dangerZoneTop) {
           escaped = true;
         }
@@ -704,7 +729,8 @@ export default function AnimalTowerGame() {
       nextDropRef.current = null;
       cameraOffsetYRef.current = 0;
       maxCameraOffsetYRef.current = 0;
-      dynamicDropYRef.current = BASE_DROP_Y;
+      stableTowerTopYRef.current = stageTopY;
+      dynamicDropYRef.current = stageTopY - SPAWN_ABOVE_TOWER_N;
       moveDirRef.current = 0;
       scoreRef.current = 0;
       gameOverRef.current = false;
