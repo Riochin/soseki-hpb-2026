@@ -313,6 +313,16 @@ export const MOCK_MESSAGES: Message[] = [
     stamp: 'bucciarati',
     createdAt: '2026-04-23T23:00:00Z',
   },
+  {
+    id: 16,
+    author: '長谷川如是閑',
+    text: '二十歳おめでとうございます。これからのご活躍も楽しみにしております。',
+    bgColor: 'purple',
+    bgStyle: 'normal',
+    font: 'noto-sans',
+    stamp: 'anasui',
+    createdAt: '2026-04-24T00:00:00Z',
+  },
 ];
 
 export const MOCK_COUNTER_COUNT = 777;
