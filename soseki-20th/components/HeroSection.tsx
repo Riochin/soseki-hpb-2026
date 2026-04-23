@@ -7,22 +7,37 @@ import { useSosekiName } from '@/hooks/useU18Mode'
 type Props = {
   isMuted: boolean
   onToggleMute: () => void
+  isEventDay: boolean
 }
 
-export default function HeroSection({ isMuted, onToggleMute }: Props) {
+export default function HeroSection({ isMuted, onToggleMute, isEventDay }: Props) {
   const sosekiName = useSosekiName()
   return (
     <section className="section-reveal relative flex min-h-[100svh] flex-col items-center justify-center overflow-hidden px-4 pb-20 sm:min-h-screen sm:pb-24 md:px-8 lg:px-16">
+      {isEventDay && (
+        <div
+          className="pointer-events-none absolute inset-0 z-0 flex items-center justify-center"
+          aria-hidden="true"
+          data-testid="hero-event-watermark"
+        >
+          <span
+            className="select-none text-center text-8xl tracking-[0.22em] text-accent/10 sm:text-9xl md:text-[11rem] lg:text-[15rem]"
+            style={{ fontFamily: 'var(--font-yuji-syuku), serif' }}
+          >
+            当日
+          </span>
+        </div>
+      )}
       <QuoteOverlay />
 
       {/* 日付 */}
-      <p className="mb-3 mt-4 text-center font-mono text-sm tracking-widest text-accent/70 sm:mt-0">
+      <p className="relative mb-3 mt-4 text-center font-mono text-sm tracking-widest text-accent/70 sm:mt-0">
         2026年4月23日（木）— BIRTHDAY
       </p>
 
       {/* 大見出し */}
       <h1
-        className="mb-8 text-center text-3xl leading-relaxed tracking-wider text-white sm:text-4xl md:text-6xl lg:text-7xl"
+        className="relative mb-8 text-center text-3xl leading-relaxed tracking-wider text-white sm:text-4xl md:text-6xl lg:text-7xl"
         style={{ fontFamily: "var(--font-yuji-syuku), serif" }}
       >
         {sosekiName}
@@ -31,7 +46,7 @@ export default function HeroSection({ isMuted, onToggleMute }: Props) {
       </h1>
 
       {/* hpb画像 */}
-      <div className="mb-6 -mt-4">
+      <div className="relative mb-6 -mt-4">
         <Image
           src="/hpb.png"
           alt="Happy Birthday"
@@ -65,7 +80,7 @@ export default function HeroSection({ isMuted, onToggleMute }: Props) {
       </button>
 
       {/* スクロール誘導 */}
-      <div className="absolute bottom-8 left-1/2 flex -translate-x-1/2 flex-col items-center gap-1 text-accent/50">
+      <div className="absolute bottom-8 left-1/2 z-10 flex -translate-x-1/2 flex-col items-center gap-1 text-accent/50">
         <span className="font-mono text-xs tracking-widest">SCROLL</span>
         <svg
           viewBox="0 0 24 24"
