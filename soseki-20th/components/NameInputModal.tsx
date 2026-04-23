@@ -31,7 +31,7 @@ export default function NameInputModal({ onInit }: Props) {
   const [name, setName] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [connecting, setConnecting] = useState(false);
+  const [connecting, setConnecting] = useState(!IS_UI_MOCK);
   const [dots, setDots] = useState('');
 
   useEffect(() => {
