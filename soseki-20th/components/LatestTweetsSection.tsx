@@ -63,7 +63,7 @@ export default function LatestTweetsSection() {
         </a>
         の投稿を表示しています。
       </p>
-      <div className="mx-2 rounded-panel border-2 border-edge bg-background p-1 sm:mx-0">
+      <div className="mx-2 rounded-panel border-2 border-edge bg-background p-0 sm:mx-0">
         <div className="mx-auto h-[50vh] w-[70vw] min-w-[260px] max-w-[560px] overflow-y-auto">
           <div className="space-y-3">
           {tweets.map((tweet) => (
