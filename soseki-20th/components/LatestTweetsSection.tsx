@@ -61,7 +61,7 @@ export default function LatestTweetsSection() {
         >
           #アクメ漱石生誕祭2026
         </a>
-        の投稿を表示しています。
+        で、みんなで盛り上がりましょう！（開発者も喜びます）
       </p>
       <div className="mx-2 rounded-panel border-2 border-edge bg-background p-0 sm:mx-0">
         <div className="mx-auto h-[50vh] w-[70vw] min-w-[260px] max-w-[560px] overflow-y-auto">
