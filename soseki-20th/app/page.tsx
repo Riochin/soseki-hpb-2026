@@ -54,17 +54,35 @@ export default function Home() {
     const initParticles = async () => {
       await import('particles.js');
       if (cancelled || !window.particlesJS) return;
+      if (window.pJSDom?.length) {
+        window.pJSDom.forEach((instance) => instance.pJS.fn.vendors.destroypJS());
+        window.pJSDom = [];
+      }
       window.particlesJS(CONFETTI_CONTAINER_ID, {
         particles: {
-          number: { value: 26, density: { enable: true, value_area: 900 } },
+          number: { value: 48, density: { enable: true, value_area: 900 } },
           color: { value: ['#facc15', '#f87171', '#c084fc', '#34d399'] },
           shape: { type: 'edge' },
-          opacity: { value: 0.28, random: true },
-          size: { value: 3, random: true },
+          opacity: {
+            value: 0.3,
+            random: false,
+            anim: { enable: false, speed: 0, opacity_min: 0.3, sync: true },
+          },
+          size: {
+            value: 7,
+            random: true,
+            anim: { enable: false, speed: 0, size_min: 5, sync: true },
+          },
+          rotate: {
+            value: 0,
+            random: true,
+            direction: 'random',
+            animation: { enable: true, speed: 15, sync: false },
+          },
           line_linked: { enable: false },
           move: {
             enable: true,
-            speed: 2.2,
+            speed: 2.6,
             direction: 'bottom',
             random: true,
             straight: false,
