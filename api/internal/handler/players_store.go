@@ -80,16 +80,42 @@ func (s *DBPlayerStore) GetPlayer(ctx context.Context, name string) (model.Playe
 }
 
 // BorrowCoins は coins・debt を amount クレ（= amount*100）ずつ増やして最新値を返す。
+// 借用イベントを debt_logs にトランザクション内で記録する。
 // プレイヤーが存在しない場合は ErrNotFound を返す。
 func (s *DBPlayerStore) BorrowCoins(ctx context.Context, name string, amount int) (coins, debt int, err error) {
-	err = s.db.Pool.QueryRow(ctx,
-		`UPDATE players SET coins = coins + $2*100, debt = debt + $2*100 WHERE name = $1 RETURNING coins, debt`,
-		name, amount,
-	).Scan(&coins, &debt)
+	tx, err := s.db.Pool.Begin(ctx)
+	if err != nil {
+		return 0, 0, err
+	}
+	defer tx.Rollback(ctx) //nolint:errcheck
+
+	var debtBefore int
+	err = tx.QueryRow(ctx, `SELECT debt FROM players WHERE name = $1`, name).Scan(&debtBefore)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return 0, 0, ErrNotFound
 	}
-	return coins, debt, err
+	if err != nil {
+		return 0, 0, err
+	}
+
+	err = tx.QueryRow(ctx,
+		`UPDATE players SET coins = coins + $2*100, debt = debt + $2*100 WHERE name = $1 RETURNING coins, debt`,
+		name, amount,
+	).Scan(&coins, &debt)
+	if err != nil {
+		return 0, 0, err
+	}
+
+	borrowAmount := amount * 100
+	_, err = tx.Exec(ctx,
+		`INSERT INTO debt_logs (player_name, event_type, amount, debt_before, debt_after) VALUES ($1, 'borrow', $2, $3, $4)`,
+		name, borrowAmount, debtBefore, debt,
+	)
+	if err != nil {
+		return 0, 0, err
+	}
+
+	return coins, debt, tx.Commit(ctx)
 }
 
 // EarnCoins はゲーム報酬としてコインを加算し、新しい残高を返す。
