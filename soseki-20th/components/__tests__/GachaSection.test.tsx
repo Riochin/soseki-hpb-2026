@@ -1,5 +1,5 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import GachaSection from '../GachaSection';
 
 const mockSpinGacha = vi.fn();
@@ -43,15 +43,17 @@ describe('GachaSection', () => {
     expect(screen.getByRole('button', { name: /1回まわす/i })).toBeInTheDocument();
   });
 
-  it('初期状態では借金ボタンは表示されない', () => {
+  it('coins < 10000 のとき「借金する」ボタンが表示される', () => {
+    // mockPlayer.coins = 200 < 10000 → 常設の借金するボタンが表示される
     render(<GachaSection playerName="テスト" />);
-    expect(screen.queryByRole('button', { name: /借金|borrow/i })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /借金する/i })).toBeInTheDocument();
   });
 
   it('コレクションを見るクリックでコレクションモーダルが表示される', () => {
     render(<GachaSection playerName="テスト" />);
     fireEvent.click(screen.getByRole('button', { name: /コレクションを見る/ }));
-    expect(screen.getByText('伝説のメガネ')).toBeInTheDocument();
+    // GachaCard はサイズキーパーと表面の2要素にアイテム名を描画するため getAllByText を使う
+    expect(screen.getAllByText('伝説のメガネ').length).toBeGreaterThan(0);
   });
 
   it('コレクションモーダルで未入手アイテムの ??? が表示される', () => {
@@ -136,13 +138,18 @@ describe('GachaSection', () => {
   it('10連モーダルでNEWバッジが新規アイテムに表示される', async () => {
     mockPlayer = { name: 'テスト', coins: 1000, debt: 0, collection: mockCollection };
     mockSpinGachaMulti.mockResolvedValueOnce({ results: mockMultiCollection, newCoins: 0 });
+    vi.useFakeTimers();
     render(<GachaSection playerName="テスト" />);
 
     fireEvent.click(screen.getByRole('button', { name: /10回まわす/i }));
 
-    await waitFor(() => {
-      expect(screen.getByText('NEW')).toBeInTheDocument();
-    });
+    // spinGachaMulti の解決を待つ
+    await act(async () => { await Promise.resolve(); });
+    // アニメーションのタイムアウトをすべて進める
+    await act(async () => { vi.runAllTimers(); });
+
+    expect(screen.getByText('NEW')).toBeInTheDocument();
+    vi.useRealTimers();
   });
 
   it('10連モーダルを閉じると非表示になる', async () => {
