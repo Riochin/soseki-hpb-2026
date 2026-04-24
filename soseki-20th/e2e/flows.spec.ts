@@ -79,6 +79,20 @@ async function mockCounterAPI(page: Page, count = 42) {
   });
 }
 
+/** 借金 API をモックする */
+async function mockBorrowAPI(page: Page, playerName: string, resultCoins = 100, resultDebt = 100) {
+  await page.route(
+    `${API_ORIGIN}/api/players/${encodeURIComponent(playerName)}/borrow`,
+    async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ coins: resultCoins, debt: resultDebt }),
+      });
+    },
+  );
+}
+
 /** ガチャ API をモックする（コイン消費・アイテム取得） */
 async function mockGachaAPI(page: Page) {
   await page.route(`${API_ORIGIN}/api/gacha`, async (route) => {
@@ -308,5 +322,101 @@ test.describe('ガチャフロー', () => {
 
     // コイン不足メッセージが表示されること
     await expect(page.getByText('コインが不足しています')).toBeVisible({ timeout: 3000 });
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// テスト 4: 借金フロー（コイン不足 → BorrowModal → 借りる → 借金警告表示）
+// ─────────────────────────────────────────────────────────────────────────────
+
+test.describe('借金フロー', () => {
+  test.beforeEach(async ({ page }) => {
+    // コイン 0、借金 0 のプレイヤーでセットアップ
+    const brokePlayer = { ...MOCK_PLAYER, coins: 0, debt: 0 };
+    await page.route(`${API_ORIGIN}/api/players`, async (route) => {
+      await route.fulfill({ status: 201, contentType: 'application/json', body: JSON.stringify(brokePlayer) });
+    });
+    await page.route(`${API_ORIGIN}/api/players/${encodeURIComponent('テスト太郎')}`, async (route) => {
+      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(brokePlayer) });
+    });
+    await mockMessagesAPI(page);
+    await mockCounterAPI(page);
+    await mockGachaAPI(page);
+
+    await openAsVerified(page);
+    await setPlayerName(page, 'テスト太郎');
+    await page.reload();
+
+    await expect(page.getByText('HAPPY 20th', { exact: true })).toBeVisible({ timeout: 5000 });
+  });
+
+  test('コイン 0 でガチャをクリックするとBorrowModalが開く', async ({ page }) => {
+    const gachaButton = page.getByRole('button', { name: /1回まわす/ });
+    await gachaButton.scrollIntoViewIfNeeded();
+    await gachaButton.click();
+
+    // BorrowModal が表示されること（「借りる」ボタンと金貸しのセリフ）
+    await expect(page.getByRole('button', { name: /借りる/ })).toBeVisible({ timeout: 3000 });
+    await expect(page.getByText('「しゃあねえな」')).toBeVisible();
+  });
+
+  test('BorrowModal で借りるとAPIが呼ばれてモーダルが閉じる', async ({ page }) => {
+    // 借金後のプレイヤーデータ（coins=100, debt=100）を返すようにモックを更新
+    await mockBorrowAPI(page, 'テスト太郎', 100, 100);
+    const playerWithDebt = { ...MOCK_PLAYER, coins: 100, debt: 100 };
+    await page.route(`${API_ORIGIN}/api/players/${encodeURIComponent('テスト太郎')}`, async (route) => {
+      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(playerWithDebt) });
+    });
+
+    const gachaButton = page.getByRole('button', { name: /1回まわす/ });
+    await gachaButton.scrollIntoViewIfNeeded();
+    await gachaButton.click();
+
+    // BorrowModal の「借りる」ボタンをクリック
+    await expect(page.getByRole('button', { name: /借りる/ })).toBeVisible({ timeout: 3000 });
+    await page.getByRole('button', { name: /借りる/ }).click();
+
+    // モーダルが閉じること
+    await expect(page.getByRole('button', { name: /借りる/ })).not.toBeVisible({ timeout: 3000 });
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// テスト 5: 再訪問フロー（localStorage/sessionStorage が残っている場合）
+// ─────────────────────────────────────────────────────────────────────────────
+
+test.describe('再訪問フロー', () => {
+  test('age_verified と playerName がセット済みの場合、ゲートと名前入力をスキップしてメインコンテンツを表示する', async ({ page }) => {
+    await mockPlayerAPI(page);
+    await mockMessagesAPI(page);
+    await mockCounterAPI(page);
+
+    // 既訪問状態（age_verified + playerName）でページを開く
+    await openAsVerified(page);
+    await setPlayerName(page, 'テスト太郎');
+    await page.reload();
+
+    // 年齢確認ゲートが表示されないこと
+    await expect(page.getByText('あなたは18歳以上ですか？')).not.toBeVisible({ timeout: 2000 });
+
+    // 名前入力モーダルが表示されないこと
+    await expect(page.getByPlaceholder('例: アクメ漱石ッズ')).not.toBeVisible({ timeout: 2000 });
+
+    // メインコンテンツが直接表示されること
+    await expect(page.getByText('HAPPY 20th', { exact: true })).toBeVisible({ timeout: 5000 });
+  });
+
+  test('playerName だけが未セットの場合は名前入力モーダルが表示される', async ({ page }) => {
+    await mockPlayerAPI(page);
+    await mockMessagesAPI(page);
+    await mockCounterAPI(page);
+
+    // age_verified のみセット（playerName なし）
+    await openAsVerified(page);
+    await page.evaluate(() => localStorage.removeItem('playerName'));
+    await page.reload();
+
+    // 名前入力モーダルが表示されること
+    await expect(page.getByPlaceholder('例: アクメ漱石ッズ')).toBeVisible({ timeout: 3000 });
   });
 });
