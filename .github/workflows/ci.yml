@@ -1,0 +1,73 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  # ── Job 1: フロントエンド 単体/コンポーネントテスト (Vitest) ──────────────
+  frontend-unit:
+    name: Frontend Unit Tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: soseki-20th
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: soseki-20th/package-lock.json
+
+      - run: npm ci
+      - run: npm run test
+
+  # ── Job 2: フロントエンド E2Eテスト (Playwright + Chromium) ─────────────────
+  frontend-e2e:
+    name: Frontend E2E Tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: soseki-20th
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: soseki-20th/package-lock.json
+
+      - run: npm ci
+
+      # Chromium と OS依存ライブラリを一括インストール
+      - run: npx playwright install chromium --with-deps
+
+      - run: npm run test:e2e
+        env:
+          CI: true
+          # APIは flows.spec.ts の page.route() で全モック済み。実Go鯖は不要。
+          NEXT_PUBLIC_API_URL: http://localhost:8080
+
+  # ── Job 3: Go バックエンド 単体テスト ───────────────────────────────────────
+  backend-unit:
+    name: Backend Unit Tests (Go)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: api
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.26'
+          cache-dependency-path: api/go.sum
+
+      # DATABASE_URL 未設定 → DB依存テストは t.Skip() で自動スキップ
+      # game_reward_test.go の calc* 関数など純粋単体テストは通過する
+      - run: go test ./internal/handler/... -v
