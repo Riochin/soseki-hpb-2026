@@ -172,15 +172,15 @@ func calcQuizReward(rank string) int {
 
 // calcFaceMemoryReward は名場面神経衰弱のコイン報酬を算出する。
 // 基準（EASY, timeLimit=1）: S=1200(12Cr), A=700, B=400, C=250, D=100
-// ムズすぎるな（timeLimit=2）は獲得コインを2倍。
+// ムズすぎるな（timeLimit=2）は獲得コインを3倍。
 func calcFaceMemoryReward(rank string, timeLimit int) int {
-	base := map[string]int{"S": 600, "A": 350, "B": 200, "C": 125, "D": 50}[rank]
+	base := map[string]int{"S": 1200, "A": 700, "B": 400, "C": 250, "D": 100}[rank]
 	if base == 0 {
 		base = 100
 	}
 	mult := 1.0
 	if timeLimit == 2 {
-		mult = 2.0
+		mult = 3.0
 	}
 	if reward := int(float64(base) * mult); reward > 0 {
 		return reward
