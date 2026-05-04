@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/soseki-hpb-2026/api/internal/apperr"
 	"github.com/soseki-hpb-2026/api/internal/db"
 )
 
@@ -19,9 +20,9 @@ func NewDBConsumeStore(database *db.DB) *DBConsumeStore {
 }
 
 // ConsumeItem はアイテムを引き換え済みにマークする。
-// - アイテムが is_giftable=false → ErrNotGiftable
-// - コレクションに存在しない → ErrNotFound
-// - すでに is_consumed=true → ErrAlreadyConsumed
+// - アイテムが is_giftable=false → apperr.ErrNotGiftable
+// - コレクションに存在しない → apperr.ErrNotFound
+// - すでに is_consumed=true → apperr.ErrAlreadyConsumed
 func (s *DBConsumeStore) ConsumeItem(ctx context.Context, playerName string, itemID int) error {
 	tx, err := s.db.Pool.Begin(ctx)
 	if err != nil {
@@ -36,13 +37,13 @@ func (s *DBConsumeStore) ConsumeItem(ctx context.Context, playerName string, ite
 		itemID,
 	).Scan(&isGiftable)
 	if errors.Is(err, pgx.ErrNoRows) {
-		return ErrNotFound
+		return apperr.ErrNotFound
 	}
 	if err != nil {
 		return err
 	}
 	if !isGiftable {
-		return ErrNotGiftable
+		return apperr.ErrNotGiftable
 	}
 
 	// プレイヤーがこのアイテムを所持しているか、消費済みかを確認
@@ -52,13 +53,13 @@ func (s *DBConsumeStore) ConsumeItem(ctx context.Context, playerName string, ite
 		playerName, itemID,
 	).Scan(&isConsumed)
 	if errors.Is(err, pgx.ErrNoRows) {
-		return ErrNotFound
+		return apperr.ErrNotFound
 	}
 	if err != nil {
 		return err
 	}
 	if isConsumed {
-		return ErrAlreadyConsumed
+		return apperr.ErrAlreadyConsumed
 	}
 
 	// 引き換え済みにする

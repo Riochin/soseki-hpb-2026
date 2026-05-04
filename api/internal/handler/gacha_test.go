@@ -10,6 +10,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/soseki-hpb-2026/api/internal/apperr"
 	"github.com/soseki-hpb-2026/api/internal/handler"
 	"github.com/soseki-hpb-2026/api/internal/model"
 )
@@ -89,7 +90,7 @@ func TestGachaCreate_InvalidJSON_Returns400(t *testing.T) {
 }
 
 func TestGachaCreate_InsufficientCoins_Returns402(t *testing.T) {
-	h := handler.NewGacha(&mockGachaStore{err: handler.ErrInsufficientCoins})
+	h := handler.NewGacha(&mockGachaStore{err: apperr.ErrInsufficientCoins})
 
 	body := `{"player_name":"漱石"}`
 	req := httptest.NewRequest(http.MethodPost, "/api/gacha", bytes.NewBufferString(body))
@@ -103,7 +104,7 @@ func TestGachaCreate_InsufficientCoins_Returns402(t *testing.T) {
 }
 
 func TestGachaCreate_PlayerNotFound_Returns404(t *testing.T) {
-	h := handler.NewGacha(&mockGachaStore{err: handler.ErrNotFound})
+	h := handler.NewGacha(&mockGachaStore{err: apperr.ErrNotFound})
 
 	body := `{"player_name":"nobody"}`
 	req := httptest.NewRequest(http.MethodPost, "/api/gacha", bytes.NewBufferString(body))
@@ -194,7 +195,7 @@ func TestGachaCreateMulti_InvalidJSON_Returns400(t *testing.T) {
 }
 
 func TestGachaCreateMulti_InsufficientCoins_Returns402(t *testing.T) {
-	h := handler.NewGacha(&mockGachaStore{err: handler.ErrInsufficientCoins})
+	h := handler.NewGacha(&mockGachaStore{err: apperr.ErrInsufficientCoins})
 
 	body := `{"player_name":"漱石"}`
 	req := httptest.NewRequest(http.MethodPost, "/api/gacha/multi", bytes.NewBufferString(body))
@@ -208,7 +209,7 @@ func TestGachaCreateMulti_InsufficientCoins_Returns402(t *testing.T) {
 }
 
 func TestGachaCreateMulti_PlayerNotFound_Returns404(t *testing.T) {
-	h := handler.NewGacha(&mockGachaStore{err: handler.ErrNotFound})
+	h := handler.NewGacha(&mockGachaStore{err: apperr.ErrNotFound})
 
 	body := `{"player_name":"nobody"}`
 	req := httptest.NewRequest(http.MethodPost, "/api/gacha/multi", bytes.NewBufferString(body))

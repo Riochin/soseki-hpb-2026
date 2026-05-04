@@ -8,6 +8,7 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/soseki-hpb-2026/api/internal/apperr"
 )
 
 // GameRewardCommiter はゲーム報酬を DB にコミットする操作を表す。
@@ -68,11 +69,11 @@ func (h *GameReward) Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	newCoins, resultID, err := h.commiter.CommitGameReward(r.Context(), commit)
-	if errors.Is(err, ErrDuplicateGameSession) {
+	if errors.Is(err, apperr.ErrDuplicateGameSession) {
 		writeError(w, http.StatusTooManyRequests, "reward already claimed for this session")
 		return
 	}
-	if errors.Is(err, ErrNotFound) {
+	if errors.Is(err, apperr.ErrNotFound) {
 		writeError(w, http.StatusNotFound, "player not found")
 		return
 	}

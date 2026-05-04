@@ -6,11 +6,9 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/soseki-hpb-2026/api/internal/apperr"
 	"github.com/soseki-hpb-2026/api/internal/db"
 )
-
-// ErrDuplicateGameSession は同一 session_id の結果が既に保存されている場合に返す。
-var ErrDuplicateGameSession = errors.New("duplicate game session")
 
 // GameRewardCommit はトランザクション内で保存するゲーム結果と付与コインを表す。
 type GameRewardCommit struct {
@@ -35,8 +33,8 @@ func NewDBGameRewardStore(database *db.DB) *DBGameRewardStore {
 
 // CommitGameReward は game_result に1プレイ1行を挿入する（ベストだけに置き換えたりはしない。履歴はすべて残る）。
 // 成功時のみコインを加算する。
-// 同一 session_id が既に存在する場合は ErrDuplicateGameSession を返す。
-// プレイヤーが存在しない場合は ErrNotFound を返す。
+// 同一 session_id が既に存在する場合は apperr.ErrDuplicateGameSession を返す。
+// プレイヤーが存在しない場合は apperr.ErrNotFound を返す。
 func (s *DBGameRewardStore) CommitGameReward(ctx context.Context, in GameRewardCommit) (newCoins int, resultID int64, err error) {
 	tx, err := s.db.Pool.Begin(ctx)
 	if err != nil {
@@ -53,10 +51,10 @@ func (s *DBGameRewardStore) CommitGameReward(ctx context.Context, in GameRewardC
 	).Scan(&resultID)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return 0, 0, ErrDuplicateGameSession
+			return 0, 0, apperr.ErrDuplicateGameSession
 		}
 		if isFKPlayerMissing(err) {
-			return 0, 0, ErrNotFound
+			return 0, 0, apperr.ErrNotFound
 		}
 		return 0, 0, err
 	}
@@ -67,7 +65,7 @@ func (s *DBGameRewardStore) CommitGameReward(ctx context.Context, in GameRewardC
 	).Scan(&newCoins)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return 0, 0, ErrNotFound
+			return 0, 0, apperr.ErrNotFound
 		}
 		return 0, 0, err
 	}

@@ -8,13 +8,8 @@ import (
 	"strconv"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/soseki-hpb-2026/api/internal/apperr"
 )
-
-// ErrNotGiftable はギフト引き換え不可アイテムを操作しようとした場合のセンチネルエラー。
-var ErrNotGiftable = errors.New("item is not giftable")
-
-// ErrAlreadyConsumed はすでに引き換え済みのアイテムを操作しようとした場合のセンチネルエラー。
-var ErrAlreadyConsumed = errors.New("item already consumed")
 
 // ConsumeStore はアイテム引き換え操作を定義するインターフェース。
 type ConsumeStore interface {
@@ -49,11 +44,11 @@ func (h *Consume) Create(w http.ResponseWriter, r *http.Request) {
 
 	if err := h.store.ConsumeItem(r.Context(), playerName, itemID); err != nil {
 		switch {
-		case errors.Is(err, ErrNotFound):
+		case errors.Is(err, apperr.ErrNotFound):
 			writeError(w, http.StatusNotFound, "player or item not found")
-		case errors.Is(err, ErrNotGiftable):
+		case errors.Is(err, apperr.ErrNotGiftable):
 			writeError(w, http.StatusBadRequest, "item is not giftable")
-		case errors.Is(err, ErrAlreadyConsumed):
+		case errors.Is(err, apperr.ErrAlreadyConsumed):
 			writeError(w, http.StatusConflict, "item already consumed")
 		default:
 			log.Printf("consume.Create: %v", err)

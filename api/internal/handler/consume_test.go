@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/soseki-hpb-2026/api/internal/apperr"
 	"github.com/soseki-hpb-2026/api/internal/handler"
 )
 
@@ -70,7 +71,7 @@ func TestConsumeCreate_ZeroItemID_Returns400(t *testing.T) {
 }
 
 func TestConsumeCreate_PlayerNotFound_Returns404(t *testing.T) {
-	h := handler.NewConsume(&mockConsumeStore{err: handler.ErrNotFound})
+	h := handler.NewConsume(&mockConsumeStore{err: apperr.ErrNotFound})
 
 	w, req := newConsumeRequest("nobody", "1")
 	h.Create(w, req)
@@ -81,7 +82,7 @@ func TestConsumeCreate_PlayerNotFound_Returns404(t *testing.T) {
 }
 
 func TestConsumeCreate_NotGiftable_Returns400(t *testing.T) {
-	h := handler.NewConsume(&mockConsumeStore{err: handler.ErrNotGiftable})
+	h := handler.NewConsume(&mockConsumeStore{err: apperr.ErrNotGiftable})
 
 	w, req := newConsumeRequest("漱石", "1")
 	h.Create(w, req)
@@ -92,7 +93,7 @@ func TestConsumeCreate_NotGiftable_Returns400(t *testing.T) {
 }
 
 func TestConsumeCreate_AlreadyConsumed_Returns409(t *testing.T) {
-	h := handler.NewConsume(&mockConsumeStore{err: handler.ErrAlreadyConsumed})
+	h := handler.NewConsume(&mockConsumeStore{err: apperr.ErrAlreadyConsumed})
 
 	w, req := newConsumeRequest("漱石", "1")
 	h.Create(w, req)

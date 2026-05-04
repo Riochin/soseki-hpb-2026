@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/soseki-hpb-2026/api/internal/apperr"
 )
 
 // Borrow は POST /api/players/:name/borrow エンドポイントのハンドラーを保持する。
@@ -35,7 +36,7 @@ func (h *Borrow) Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	coins, debt, err := h.store.BorrowCoins(r.Context(), name, input.Amount)
-	if errors.Is(err, ErrNotFound) {
+	if errors.Is(err, apperr.ErrNotFound) {
 		writeError(w, http.StatusNotFound, "player not found")
 		return
 	}

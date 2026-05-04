@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/soseki-hpb-2026/api/internal/apperr"
 	"github.com/soseki-hpb-2026/api/internal/db"
 	"github.com/soseki-hpb-2026/api/internal/model"
 )
@@ -34,7 +35,7 @@ func (s *DBPlayerStore) UpsertPlayer(ctx context.Context, name string) (model.Pl
 }
 
 // GetPlayer は name をキーにプレイヤーとコレクション一覧を取得する。
-// プレイヤーが存在しない場合は ErrNotFound を返す。
+// プレイヤーが存在しない場合は apperr.ErrNotFound を返す。
 func (s *DBPlayerStore) GetPlayer(ctx context.Context, name string) (model.Player, error) {
 	var p model.Player
 	err := s.db.Pool.QueryRow(ctx,
@@ -42,7 +43,7 @@ func (s *DBPlayerStore) GetPlayer(ctx context.Context, name string) (model.Playe
 		name,
 	).Scan(&p.Name, &p.Coins, &p.Debt)
 	if errors.Is(err, pgx.ErrNoRows) {
-		return model.Player{}, ErrNotFound
+		return model.Player{}, apperr.ErrNotFound
 	}
 	if err != nil {
 		return model.Player{}, err
@@ -81,7 +82,7 @@ func (s *DBPlayerStore) GetPlayer(ctx context.Context, name string) (model.Playe
 
 // BorrowCoins は coins・debt を amount クレ（= amount*100）ずつ増やして最新値を返す。
 // 借用イベントを debt_logs にトランザクション内で記録する。
-// プレイヤーが存在しない場合は ErrNotFound を返す。
+// プレイヤーが存在しない場合は apperr.ErrNotFound を返す。
 func (s *DBPlayerStore) BorrowCoins(ctx context.Context, name string, amount int) (coins, debt int, err error) {
 	tx, err := s.db.Pool.Begin(ctx)
 	if err != nil {
@@ -92,7 +93,7 @@ func (s *DBPlayerStore) BorrowCoins(ctx context.Context, name string, amount int
 	var debtBefore int
 	err = tx.QueryRow(ctx, `SELECT debt FROM players WHERE name = $1`, name).Scan(&debtBefore)
 	if errors.Is(err, pgx.ErrNoRows) {
-		return 0, 0, ErrNotFound
+		return 0, 0, apperr.ErrNotFound
 	}
 	if err != nil {
 		return 0, 0, err
@@ -119,7 +120,7 @@ func (s *DBPlayerStore) BorrowCoins(ctx context.Context, name string, amount int
 }
 
 // EarnCoins はゲーム報酬としてコインを加算し、新しい残高を返す。
-// プレイヤーが存在しない場合は ErrNotFound を返す。
+// プレイヤーが存在しない場合は apperr.ErrNotFound を返す。
 func (s *DBPlayerStore) EarnCoins(ctx context.Context, name string, amount int) (int, error) {
 	var newCoins int
 	err := s.db.Pool.QueryRow(ctx,
@@ -127,7 +128,7 @@ func (s *DBPlayerStore) EarnCoins(ctx context.Context, name string, amount int) 
 		name, amount,
 	).Scan(&newCoins)
 	if errors.Is(err, pgx.ErrNoRows) {
-		return 0, ErrNotFound
+		return 0, apperr.ErrNotFound
 	}
 	return newCoins, err
 }

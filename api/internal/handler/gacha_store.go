@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/soseki-hpb-2026/api/internal/apperr"
 	"github.com/soseki-hpb-2026/api/internal/db"
 	"github.com/soseki-hpb-2026/api/internal/model"
 )
@@ -23,8 +24,8 @@ func NewDBGachaStore(database *db.DB) *DBGachaStore {
 }
 
 // ExecuteGacha はコイン消費・重み付き抽選・コレクション追加をトランザクション内で実行する。
-// - coins < 100 → ErrInsufficientCoins
-// - プレイヤー不在 → ErrNotFound
+// - coins < 100 → apperr.ErrInsufficientCoins
+// - プレイヤー不在 → apperr.ErrNotFound
 func (s *DBGachaStore) ExecuteGacha(ctx context.Context, playerName string) (GachaResult, error) {
 	tx, err := s.db.Pool.Begin(ctx)
 	if err != nil {
@@ -39,14 +40,14 @@ func (s *DBGachaStore) ExecuteGacha(ctx context.Context, playerName string) (Gac
 		playerName,
 	).Scan(&coins)
 	if errors.Is(err, pgx.ErrNoRows) {
-		return GachaResult{}, ErrNotFound
+		return GachaResult{}, apperr.ErrNotFound
 	}
 	if err != nil {
 		return GachaResult{}, err
 	}
 
 	if coins < 100 {
-		return GachaResult{}, ErrInsufficientCoins
+		return GachaResult{}, apperr.ErrInsufficientCoins
 	}
 
 	// コイン消費
@@ -117,8 +118,8 @@ func (s *DBGachaStore) ExecuteGacha(ctx context.Context, playerName string) (Gac
 }
 
 // ExecuteMultiGacha は1000コイン消費・10回抽選・コレクション追加をトランザクション内で実行する。
-// - coins < 1000 → ErrInsufficientCoins
-// - プレイヤー不在 → ErrNotFound
+// - coins < 1000 → apperr.ErrInsufficientCoins
+// - プレイヤー不在 → apperr.ErrNotFound
 func (s *DBGachaStore) ExecuteMultiGacha(ctx context.Context, playerName string) (MultiGachaResult, error) {
 	tx, err := s.db.Pool.Begin(ctx)
 	if err != nil {
@@ -133,14 +134,14 @@ func (s *DBGachaStore) ExecuteMultiGacha(ctx context.Context, playerName string)
 		playerName,
 	).Scan(&coins)
 	if errors.Is(err, pgx.ErrNoRows) {
-		return MultiGachaResult{}, ErrNotFound
+		return MultiGachaResult{}, apperr.ErrNotFound
 	}
 	if err != nil {
 		return MultiGachaResult{}, err
 	}
 
 	if coins < 1000 {
-		return MultiGachaResult{}, ErrInsufficientCoins
+		return MultiGachaResult{}, apperr.ErrInsufficientCoins
 	}
 
 	// 1000コイン一括消費

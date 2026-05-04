@@ -8,11 +8,9 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/soseki-hpb-2026/api/internal/apperr"
 	"github.com/soseki-hpb-2026/api/internal/model"
 )
-
-// ErrNotFound はリソースが見つからない場合のセンチネルエラー。
-var ErrNotFound = errors.New("not found")
 
 // PlayerStore はプレイヤーの永続化操作を定義するインターフェース。
 type PlayerStore interface {
@@ -64,7 +62,7 @@ func (h *Players) Get(w http.ResponseWriter, r *http.Request) {
 	name := chi.URLParam(r, "name")
 
 	player, err := h.store.GetPlayer(r.Context(), name)
-	if errors.Is(err, ErrNotFound) {
+	if errors.Is(err, apperr.ErrNotFound) {
 		writeError(w, http.StatusNotFound, "player not found")
 		return
 	}

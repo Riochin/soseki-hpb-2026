@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/soseki-hpb-2026/api/internal/apperr"
 	"github.com/soseki-hpb-2026/api/internal/handler"
 	"github.com/soseki-hpb-2026/api/internal/model"
 )
@@ -44,7 +45,7 @@ func (m *mockPlayerStore) GetPlayer(_ context.Context, _ string) (model.Player, 
 		return model.Player{}, m.storeErr
 	}
 	if m.notFound {
-		return model.Player{}, handler.ErrNotFound
+		return model.Player{}, apperr.ErrNotFound
 	}
 	return m.player, nil
 }
@@ -54,7 +55,7 @@ func (m *mockPlayerStore) BorrowCoins(_ context.Context, _ string, _ int) (int, 
 		return 0, 0, m.storeErr
 	}
 	if m.notFound {
-		return 0, 0, handler.ErrNotFound
+		return 0, 0, apperr.ErrNotFound
 	}
 	return m.coins, m.debt, nil
 }
@@ -64,7 +65,7 @@ func (m *mockPlayerStore) EarnCoins(_ context.Context, _ string, amount int) (in
 		return 0, m.storeErr
 	}
 	if m.notFound {
-		return 0, handler.ErrNotFound
+		return 0, apperr.ErrNotFound
 	}
 	// players_test では実値は厳密に見ていないため、単純な加算挙動を返す。
 	return m.coins + amount, nil

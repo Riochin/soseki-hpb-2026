@@ -8,11 +8,9 @@ import (
 	"math/rand"
 	"net/http"
 
+	"github.com/soseki-hpb-2026/api/internal/apperr"
 	"github.com/soseki-hpb-2026/api/internal/model"
 )
-
-// ErrInsufficientCoins はコイン残高不足を表すセンチネルエラー。
-var ErrInsufficientCoins = errors.New("insufficient coins")
 
 // GachaResult はガチャ実行結果を表す。
 type GachaResult struct {
@@ -59,11 +57,11 @@ func (h *Gacha) Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	result, err := h.store.ExecuteGacha(r.Context(), input.PlayerName)
-	if errors.Is(err, ErrInsufficientCoins) {
+	if errors.Is(err, apperr.ErrInsufficientCoins) {
 		writeError(w, http.StatusPaymentRequired, "insufficient coins")
 		return
 	}
-	if errors.Is(err, ErrNotFound) {
+	if errors.Is(err, apperr.ErrNotFound) {
 		writeError(w, http.StatusNotFound, "player not found")
 		return
 	}
@@ -94,11 +92,11 @@ func (h *Gacha) CreateMulti(w http.ResponseWriter, r *http.Request) {
 	}
 
 	result, err := h.store.ExecuteMultiGacha(r.Context(), input.PlayerName)
-	if errors.Is(err, ErrInsufficientCoins) {
+	if errors.Is(err, apperr.ErrInsufficientCoins) {
 		writeError(w, http.StatusPaymentRequired, "insufficient coins")
 		return
 	}
-	if errors.Is(err, ErrNotFound) {
+	if errors.Is(err, apperr.ErrNotFound) {
 		writeError(w, http.StatusNotFound, "player not found")
 		return
 	}
