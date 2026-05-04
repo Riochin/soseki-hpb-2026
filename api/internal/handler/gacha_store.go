@@ -11,6 +11,7 @@ import (
 	"github.com/soseki-hpb-2026/api/internal/apperr"
 	"github.com/soseki-hpb-2026/api/internal/db"
 	"github.com/soseki-hpb-2026/api/internal/model"
+	"github.com/soseki-hpb-2026/api/internal/service/gacha"
 )
 
 // DBGachaStore は pgxpool を使った GachaStore の実装。
@@ -85,7 +86,7 @@ func (s *DBGachaStore) ExecuteGacha(ctx context.Context, playerName string) (Gac
 
 	// 重み付きランダム抽選
 	rng := rand.New(rand.NewSource(time.Now().UnixNano()))
-	selected := SelectWeightedItem(items, rng)
+	selected := gacha.SelectWeightedItem(items, rng)
 
 	// コレクションに追加（重複は ON CONFLICT DO NOTHING で無視）
 	tag, err := tx.Exec(ctx,
@@ -191,9 +192,9 @@ func (s *DBGachaStore) ExecuteMultiGacha(ctx context.Context, playerName string)
 	for i := 0; i < 10; i++ {
 		var selected model.Item
 		if i == 9 && len(highRarityItems) > 0 {
-			selected = SelectWeightedItem(highRarityItems, rng)
+			selected = gacha.SelectWeightedItem(highRarityItems, rng)
 		} else {
-			selected = SelectWeightedItem(items, rng)
+			selected = gacha.SelectWeightedItem(items, rng)
 		}
 
 		tag, err := tx.Exec(ctx,
