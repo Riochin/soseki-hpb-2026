@@ -1,4 +1,4 @@
-package handler
+package repository
 
 import (
 	"context"
@@ -21,6 +21,11 @@ type GameRewardCommit struct {
 	CoinsEarned int
 }
 
+// GameRewardCommiter はゲーム報酬を DB にコミットする操作を表す。
+type GameRewardCommiter interface {
+	CommitGameReward(ctx context.Context, in GameRewardCommit) (newCoins int, resultID int64, err error)
+}
+
 // DBGameRewardStore は game_result 挿入とコイン加算を同一トランザクションで行う。
 type DBGameRewardStore struct {
 	db *db.DB
@@ -31,10 +36,6 @@ func NewDBGameRewardStore(database *db.DB) *DBGameRewardStore {
 	return &DBGameRewardStore{db: database}
 }
 
-// CommitGameReward は game_result に1プレイ1行を挿入する（ベストだけに置き換えたりはしない。履歴はすべて残る）。
-// 成功時のみコインを加算する。
-// 同一 session_id が既に存在する場合は apperr.ErrDuplicateGameSession を返す。
-// プレイヤーが存在しない場合は apperr.ErrNotFound を返す。
 func (s *DBGameRewardStore) CommitGameReward(ctx context.Context, in GameRewardCommit) (newCoins int, resultID int64, err error) {
 	tx, err := s.db.Pool.Begin(ctx)
 	if err != nil {

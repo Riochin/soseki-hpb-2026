@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"context"
 	"errors"
 	"log"
 	"net/http"
@@ -9,25 +8,20 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/soseki-hpb-2026/api/internal/apperr"
+	"github.com/soseki-hpb-2026/api/internal/repository"
 )
-
-// ConsumeStore はアイテム引き換え操作を定義するインターフェース。
-type ConsumeStore interface {
-	ConsumeItem(ctx context.Context, playerName string, itemID int) error
-}
 
 // Consume は POST /api/players/{name}/items/{item_id}/consume エンドポイントのハンドラーを保持する。
 type Consume struct {
-	store ConsumeStore
+	store repository.ConsumeStore
 }
 
 // NewConsume は Consume ハンドラーを生成して返す。
-func NewConsume(store ConsumeStore) *Consume {
+func NewConsume(store repository.ConsumeStore) *Consume {
 	return &Consume{store: store}
 }
 
 // Create は POST /api/players/{name}/items/{item_id}/consume を処理する。
-// is_giftable=true のアイテムを is_consumed=true にマークする。
 func (h *Consume) Create(w http.ResponseWriter, r *http.Request) {
 	playerName := chi.URLParam(r, "name")
 	if playerName == "" {

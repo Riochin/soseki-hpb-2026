@@ -1,4 +1,4 @@
-package handler
+package repository
 
 import (
 	"context"
@@ -14,6 +14,25 @@ import (
 	"github.com/soseki-hpb-2026/api/internal/service/gacha"
 )
 
+// GachaResult はガチャ実行結果を表す。
+type GachaResult struct {
+	Item     model.CollectionItem `json:"item"`
+	IsNew    bool                 `json:"isNew"`
+	NewCoins int                  `json:"newCoins"`
+}
+
+// MultiGachaResult は10連ガチャ実行結果を表す。
+type MultiGachaResult struct {
+	Results  []GachaResult `json:"results"`
+	NewCoins int           `json:"newCoins"`
+}
+
+// GachaStore はガチャの永続化操作を定義するインターフェース。
+type GachaStore interface {
+	ExecuteGacha(ctx context.Context, playerName string) (GachaResult, error)
+	ExecuteMultiGacha(ctx context.Context, playerName string) (MultiGachaResult, error)
+}
+
 // DBGachaStore は pgxpool を使った GachaStore の実装。
 type DBGachaStore struct {
 	db *db.DB
@@ -24,9 +43,6 @@ func NewDBGachaStore(database *db.DB) *DBGachaStore {
 	return &DBGachaStore{db: database}
 }
 
-// ExecuteGacha はコイン消費・重み付き抽選・コレクション追加をトランザクション内で実行する。
-// - coins < 100 → apperr.ErrInsufficientCoins
-// - プレイヤー不在 → apperr.ErrNotFound
 func (s *DBGachaStore) ExecuteGacha(ctx context.Context, playerName string) (GachaResult, error) {
 	tx, err := s.db.Pool.Begin(ctx)
 	if err != nil {
@@ -34,7 +50,6 @@ func (s *DBGachaStore) ExecuteGacha(ctx context.Context, playerName string) (Gac
 	}
 	defer tx.Rollback(ctx) //nolint:errcheck
 
-	// プレイヤーをロック付きで取得
 	var coins int
 	err = tx.QueryRow(ctx,
 		`SELECT coins FROM players WHERE name = $1 FOR UPDATE`,
@@ -51,7 +66,6 @@ func (s *DBGachaStore) ExecuteGacha(ctx context.Context, playerName string) (Gac
 		return GachaResult{}, apperr.ErrInsufficientCoins
 	}
 
-	// コイン消費
 	var newCoins int
 	if err := tx.QueryRow(ctx,
 		`UPDATE players SET coins = coins - 100 WHERE name = $1 RETURNING coins`,
@@ -60,7 +74,6 @@ func (s *DBGachaStore) ExecuteGacha(ctx context.Context, playerName string) (Gac
 		return GachaResult{}, err
 	}
 
-	// アイテム一覧取得（重み付き抽選用）
 	rows, err := tx.Query(ctx,
 		`SELECT id, name, rarity, icon, weight, proposed_by, is_giftable FROM items WHERE weight > 0`,
 	)
@@ -84,11 +97,9 @@ func (s *DBGachaStore) ExecuteGacha(ctx context.Context, playerName string) (Gac
 		return GachaResult{}, fmt.Errorf("no items available for gacha")
 	}
 
-	// 重み付きランダム抽選
 	rng := rand.New(rand.NewSource(time.Now().UnixNano()))
 	selected := gacha.SelectWeightedItem(items, rng)
 
-	// コレクションに追加（重複は ON CONFLICT DO NOTHING で無視）
 	tag, err := tx.Exec(ctx,
 		`INSERT INTO collections (player_name, item_id) VALUES ($1, $2) ON CONFLICT DO NOTHING`,
 		playerName, selected.ID,
@@ -118,9 +129,6 @@ func (s *DBGachaStore) ExecuteGacha(ctx context.Context, playerName string) (Gac
 	}, nil
 }
 
-// ExecuteMultiGacha は1000コイン消費・10回抽選・コレクション追加をトランザクション内で実行する。
-// - coins < 1000 → apperr.ErrInsufficientCoins
-// - プレイヤー不在 → apperr.ErrNotFound
 func (s *DBGachaStore) ExecuteMultiGacha(ctx context.Context, playerName string) (MultiGachaResult, error) {
 	tx, err := s.db.Pool.Begin(ctx)
 	if err != nil {
@@ -128,7 +136,6 @@ func (s *DBGachaStore) ExecuteMultiGacha(ctx context.Context, playerName string)
 	}
 	defer tx.Rollback(ctx) //nolint:errcheck
 
-	// プレイヤーをロック付きで取得
 	var coins int
 	err = tx.QueryRow(ctx,
 		`SELECT coins FROM players WHERE name = $1 FOR UPDATE`,
@@ -145,7 +152,6 @@ func (s *DBGachaStore) ExecuteMultiGacha(ctx context.Context, playerName string)
 		return MultiGachaResult{}, apperr.ErrInsufficientCoins
 	}
 
-	// 1000コイン一括消費
 	var newCoins int
 	if err := tx.QueryRow(ctx,
 		`UPDATE players SET coins = coins - 1000 WHERE name = $1 RETURNING coins`,
@@ -154,7 +160,6 @@ func (s *DBGachaStore) ExecuteMultiGacha(ctx context.Context, playerName string)
 		return MultiGachaResult{}, err
 	}
 
-	// アイテム一覧取得（1回だけ）
 	rows, err := tx.Query(ctx,
 		`SELECT id, name, rarity, icon, weight, proposed_by, is_giftable FROM items WHERE weight > 0`,
 	)
@@ -178,7 +183,6 @@ func (s *DBGachaStore) ExecuteMultiGacha(ctx context.Context, playerName string)
 		return MultiGachaResult{}, fmt.Errorf("no items available for gacha")
 	}
 
-	// rng を1つ生成して10回使い回す
 	rng := rand.New(rand.NewSource(time.Now().UnixNano()))
 
 	var highRarityItems []model.Item

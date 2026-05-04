@@ -8,6 +8,7 @@ import (
 
 	"github.com/soseki-hpb-2026/api/internal/db"
 	"github.com/soseki-hpb-2026/api/internal/handler"
+	"github.com/soseki-hpb-2026/api/internal/repository"
 )
 
 // corsAllowedOrigin は dig 上で CORS 許可オリジンを他の string と区別するための型。
@@ -22,21 +23,20 @@ func registerHandlers(c *dig.Container, database *db.DB, allowedOrigin string) e
 		return err
 	}
 
-	// 具体ストア（dig は *T → interface の自動注入を保証しないため、明示バインドする）
-	if err := c.Provide(handler.NewDBMessageStore); err != nil {
+	if err := c.Provide(repository.NewDBMessageStore); err != nil {
 		return err
 	}
-	if err := c.Provide(func(s *handler.DBMessageStore) handler.MessageStore { return s }); err != nil {
+	if err := c.Provide(func(s *repository.DBMessageStore) repository.MessageStore { return s }); err != nil {
 		return err
 	}
 	if err := c.Provide(handler.NewMessages); err != nil {
 		return err
 	}
 
-	if err := c.Provide(handler.NewDBPlayerStore); err != nil {
+	if err := c.Provide(repository.NewDBPlayerStore); err != nil {
 		return err
 	}
-	if err := c.Provide(func(s *handler.DBPlayerStore) handler.PlayerStore { return s }); err != nil {
+	if err := c.Provide(func(s *repository.DBPlayerStore) repository.PlayerStore { return s }); err != nil {
 		return err
 	}
 	if err := c.Provide(handler.NewPlayers); err != nil {
@@ -46,50 +46,50 @@ func registerHandlers(c *dig.Container, database *db.DB, allowedOrigin string) e
 		return err
 	}
 
-	if err := c.Provide(handler.NewDBGameRewardStore); err != nil {
+	if err := c.Provide(repository.NewDBGameRewardStore); err != nil {
 		return err
 	}
-	if err := c.Provide(func(s *handler.DBGameRewardStore) handler.GameRewardCommiter { return s }); err != nil {
+	if err := c.Provide(func(s *repository.DBGameRewardStore) repository.GameRewardCommiter { return s }); err != nil {
 		return err
 	}
 	if err := c.Provide(handler.NewGameReward); err != nil {
 		return err
 	}
 
-	if err := c.Provide(handler.NewDBGameResultListStore); err != nil {
+	if err := c.Provide(repository.NewDBGameResultListStore); err != nil {
 		return err
 	}
-	if err := c.Provide(func(s *handler.DBGameResultListStore) handler.GameResultListStore { return s }); err != nil {
+	if err := c.Provide(func(s *repository.DBGameResultListStore) repository.GameResultListStore { return s }); err != nil {
 		return err
 	}
 	if err := c.Provide(handler.NewGameResults); err != nil {
 		return err
 	}
 
-	if err := c.Provide(handler.NewDBGachaStore); err != nil {
+	if err := c.Provide(repository.NewDBGachaStore); err != nil {
 		return err
 	}
-	if err := c.Provide(func(s *handler.DBGachaStore) handler.GachaStore { return s }); err != nil {
+	if err := c.Provide(func(s *repository.DBGachaStore) repository.GachaStore { return s }); err != nil {
 		return err
 	}
 	if err := c.Provide(handler.NewGacha); err != nil {
 		return err
 	}
 
-	if err := c.Provide(handler.NewDBConsumeStore); err != nil {
+	if err := c.Provide(repository.NewDBConsumeStore); err != nil {
 		return err
 	}
-	if err := c.Provide(func(s *handler.DBConsumeStore) handler.ConsumeStore { return s }); err != nil {
+	if err := c.Provide(func(s *repository.DBConsumeStore) repository.ConsumeStore { return s }); err != nil {
 		return err
 	}
 	if err := c.Provide(handler.NewConsume); err != nil {
 		return err
 	}
 
-	if err := c.Provide(handler.NewDBCounterStore); err != nil {
+	if err := c.Provide(repository.NewDBCounterStore); err != nil {
 		return err
 	}
-	if err := c.Provide(func(s *handler.DBCounterStore) handler.CounterStore { return s }); err != nil {
+	if err := c.Provide(func(s *repository.DBCounterStore) repository.CounterStore { return s }); err != nil {
 		return err
 	}
 	if err := c.Provide(handler.NewCounter); err != nil {

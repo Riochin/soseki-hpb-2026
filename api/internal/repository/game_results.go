@@ -1,11 +1,25 @@
-package handler
+package repository
 
 import (
 	"context"
+	"time"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/soseki-hpb-2026/api/internal/db"
 )
+
+// GameResultEntry は1件のランキング行。
+type GameResultEntry struct {
+	PlayerName string    `json:"playerName"`
+	Score      int       `json:"score"`
+	GradeRank  string    `json:"gradeRank"`
+	CreatedAt  time.Time `json:"createdAt"`
+}
+
+// GameResultListStore はランキング一覧取得を抽象化する。
+type GameResultListStore interface {
+	ListLeaderboard(ctx context.Context, gameType string, timeLimit *int, limit int) ([]GameResultEntry, error)
+}
 
 // DBGameResultListStore はランキング一覧を DB から取得する。
 type DBGameResultListStore struct {
@@ -17,9 +31,6 @@ func NewDBGameResultListStore(database *db.DB) *DBGameResultListStore {
 	return &DBGameResultListStore{db: database}
 }
 
-// ListLeaderboard は game_result テーブル上の全行を読み、読み取り時にプレイヤー別自己ベストへ集約したうえで
-// スコア降順で上位 limit 件を返す（INSERT は集約しない）。
-// player_name の前後空白の違いは同一人物としてまとめる（btrim）。
 func (s *DBGameResultListStore) ListLeaderboard(ctx context.Context, gameType string, timeLimit *int, limit int) ([]GameResultEntry, error) {
 	var rows pgx.Rows
 	var err error

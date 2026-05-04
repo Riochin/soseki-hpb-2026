@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"context"
 	"encoding/json"
 	"log"
 	"net/http"
@@ -9,6 +8,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/soseki-hpb-2026/api/internal/model"
+	"github.com/soseki-hpb-2026/api/internal/repository"
 )
 
 var validBgColors = map[string]bool{"white": true, "beige": true, "purple": true}
@@ -20,21 +20,13 @@ var validStamps = map[string]bool{
 	"diavolo": true, "jolyne": true, "anasui": true,
 }
 
-// MessageStore はメッセージの永続化操作を定義するインターフェース。
-type MessageStore interface {
-	ListMessages(ctx context.Context) ([]model.Message, error)
-	CreateMessage(ctx context.Context, author string, username *string, text string, bgColor string, bgStyle string, font string, stamp *string) (model.Message, error)
-	DeleteMessage(ctx context.Context, id int, username string) (bool, error)
-	UpdateMessage(ctx context.Context, id int, username string, newAuthor *string, newText *string) (model.Message, bool, error)
-}
-
 // Messages はメッセージ CRUD エンドポイントのハンドラー群を保持する。
 type Messages struct {
-	store MessageStore
+	store repository.MessageStore
 }
 
 // NewMessages は Messages ハンドラーを生成して返す。
-func NewMessages(store MessageStore) *Messages {
+func NewMessages(store repository.MessageStore) *Messages {
 	return &Messages{store: store}
 }
 

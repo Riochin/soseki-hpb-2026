@@ -1,4 +1,4 @@
-package handler
+package repository
 
 import (
 	"context"
@@ -8,6 +8,14 @@ import (
 	"github.com/soseki-hpb-2026/api/internal/db"
 	"github.com/soseki-hpb-2026/api/internal/model"
 )
+
+// MessageStore はメッセージの永続化操作を定義するインターフェース。
+type MessageStore interface {
+	ListMessages(ctx context.Context) ([]model.Message, error)
+	CreateMessage(ctx context.Context, author string, username *string, text string, bgColor string, bgStyle string, font string, stamp *string) (model.Message, error)
+	DeleteMessage(ctx context.Context, id int, username string) (bool, error)
+	UpdateMessage(ctx context.Context, id int, username string, newAuthor *string, newText *string) (model.Message, bool, error)
+}
 
 // DBMessageStore は pgxpool を使った MessageStore の実装。
 type DBMessageStore struct {
@@ -19,7 +27,6 @@ func NewDBMessageStore(database *db.DB) *DBMessageStore {
 	return &DBMessageStore{db: database}
 }
 
-// ListMessages は messages テーブルから全件を作成日降順で取得する。
 func (s *DBMessageStore) ListMessages(ctx context.Context) ([]model.Message, error) {
 	rows, err := s.db.Pool.Query(ctx,
 		`SELECT id, author, username, text, bg_color, bg_style, font, stamp, created_at
@@ -52,8 +59,6 @@ func (s *DBMessageStore) ListMessages(ctx context.Context) ([]model.Message, err
 	return msgs, nil
 }
 
-// DeleteMessage は messages テーブルから id と username が一致する行を削除する。
-// 削除できた場合は true を返す。
 func (s *DBMessageStore) DeleteMessage(ctx context.Context, id int, username string) (bool, error) {
 	tag, err := s.db.Pool.Exec(ctx,
 		`DELETE FROM messages WHERE id=$1 AND username=$2`,
@@ -65,9 +70,6 @@ func (s *DBMessageStore) DeleteMessage(ctx context.Context, id int, username str
 	return tag.RowsAffected() > 0, nil
 }
 
-// UpdateMessage は author・text を更新して更新後の Message を返す。
-// nil を渡したフィールドは既存値を保持する。
-// 対象行が存在しない or username 不一致の場合は (zero, false, nil) を返す。
 func (s *DBMessageStore) UpdateMessage(ctx context.Context, id int, username string, newAuthor *string, newText *string) (model.Message, bool, error) {
 	var m model.Message
 	err := s.db.Pool.QueryRow(ctx,
@@ -90,7 +92,6 @@ func (s *DBMessageStore) UpdateMessage(ctx context.Context, id int, username str
 	return m, true, nil
 }
 
-// CreateMessage は messages テーブルに1件挿入して返す。
 func (s *DBMessageStore) CreateMessage(
 	ctx context.Context,
 	author string,

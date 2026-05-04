@@ -10,23 +10,24 @@ import (
 	"time"
 
 	"github.com/soseki-hpb-2026/api/internal/handler"
+	"github.com/soseki-hpb-2026/api/internal/repository"
 )
 
 // --- モック ---
 
 type mockGameResultListStore struct {
-	entries []handler.GameResultEntry
+	entries []repository.GameResultEntry
 	err     error
 }
 
-func (m *mockGameResultListStore) ListLeaderboard(_ context.Context, _ string, _ *int, _ int) ([]handler.GameResultEntry, error) {
+func (m *mockGameResultListStore) ListLeaderboard(_ context.Context, _ string, _ *int, _ int) ([]repository.GameResultEntry, error) {
 	return m.entries, m.err
 }
 
 // --- GET /api/game-results ---
 
 func TestGameResultsList_DefaultGameType_Returns200(t *testing.T) {
-	entries := []handler.GameResultEntry{
+	entries := []repository.GameResultEntry{
 		{PlayerName: "漱石", Score: 9999, GradeRank: "S", CreatedAt: time.Now()},
 		{PlayerName: "子規", Score: 5000, GradeRank: "A", CreatedAt: time.Now()},
 	}
@@ -59,7 +60,7 @@ func TestGameResultsList_DefaultGameType_Returns200(t *testing.T) {
 }
 
 func TestGameResultsList_EmptyEntries_ReturnsEmptyList(t *testing.T) {
-	h := handler.NewGameResults(&mockGameResultListStore{entries: []handler.GameResultEntry{}})
+	h := handler.NewGameResults(&mockGameResultListStore{entries: []repository.GameResultEntry{}})
 
 	req := httptest.NewRequest(http.MethodGet, "/api/game-results?gameType=shooting", nil)
 	w := httptest.NewRecorder()
@@ -93,7 +94,7 @@ func TestGameResultsList_StoreError_Returns500(t *testing.T) {
 }
 
 func TestGameResultsList_LimitClamped_DoesNotExceed100(t *testing.T) {
-	h := handler.NewGameResults(&mockGameResultListStore{entries: []handler.GameResultEntry{}})
+	h := handler.NewGameResults(&mockGameResultListStore{entries: []repository.GameResultEntry{}})
 
 	// limit=500 を指定しても 100 にクランプされること（ストアは呼ばれるが上限制御は内部）
 	req := httptest.NewRequest(http.MethodGet, "/api/game-results?limit=500", nil)

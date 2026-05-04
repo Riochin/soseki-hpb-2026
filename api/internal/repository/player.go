@@ -1,4 +1,4 @@
-package handler
+package repository
 
 import (
 	"context"
@@ -10,6 +10,14 @@ import (
 	"github.com/soseki-hpb-2026/api/internal/model"
 )
 
+// PlayerStore はプレイヤーの永続化操作を定義するインターフェース。
+type PlayerStore interface {
+	UpsertPlayer(ctx context.Context, name string) (model.Player, error)
+	GetPlayer(ctx context.Context, name string) (model.Player, error)
+	BorrowCoins(ctx context.Context, name string, amount int) (coins, debt int, err error)
+	EarnCoins(ctx context.Context, name string, amount int) (newCoins int, err error)
+}
+
 // DBPlayerStore は pgxpool を使った PlayerStore の実装。
 type DBPlayerStore struct {
 	db *db.DB
@@ -20,10 +28,7 @@ func NewDBPlayerStore(database *db.DB) *DBPlayerStore {
 	return &DBPlayerStore{db: database}
 }
 
-// UpsertPlayer は初回訪問時に players に INSERT（coins=1000）し、
-// 既存プレイヤーは SELECT で返す（ON CONFLICT DO NOTHING）。
 func (s *DBPlayerStore) UpsertPlayer(ctx context.Context, name string) (model.Player, error) {
-	// 存在しなければ挿入（既存行はそのまま）
 	_, err := s.db.Pool.Exec(ctx,
 		`INSERT INTO players (name, coins, debt) VALUES ($1, 1000, 0) ON CONFLICT (name) DO NOTHING`,
 		name,
@@ -34,8 +39,6 @@ func (s *DBPlayerStore) UpsertPlayer(ctx context.Context, name string) (model.Pl
 	return s.GetPlayer(ctx, name)
 }
 
-// GetPlayer は name をキーにプレイヤーとコレクション一覧を取得する。
-// プレイヤーが存在しない場合は apperr.ErrNotFound を返す。
 func (s *DBPlayerStore) GetPlayer(ctx context.Context, name string) (model.Player, error) {
 	var p model.Player
 	err := s.db.Pool.QueryRow(ctx,
@@ -49,7 +52,6 @@ func (s *DBPlayerStore) GetPlayer(ctx context.Context, name string) (model.Playe
 		return model.Player{}, err
 	}
 
-	// 全アイテムと取得状態を JOIN で取得
 	rows, err := s.db.Pool.Query(ctx, `
 		SELECT i.id, i.name, i.rarity, i.icon,
 		       (c.player_name IS NOT NULL) AS acquired,
@@ -80,9 +82,6 @@ func (s *DBPlayerStore) GetPlayer(ctx context.Context, name string) (model.Playe
 	return p, nil
 }
 
-// BorrowCoins は coins・debt を amount クレ（= amount*100）ずつ増やして最新値を返す。
-// 借用イベントを debt_logs にトランザクション内で記録する。
-// プレイヤーが存在しない場合は apperr.ErrNotFound を返す。
 func (s *DBPlayerStore) BorrowCoins(ctx context.Context, name string, amount int) (coins, debt int, err error) {
 	tx, err := s.db.Pool.Begin(ctx)
 	if err != nil {
@@ -119,8 +118,6 @@ func (s *DBPlayerStore) BorrowCoins(ctx context.Context, name string, amount int
 	return coins, debt, tx.Commit(ctx)
 }
 
-// EarnCoins はゲーム報酬としてコインを加算し、新しい残高を返す。
-// プレイヤーが存在しない場合は apperr.ErrNotFound を返す。
 func (s *DBPlayerStore) EarnCoins(ctx context.Context, name string, amount int) (int, error) {
 	var newCoins int
 	err := s.db.Pool.QueryRow(ctx,

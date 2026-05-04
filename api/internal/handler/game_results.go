@@ -1,34 +1,22 @@
 package handler
 
 import (
-	"context"
 	"encoding/json"
 	"log"
 	"net/http"
 	"strconv"
 	"time"
+
+	"github.com/soseki-hpb-2026/api/internal/repository"
 )
 
 // GameResults は GET /api/game-results のハンドラー。
 type GameResults struct {
-	store GameResultListStore
-}
-
-// GameResultListStore はランキング一覧取得を抽象化する。
-type GameResultListStore interface {
-	ListLeaderboard(ctx context.Context, gameType string, timeLimit *int, limit int) ([]GameResultEntry, error)
-}
-
-// GameResultEntry は1件のランキング行。
-type GameResultEntry struct {
-	PlayerName string    `json:"playerName"`
-	Score      int       `json:"score"`
-	GradeRank  string    `json:"gradeRank"`
-	CreatedAt  time.Time `json:"createdAt"`
+	store repository.GameResultListStore
 }
 
 // NewGameResults は GameResults を生成する。
-func NewGameResults(store GameResultListStore) *GameResults {
+func NewGameResults(store repository.GameResultListStore) *GameResults {
 	return &GameResults{store: store}
 }
 

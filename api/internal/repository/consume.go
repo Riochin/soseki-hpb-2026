@@ -1,4 +1,4 @@
-package handler
+package repository
 
 import (
 	"context"
@@ -8,6 +8,11 @@ import (
 	"github.com/soseki-hpb-2026/api/internal/apperr"
 	"github.com/soseki-hpb-2026/api/internal/db"
 )
+
+// ConsumeStore はアイテム引き換え操作を定義するインターフェース。
+type ConsumeStore interface {
+	ConsumeItem(ctx context.Context, playerName string, itemID int) error
+}
 
 // DBConsumeStore は pgxpool を使った ConsumeStore の実装。
 type DBConsumeStore struct {
@@ -19,10 +24,6 @@ func NewDBConsumeStore(database *db.DB) *DBConsumeStore {
 	return &DBConsumeStore{db: database}
 }
 
-// ConsumeItem はアイテムを引き換え済みにマークする。
-// - アイテムが is_giftable=false → apperr.ErrNotGiftable
-// - コレクションに存在しない → apperr.ErrNotFound
-// - すでに is_consumed=true → apperr.ErrAlreadyConsumed
 func (s *DBConsumeStore) ConsumeItem(ctx context.Context, playerName string, itemID int) error {
 	tx, err := s.db.Pool.Begin(ctx)
 	if err != nil {
@@ -30,7 +31,6 @@ func (s *DBConsumeStore) ConsumeItem(ctx context.Context, playerName string, ite
 	}
 	defer tx.Rollback(ctx) //nolint:errcheck
 
-	// アイテムの is_giftable を確認
 	var isGiftable bool
 	err = tx.QueryRow(ctx,
 		`SELECT is_giftable FROM items WHERE id = $1`,
@@ -46,7 +46,6 @@ func (s *DBConsumeStore) ConsumeItem(ctx context.Context, playerName string, ite
 		return apperr.ErrNotGiftable
 	}
 
-	// プレイヤーがこのアイテムを所持しているか、消費済みかを確認
 	var isConsumed bool
 	err = tx.QueryRow(ctx,
 		`SELECT is_consumed FROM collections WHERE player_name = $1 AND item_id = $2`,
@@ -62,7 +61,6 @@ func (s *DBConsumeStore) ConsumeItem(ctx context.Context, playerName string, ite
 		return apperr.ErrAlreadyConsumed
 	}
 
-	// 引き換え済みにする
 	if _, err := tx.Exec(ctx,
 		`UPDATE collections SET is_consumed = true WHERE player_name = $1 AND item_id = $2`,
 		playerName, itemID,

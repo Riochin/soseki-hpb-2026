@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	"log"
@@ -9,29 +8,20 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/soseki-hpb-2026/api/internal/apperr"
-	"github.com/soseki-hpb-2026/api/internal/model"
+	"github.com/soseki-hpb-2026/api/internal/repository"
 )
-
-// PlayerStore はプレイヤーの永続化操作を定義するインターフェース。
-type PlayerStore interface {
-	UpsertPlayer(ctx context.Context, name string) (model.Player, error)
-	GetPlayer(ctx context.Context, name string) (model.Player, error)
-	BorrowCoins(ctx context.Context, name string, amount int) (coins, debt int, err error)
-	EarnCoins(ctx context.Context, name string, amount int) (newCoins int, err error)
-}
 
 // Players はプレイヤー取得・作成エンドポイントのハンドラーを保持する。
 type Players struct {
-	store PlayerStore
+	store repository.PlayerStore
 }
 
 // NewPlayers は Players ハンドラーを生成して返す。
-func NewPlayers(store PlayerStore) *Players {
+func NewPlayers(store repository.PlayerStore) *Players {
 	return &Players{store: store}
 }
 
 // Create は POST /api/players を処理する。
-// 初回は coins=1000（10クレ）で INSERT、既存は SELECT（upsert）。
 func (h *Players) Create(w http.ResponseWriter, r *http.Request) {
 	var input struct {
 		Name string `json:"name"`

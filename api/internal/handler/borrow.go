@@ -8,28 +8,26 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/soseki-hpb-2026/api/internal/apperr"
+	"github.com/soseki-hpb-2026/api/internal/repository"
 )
 
 // Borrow は POST /api/players/:name/borrow エンドポイントのハンドラーを保持する。
 type Borrow struct {
-	store PlayerStore
+	store repository.PlayerStore
 }
 
 // NewBorrow は Borrow ハンドラーを生成して返す。
-func NewBorrow(store PlayerStore) *Borrow {
+func NewBorrow(store repository.PlayerStore) *Borrow {
 	return &Borrow{store: store}
 }
 
 // Create は POST /api/players/:name/borrow を処理する。
-// リクエストボディの amount（クレ単位）だけ coins・debt を増やして最新値を返す。
-// amount 未指定または 1 未満の場合は 1 とする。
 func (h *Borrow) Create(w http.ResponseWriter, r *http.Request) {
 	name := chi.URLParam(r, "name")
 
 	var input struct {
 		Amount int `json:"amount"`
 	}
-	// デコード失敗は無視してデフォルト値（0）のまま続行
 	_ = json.NewDecoder(r.Body).Decode(&input)
 	if input.Amount < 1 {
 		input.Amount = 1

@@ -1,10 +1,15 @@
-package handler
+package repository
 
 import (
 	"context"
 
 	"github.com/soseki-hpb-2026/api/internal/db"
 )
+
+// CounterStore はアクセスカウンターの永続化操作を定義するインターフェース。
+type CounterStore interface {
+	Increment(ctx context.Context) (count int, err error)
+}
 
 // DBCounterStore は pgxpool を使った CounterStore の実装。
 type DBCounterStore struct {
@@ -16,7 +21,6 @@ func NewDBCounterStore(database *db.DB) *DBCounterStore {
 	return &DBCounterStore{db: database}
 }
 
-// Increment は access_counter をアトミックにインクリメントして最新値を返す。
 func (s *DBCounterStore) Increment(ctx context.Context) (int, error) {
 	var count int
 	err := s.db.Pool.QueryRow(ctx,

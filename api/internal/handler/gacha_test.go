@@ -12,28 +12,29 @@ import (
 	"github.com/soseki-hpb-2026/api/internal/apperr"
 	"github.com/soseki-hpb-2026/api/internal/handler"
 	"github.com/soseki-hpb-2026/api/internal/model"
+	"github.com/soseki-hpb-2026/api/internal/repository"
 )
 
 // --- モック ---
 
 type mockGachaStore struct {
-	result      handler.GachaResult
-	multiResult handler.MultiGachaResult
+	result      repository.GachaResult
+	multiResult repository.MultiGachaResult
 	err         error
 }
 
-func (m *mockGachaStore) ExecuteGacha(_ context.Context, _ string) (handler.GachaResult, error) {
+func (m *mockGachaStore) ExecuteGacha(_ context.Context, _ string) (repository.GachaResult, error) {
 	return m.result, m.err
 }
 
-func (m *mockGachaStore) ExecuteMultiGacha(_ context.Context, _ string) (handler.MultiGachaResult, error) {
+func (m *mockGachaStore) ExecuteMultiGacha(_ context.Context, _ string) (repository.MultiGachaResult, error) {
 	return m.multiResult, m.err
 }
 
 // --- POST /api/gacha ---
 
 func TestGachaCreate_ValidRequest_Returns200(t *testing.T) {
-	result := handler.GachaResult{
+	result := repository.GachaResult{
 		Item:     model.CollectionItem{ItemID: 1, Name: "伝説のメガネ", Rarity: "SSR", Icon: "🕶️", Acquired: true},
 		IsNew:    true,
 		NewCoins: 0,
@@ -49,7 +50,7 @@ func TestGachaCreate_ValidRequest_Returns200(t *testing.T) {
 	if w.Code != http.StatusOK {
 		t.Fatalf("expected 200, got %d: %s", w.Code, w.Body.String())
 	}
-	var got handler.GachaResult
+	var got repository.GachaResult
 	if err := json.NewDecoder(w.Body).Decode(&got); err != nil {
 		t.Fatalf("decode error: %v", err)
 	}
@@ -132,16 +133,16 @@ func TestGachaCreate_StoreError_Returns500(t *testing.T) {
 
 // --- POST /api/gacha/multi ---
 
-func makeMultiResult(n int) handler.MultiGachaResult {
-	results := make([]handler.GachaResult, n)
+func makeMultiResult(n int) repository.MultiGachaResult {
+	results := make([]repository.GachaResult, n)
 	for i := range results {
-		results[i] = handler.GachaResult{
+		results[i] = repository.GachaResult{
 			Item:     model.CollectionItem{ItemID: i + 1, Name: "アイテム", Rarity: "N", Icon: "☕", Acquired: true},
 			IsNew:    i == 0,
 			NewCoins: 0,
 		}
 	}
-	return handler.MultiGachaResult{Results: results, NewCoins: 0}
+	return repository.MultiGachaResult{Results: results, NewCoins: 0}
 }
 
 func TestGachaCreateMulti_ValidRequest_Returns200(t *testing.T) {
@@ -157,7 +158,7 @@ func TestGachaCreateMulti_ValidRequest_Returns200(t *testing.T) {
 	if w.Code != http.StatusOK {
 		t.Fatalf("expected 200, got %d: %s", w.Code, w.Body.String())
 	}
-	var got handler.MultiGachaResult
+	var got repository.MultiGachaResult
 	if err := json.NewDecoder(w.Body).Decode(&got); err != nil {
 		t.Fatalf("decode error: %v", err)
 	}
@@ -234,4 +235,3 @@ func TestGachaCreateMulti_StoreError_Returns500(t *testing.T) {
 		t.Fatalf("expected 500, got %d", w.Code)
 	}
 }
-
